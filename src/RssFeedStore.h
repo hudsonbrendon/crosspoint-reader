@@ -24,6 +24,7 @@ class RssFeedStore {
   bool loadFromFile();
 
   bool addFeed(const RssFeed& feed);
+  bool updateFeed(size_t index, const RssFeed& feed);
   bool removeFeed(size_t index);
 
   const std::vector<RssFeed>& getFeeds() const { return feeds; }

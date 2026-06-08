@@ -34,6 +34,12 @@ bool RssFeedStore::addFeed(const RssFeed& feed) {
   return saveToFile();
 }
 
+bool RssFeedStore::updateFeed(size_t index, const RssFeed& feed) {
+  if (index >= feeds.size()) return false;
+  feeds[index] = feed;
+  return saveToFile();
+}
+
 bool RssFeedStore::removeFeed(size_t index) {
   if (index >= feeds.size()) return false;
   feeds.erase(feeds.begin() + static_cast<ptrdiff_t>(index));
