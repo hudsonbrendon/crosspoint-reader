@@ -1,7 +1,7 @@
 /**
  * Xtc.h
  *
- * Main XTC ebook class for inkpoint Reader
+ * Main XTC ebook class for InkPoint Reader
  * Provides EPUB-like interface for XTC file handling
  */
 

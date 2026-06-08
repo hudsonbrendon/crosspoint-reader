@@ -2,7 +2,7 @@
  * XtcParser.h
  *
  * XTC file parsing and page data extraction
- * XTC ebook support for inkpoint Reader
+ * XTC ebook support for InkPoint Reader
  */
 
 #pragma once

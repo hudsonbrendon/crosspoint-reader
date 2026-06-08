@@ -1,6 +1,6 @@
 # Testing and Debugging
 
-inkpoint runs on real hardware, so debugging usually combines local build checks and on-device logs.
+InkPoint runs on real hardware, so debugging usually combines local build checks and on-device logs.
 
 ## Local checks
 

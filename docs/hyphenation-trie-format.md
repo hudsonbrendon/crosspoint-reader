@@ -1,6 +1,6 @@
 # Hypher Binary Tries
 
-inkpoint embeds the exact binary automata produced by
+InkPoint embeds the exact binary automata produced by
 [Typst's `hypher`](https://github.com/typst/hypher). 
 
 ## File layout

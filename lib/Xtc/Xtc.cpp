@@ -2,7 +2,7 @@
  * Xtc.cpp
  *
  * Main XTC ebook class implementation
- * XTC ebook support for inkpoint Reader
+ * XTC ebook support for InkPoint Reader
  */
 
 #include "Xtc.h"

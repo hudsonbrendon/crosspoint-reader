@@ -1,6 +1,6 @@
 # SD Card Fonts
 
-inkpoint supports loading additional fonts from the SD card, including fonts
+InkPoint supports loading additional fonts from the SD card, including fonts
 with extended Unicode coverage (CJK, Cyrillic, Greek, etc.).
 
 ## Installing Fonts
@@ -9,15 +9,15 @@ There are three ways to install fonts:
 
 ### Option 1: Download from device (recommended)
 
-1. Connect your inkpoint reader to Wi-Fi
+1. Connect your InkPoint reader to WiFi
 2. Go to **Settings > System > Manage Fonts**
 3. Browse available font families and tap to download
 4. Downloaded fonts appear immediately in **Settings > Reader > Font Family**
 
 ### Option 2: Upload via web browser
 
-1. Start **File Transfer** and connect through **Join Network** or **Create Hotspot**
-2. Open the web interface URL shown on the reader
+1. Connect your InkPoint reader to WiFi
+2. Open the web interface in your browser (shown on the WiFi screen)
 3. Navigate to the **Fonts** tab
 4. Upload `.cpfont` files using the upload form
 
@@ -50,7 +50,7 @@ There are three ways to install fonts:
                ├── Merriweather_12.cpfont
                └── ...
 
-3. Insert the SD card and power on your inkpoint reader
+3. Insert the SD card and power on your InkPoint reader
 
 ## Available Pre-Built Fonts
 
@@ -96,7 +96,6 @@ To convert your own TrueType/OpenType fonts:
 | `latin-ext` | European languages (Latin + Extended-A/B + punctuation + ligatures) |
 | `greek` | Greek + Extended Greek |
 | `cyrillic` | Cyrillic + Supplement |
-| `hebrew` | Hebrew + Alphabetic Presentation Forms |
 | `georgian` | Georgian + Georgian Supplement |
 | `armenian` | Armenian |
 | `ethiopic` | Ethiopic + Extended |
@@ -108,7 +107,7 @@ To convert your own TrueType/OpenType fonts:
 | `tifinagh` | Tifinagh |
 | `symbols` | Math, currency, arrows, box-drawing, misc symbols, dingbats |
 | `reading` | Literary fiction coverage: Latin, Greek, Cyrillic, math/symbol blocks, supplemental punctuation, and CJK quote marks |
-| `builtin` | Matches the firmware's built-in font conversion intervals |
+| `builtin` | Matches built-in Bookerly coverage exactly |
 
 Combine presets with commas: `--intervals latin-ext,greek,cyrillic`
 
@@ -123,4 +122,4 @@ To list all presets with codepoint counts:
 
 `--force-autohint` — force FreeType's auto-hinter instead of the font's native hinting (useful when a font's built-in hints produce poor results at small sizes).
 
-Install custom fonts via the web interface or manual SD card copy.
+Install custom fonts via WiFi upload or manual SD card copy.

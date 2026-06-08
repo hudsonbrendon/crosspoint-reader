@@ -1,13 +1,13 @@
-/* bidiclasses.t — bidi class table for inkpoint Hebrew/English epub.
+/* bidiclasses.t — bidi class table for InkPoint Hebrew/English epub.
  *
  * Coverage rationale:
- *   Hebrew + English is the primary target. However, inkpoint renders
+ *   Hebrew + English is the primary target. However, InkPoint renders
  *   Latin and Cyrillic scripts for many other languages, so these MUST be
  *   classified as L (not fall through to ON) to avoid regression when they
  *   appear adjacent to Hebrew runs.
  *
  *   Scripts NOT in this table fall through to ON — correct per UAX#9 for
- *   scripts inkpoint's fonts don't support (CJK, Arabic, Devanagari, etc.)
+ *   scripts InkPoint's fonts don't support (CJK, Arabic, Devanagari, etc.)
  *   ON is the right class for "unknown" — it behaves neutrally.
  *
  * Entries sorted ascending by first (binary search requirement).
@@ -63,7 +63,7 @@
 {0x0300, 0x036F, NSM},
 
 /* ── Cyrillic (L) ────────────────────────────────────────────────────── */
-/* Required: inkpoint supports Russian, Ukrainian, Bulgarian, etc.
+/* Required: InkPoint supports Russian, Ukrainian, Bulgarian, etc.
    Without these, Cyrillic chars fall to ON, breaking mixed Hebrew+Russian. */
 {0x0400, 0x04FF, L},    /* Cyrillic */
 {0x0500, 0x052F, L},    /* Cyrillic Supplement */
@@ -86,7 +86,7 @@
 
 /* ── Latin Extended Additional (L) ─────────────────────────────────── */
 /* Covers accented chars for Vietnamese, Welsh, Romanian, etc.
-   Not currently rendered by inkpoint fonts, but costs only 2 table rows. */
+   Not currently rendered by InkPoint fonts, but costs only 2 table rows. */
 {0x1E00, 0x1EFF, L},
 
 /* ── Unicode directional format characters ─────────────────────────── */

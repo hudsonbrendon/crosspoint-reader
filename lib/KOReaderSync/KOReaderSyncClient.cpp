@@ -12,8 +12,8 @@
 int KOReaderSyncClient::lastHttpCode = 0;
 
 namespace {
-// Device identifier for inkpoint reader
-constexpr char DEVICE_NAME[] = "inkpoint";
+// Device identifier for InkPoint reader
+constexpr char DEVICE_NAME[] = "InkPoint";
 constexpr char DEVICE_ID[] = "inkpoint-reader";
 
 // Small TLS buffers to fit in ESP32-C3's limited heap (~46KB free after WiFi).

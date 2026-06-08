@@ -6,7 +6,7 @@
 #include <string>
 
 /**
- * inkpoint position representation.
+ * InkPoint position representation.
  */
 struct InkPointPosition {
   int spineIndex;                  // Current spine item (chapter) index
@@ -28,28 +28,28 @@ struct SavedProgressPosition {
 };
 
 /**
- * Maps between inkpoint and SavedProgress position formats, such as those used by KOReader.
+ * Maps between InkPoint and SavedProgress position formats, such as those used by KOReader.
  *
- * inkpoint tracks position as (spineIndex, pageNumber).
+ * InkPoint tracks position as (spineIndex, pageNumber).
  * SavedProgress uses XPath-like strings + percentage.
  *
- * Since inkpoint discards HTML structure during parsing, we generate
+ * Since InkPoint discards HTML structure during parsing, we generate
  * synthetic XPath strings based on spine index, using percentage as the
  * primary sync mechanism.
  */
 class ProgressMapper {
  public:
   /**
-   * Convert inkpoint position to SavedProgress format.
+   * Convert InkPoint position to SavedProgress format.
    *
    * @param epub The EPUB book
-   * @param pos inkpoint position
+   * @param pos InkPoint position
    * @return SavedProgress position
    */
   static SavedProgressPosition toSavedProgress(const std::shared_ptr<Epub>& epub, const InkPointPosition& pos);
 
   /**
-   * Convert SavedProgress position to inkpoint format.
+   * Convert SavedProgress position to InkPoint format.
    *
    * Note: The returned pageNumber may be approximate since different
    * rendering settings produce different page counts.
@@ -59,7 +59,7 @@ class ProgressMapper {
    * @param renderer GfxRenderer for page count estimation
    * @param currentSpineIndex Index of the currently open spine item (for density estimation)
    * @param totalPagesInCurrentSpine Total pages in the current spine item (for density estimation)
-   * @return inkpoint position
+   * @return InkPoint position
    */
   static InkPointPosition toInkPoint(const std::shared_ptr<Epub>& epub, const SavedProgressPosition& savedPos,
                                          GfxRenderer& renderer, int currentSpineIndex = -1,

@@ -20,7 +20,7 @@ namespace {
 constexpr char latestReleaseUrl[] = "https://api.github.com/repos/hudsonbrendon/inkpoint/releases/latest";
 
 esp_err_t http_client_set_header_cb(esp_http_client_handle_t http_client) {
-  return esp_http_client_set_header(http_client, "User-Agent", "inkpoint-ESP32-" INKPOINT_VERSION);
+  return esp_http_client_set_header(http_client, "User-Agent", "InkPoint-ESP32-" INKPOINT_VERSION);
 }
 }  // namespace
 

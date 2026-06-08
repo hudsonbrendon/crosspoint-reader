@@ -6,6 +6,8 @@
 #include <Logging.h>
 #include <WiFi.h>
 
+#include <map>
+
 #include "InkPointSettings.h"
 #include "MappedInputManager.h"
 #include "WifiCredentialStore.h"
@@ -116,33 +118,37 @@ void WifiSelectionActivity::processWifiScanResults() {
     return;
   }
 
-  // Scan complete, process results — deduplicate in-place, keeping strongest signal
-  networks.clear();
-  networks.reserve(scanResult);
+  // Scan complete, process results
+  // Use a map to deduplicate networks by SSID, keeping the strongest signal
+  std::map<std::string, WifiNetworkInfo> uniqueNetworks;
 
   for (int i = 0; i < scanResult; i++) {
-    char ssid[33];
-    strlcpy(ssid, WiFi.SSID(i).c_str(), sizeof(ssid));
+    std::string ssid = WiFi.SSID(i).c_str();
     const int32_t rssi = WiFi.RSSI(i);
 
     // Skip hidden networks (empty SSID)
-    if (ssid[0] == '\0') {
+    if (ssid.empty()) {
       continue;
     }
 
-    auto it =
-        std::find_if(networks.begin(), networks.end(), [&ssid](const WifiNetworkInfo& n) { return n.ssid == ssid; });
-    if (it == networks.end()) {
+    // Check if we've already seen this SSID
+    auto it = uniqueNetworks.find(ssid);
+    if (it == uniqueNetworks.end() || rssi > it->second.rssi) {
+      // New network or stronger signal than existing entry
       WifiNetworkInfo network;
       network.ssid = ssid;
       network.rssi = rssi;
       network.isEncrypted = (WiFi.encryptionType(i) != WIFI_AUTH_OPEN);
       network.hasSavedPassword = WIFI_STORE.hasSavedCredential(network.ssid);
-      networks.push_back(std::move(network));
-    } else if (rssi > it->rssi) {
-      it->rssi = rssi;
-      it->isEncrypted = (WiFi.encryptionType(i) != WIFI_AUTH_OPEN);
+      uniqueNetworks[ssid] = network;
     }
+  }
+
+  // Convert map to vector
+  networks.clear();
+  for (const auto& pair : uniqueNetworks) {
+    // cppcheck-suppress useStlAlgorithm
+    networks.push_back(pair.second);
   }
 
   // Sort: saved-password networks first, then by signal strength (strongest first)
@@ -216,10 +222,10 @@ void WifiSelectionActivity::attemptConnection() {
   WiFi.disconnect(true, true);  // Abort any in-progress SDK auto-connect and clear NVS-saved SSID
   delay(100);
 
-  // Set hostname so routers show "inkpoint-AABBCCDDEEFF" instead of "esp32-XXXXXXXXXXXX"
+  // Set hostname so routers show "InkPoint-Reader-AABBCCDDEEFF" instead of "esp32-XXXXXXXXXXXX"
   String mac = WiFi.macAddress();
   mac.replace(":", "");
-  String hostname = "inkpoint-" + mac;
+  String hostname = "InkPoint-Reader-" + mac;
   WiFi.setHostname(hostname.c_str());
 
   if (selectedRequiresPassword && !enteredPassword.empty()) {

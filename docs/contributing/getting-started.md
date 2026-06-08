@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide helps you build and run inkpoint locally.
+This guide helps you build and run InkPoint locally.
 
 ## Prerequisites
 

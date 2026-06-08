@@ -18,14 +18,6 @@
 namespace {
 constexpr unsigned long GO_HOME_MS = 1000;
 constexpr size_t NAME_BUFFER_SIZE = 500;
-
-// One directory entry plus the keys needed to sort it. `name` keeps the trailing
-// '/' for directories (matching how the browser stores/displays entries).
-struct BrowserEntry {
-  std::string name;
-  uint32_t date;  // FAT modify key; 0 for directories or if unavailable
-  uint32_t size;  // bytes; 0 for directories
-};
 }  // namespace
 
 void FileBrowserActivity::loadFiles() {
@@ -44,7 +36,6 @@ void FileBrowserActivity::loadFiles() {
     return;
   }
 
-  std::vector<BrowserEntry> entries;
   for (auto file = root.openNextFile(); file; file = root.openNextFile()) {
     file.getName(fileNameBuffer.get(), NAME_BUFFER_SIZE);
     if ((!SETTINGS.showHiddenFiles && fileNameBuffer[0] == '.') ||
@@ -53,43 +44,23 @@ void FileBrowserActivity::loadFiles() {
     }
 
     if (file.isDirectory()) {
-      // Directories are always name-sorted and listed first; sort keys unused.
-      entries.push_back({std::string(fileNameBuffer.get()) + "/", 0, 0});
+      files.emplace_back(std::string(fileNameBuffer.get()) + "/");
     } else {
       std::string_view filename{fileNameBuffer.get()};
-      const bool keep = (mode == Mode::PickFirmware)
-                            ? FsHelpers::checkFileExtension(filename, ".bin")
-                            : (FsHelpers::hasEpubExtension(filename) || FsHelpers::hasXtcExtension(filename) ||
-                               FsHelpers::hasTxtExtension(filename) || FsHelpers::hasMarkdownExtension(filename) ||
-                               FsHelpers::hasBmpExtension(filename));
-      if (keep) {
-        entries.push_back({std::string(filename), file.modifiedKey(), static_cast<uint32_t>(file.fileSize())});
+      if (mode == Mode::PickFirmware) {
+        // Firmware picker: only show .bin files.
+        if (FsHelpers::checkFileExtension(filename, ".bin")) {
+          files.emplace_back(filename);
+        }
+      } else if (FsHelpers::hasEpubExtension(filename) || FsHelpers::hasXtcExtension(filename) ||
+                 FsHelpers::hasTxtExtension(filename) || FsHelpers::hasMarkdownExtension(filename) ||
+                 FsHelpers::hasBmpExtension(filename)) {
+        files.emplace_back(filename);
       }
     }
   }
   root.close();
-
-  const uint8_t sortMode = SETTINGS.fileSortMode;
-  std::sort(entries.begin(), entries.end(), [sortMode](const BrowserEntry& a, const BrowserEntry& b) {
-    const bool aDir = a.name.back() == '/';
-    const bool bDir = b.name.back() == '/';
-    if (aDir != bDir) return aDir;                            // directories first
-    if (aDir) return FsHelpers::naturalLess(a.name, b.name);  // dirs always by name
-    switch (sortMode) {
-      case InkPointSettings::SORT_DATE_MODIFIED:
-        if (a.date != b.date) return a.date > b.date;  // newest first
-        return FsHelpers::naturalLess(a.name, b.name);
-      case InkPointSettings::SORT_SIZE:
-        if (a.size != b.size) return a.size > b.size;  // largest first
-        return FsHelpers::naturalLess(a.name, b.name);
-      case InkPointSettings::SORT_NAME:
-      default:
-        return FsHelpers::naturalLess(a.name, b.name);
-    }
-  });
-
-  files.reserve(entries.size());
-  for (auto& e : entries) files.push_back(std::move(e.name));
+  FsHelpers::sortFileList(files);
 }
 
 void FileBrowserActivity::onEnter() {
