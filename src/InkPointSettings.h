@@ -34,6 +34,12 @@ class InkPointSettings {
     INVERTED_BLACK_AND_WHITE = 2,
     SLEEP_SCREEN_COVER_FILTER_COUNT
   };
+  enum FILE_SORT_MODE {
+    SORT_NAME = 0,           // natural alphabetical (default, current behaviour)
+    SORT_DATE_MODIFIED = 1,  // newest first
+    SORT_SIZE = 2,           // largest first
+    FILE_SORT_MODE_COUNT
+  };
 
   // Status bar enum - legacy
   enum STATUS_BAR_MODE {
@@ -167,6 +173,8 @@ class InkPointSettings {
   uint8_t sleepScreenCoverMode = FIT;
   // Sleep screen cover filter
   uint8_t sleepScreenCoverFilter = NO_FILTER;
+  // File browser sort mode (filesystem-only; works on X3 and X4)
+  uint8_t fileSortMode = SORT_NAME;
   // Status bar settings (statusBar retained for migration only)
   uint8_t statusBar = FULL;
   uint8_t statusBarChapterPageCount = 1;
