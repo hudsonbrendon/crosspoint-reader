@@ -13,12 +13,14 @@
 #include "InkPointSettings.h"
 #include "FontInstaller.h"
 #include "OpdsServerStore.h"
+#include "RssFeedStore.h"
 #include "SdCardFontSystem.h"
 #include "SettingsList.h"
 #include "WebDAVHandler.h"
 #include "WifiCredentialStore.h"
 #include "html/FilesPageHtml.generated.h"
 #include "html/FontsPageHtml.generated.h"
+#include "html/RssFeedsPageHtml.generated.h"
 #include "html/HomePageHtml.generated.h"
 #include "html/SettingsPageHtml.generated.h"
 #include "html/js/jszip_minJs.generated.h"
@@ -169,6 +171,12 @@ void InkPointWebServer::begin() {
   server->on("/api/opds", HTTP_GET, [this] { handleGetOpdsServers(); });
   server->on("/api/opds", HTTP_POST, [this] { handlePostOpdsServer(); });
   server->on("/api/opds/delete", HTTP_POST, [this] { handleDeleteOpdsServer(); });
+
+  // RSS feed endpoints
+  server->on("/rssfeeds", HTTP_GET, [this] { handleRssFeedsPage(); });
+  server->on("/api/rssfeeds", HTTP_GET, [this] { handleGetRssFeeds(); });
+  server->on("/api/rssfeeds", HTTP_POST, [this] { handlePostRssFeed(); });
+  server->on("/api/rssfeeds/delete", HTTP_POST, [this] { handleDeleteRssFeed(); });
 
   // Wi-Fi credential endpoints
   server->on("/api/wifi", HTTP_GET, [this] { handleGetWifiNetworks(); });
@@ -1384,6 +1392,123 @@ void InkPointWebServer::handleDeleteOpdsServer() {
 
   OPDS_STORE.removeServer(static_cast<size_t>(idx));
   LOG_DBG("WEB", "Deleted OPDS server at index %d", idx);
+  server->send(200, "text/plain", "OK");
+}
+
+// ---- RSS Feeds API ----
+
+void InkPointWebServer::handleRssFeedsPage() const {
+  sendHtmlContent(server.get(), RssFeedsPageHtml, sizeof(RssFeedsPageHtml));
+  LOG_DBG("WEB", "Served RSS feeds page");
+}
+
+void InkPointWebServer::handleGetRssFeeds() const {
+  const auto& feeds = RSS_STORE.getFeeds();
+
+  // Stream the JSON array incrementally (same pattern as handleGetOpdsServers).
+  server->setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server->send(200, "application/json", "");
+  server->sendContent("[");
+
+  char output[512];
+  constexpr size_t outputSize = sizeof(output);
+  JsonDocument doc;
+
+  for (size_t i = 0; i < feeds.size(); i++) {
+    doc.clear();
+    doc["index"] = i;
+    doc["name"] = feeds[i].name;
+    doc["url"] = feeds[i].url;
+
+    const size_t written = serializeJson(doc, output, outputSize);
+    if (written >= outputSize) continue;
+
+    if (i > 0) server->sendContent(",");
+    server->sendContent(output);
+  }
+
+  server->sendContent("]");
+  server->sendContent("");
+  LOG_DBG("WEB", "Served RSS feeds API (%zu feeds)", feeds.size());
+}
+
+void InkPointWebServer::handlePostRssFeed() {
+  if (!server->hasArg("plain")) {
+    server->send(400, "text/plain", "Missing JSON body");
+    return;
+  }
+
+  const String body = server->arg("plain");
+  JsonDocument doc;
+  const DeserializationError err = deserializeJson(doc, body);
+  if (err) {
+    server->send(400, "text/plain", String("Invalid JSON: ") + err.c_str());
+    return;
+  }
+
+  RssFeed feed;
+  feed.name = doc["name"] | std::string("");
+  feed.url = doc["url"] | std::string("");
+
+  if (feed.url.empty()) {
+    server->send(400, "text/plain", "URL is required");
+    return;
+  }
+  // Default the display name to the URL host when the user left it blank.
+  if (feed.name.empty()) {
+    size_t s = feed.url.find("://");
+    s = (s == std::string::npos) ? 0 : s + 3;
+    size_t e = feed.url.find('/', s);
+    feed.name = feed.url.substr(s, (e == std::string::npos ? feed.url.size() : e) - s);
+  }
+
+  if (doc["index"].is<int>()) {
+    int idx = doc["index"].as<int>();
+    if (idx < 0 || idx >= static_cast<int>(RSS_STORE.getCount())) {
+      server->send(400, "text/plain", "Invalid feed index");
+      return;
+    }
+    RSS_STORE.updateFeed(static_cast<size_t>(idx), feed);
+    LOG_DBG("WEB", "Updated RSS feed at index %d", idx);
+  } else {
+    if (!RSS_STORE.addFeed(feed)) {
+      server->send(400, "text/plain", "Cannot add feed (limit reached)");
+      return;
+    }
+    LOG_DBG("WEB", "Added new RSS feed: %s", feed.name.c_str());
+  }
+
+  server->send(200, "text/plain", "OK");
+}
+
+// Uses POST (not HTTP DELETE) because ESP32 WebServer doesn't support DELETE with a body.
+void InkPointWebServer::handleDeleteRssFeed() {
+  if (!server->hasArg("plain")) {
+    server->send(400, "text/plain", "Missing JSON body");
+    return;
+  }
+
+  const String body = server->arg("plain");
+  JsonDocument doc;
+  const DeserializationError err = deserializeJson(doc, body);
+  if (err) {
+    server->send(400, "text/plain", String("Invalid JSON: ") + err.c_str());
+    return;
+  }
+
+  if (!doc["index"].is<int>()) {
+    server->send(400, "text/plain", "Missing index");
+    return;
+  }
+
+  int idx = doc["index"].as<int>();
+  if (idx < 0 || idx >= static_cast<int>(RSS_STORE.getCount())) {
+    server->send(400, "text/plain", "Invalid feed index");
+    return;
+  }
+
+  RSS_STORE.removeFeed(static_cast<size_t>(idx));
+  LOG_DBG("WEB", "Deleted RSS feed at index %d", idx);
   server->send(200, "text/plain", "OK");
 }
 
