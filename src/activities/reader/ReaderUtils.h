@@ -1,6 +1,6 @@
 #pragma once
 
-#include <CrossPointSettings.h>
+#include <InkPointSettings.h>
 #include <GfxRenderer.h>
 #include <HalTiltSensor.h>
 #include <Logging.h>
@@ -16,16 +16,16 @@ constexpr unsigned long BOOKMARK_MESSAGE_DURATION_MS = 2500;
 
 inline void applyOrientation(GfxRenderer& renderer, const uint8_t orientation) {
   switch (orientation) {
-    case CrossPointSettings::ORIENTATION::PORTRAIT:
+    case InkPointSettings::ORIENTATION::PORTRAIT:
       renderer.setOrientation(GfxRenderer::Orientation::Portrait);
       break;
-    case CrossPointSettings::ORIENTATION::LANDSCAPE_CW:
+    case InkPointSettings::ORIENTATION::LANDSCAPE_CW:
       renderer.setOrientation(GfxRenderer::Orientation::LandscapeClockwise);
       break;
-    case CrossPointSettings::ORIENTATION::INVERTED:
+    case InkPointSettings::ORIENTATION::INVERTED:
       renderer.setOrientation(GfxRenderer::Orientation::PortraitInverted);
       break;
-    case CrossPointSettings::ORIENTATION::LANDSCAPE_CCW:
+    case InkPointSettings::ORIENTATION::LANDSCAPE_CCW:
       renderer.setOrientation(GfxRenderer::Orientation::LandscapeCounterClockwise);
       break;
     default:
@@ -44,15 +44,15 @@ inline PageTurnResult detectPageTurn(const MappedInputManager& input) {
   const bool tiltNext = SETTINGS.tiltPageTurn && halTiltSensor.wasTiltedForward();
   const bool tiltPrev = SETTINGS.tiltPageTurn && halTiltSensor.wasTiltedBack();
   const bool swapFront =
-      SETTINGS.frontButtonFollowOrientation && (SETTINGS.orientation == CrossPointSettings::INVERTED ||
-                                                SETTINGS.orientation == CrossPointSettings::LANDSCAPE_CCW);
+      SETTINGS.frontButtonFollowOrientation && (SETTINGS.orientation == InkPointSettings::INVERTED ||
+                                                SETTINGS.orientation == InkPointSettings::LANDSCAPE_CCW);
   const auto prevButton = swapFront ? MappedInputManager::Button::Right : MappedInputManager::Button::Left;
   const auto nextButton = swapFront ? MappedInputManager::Button::Left : MappedInputManager::Button::Right;
   const bool prev =
       tiltPrev ||
       (usePress ? (input.wasPressed(MappedInputManager::Button::PageBack) || input.wasPressed(prevButton))
                 : (input.wasReleased(MappedInputManager::Button::PageBack) || input.wasReleased(prevButton)));
-  const bool powerTurn = SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::PAGE_TURN &&
+  const bool powerTurn = SETTINGS.shortPwrBtn == InkPointSettings::SHORT_PWRBTN::PAGE_TURN &&
                          input.wasReleased(MappedInputManager::Button::Power);
   const bool next = tiltNext || (usePress ? (input.wasPressed(MappedInputManager::Button::PageForward) || powerTurn ||
                                              input.wasPressed(nextButton))

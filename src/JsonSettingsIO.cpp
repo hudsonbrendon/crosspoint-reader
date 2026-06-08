@@ -9,8 +9,8 @@
 #include <string>
 
 #include "BookmarkEntry.h"
-#include "CrossPointSettings.h"
-#include "CrossPointState.h"
+#include "InkPointSettings.h"
+#include "InkPointState.h"
 #include "OpdsServerStore.h"
 #include "ReadingStatsStore.h"
 #include "RecentBooksStore.h"
@@ -18,61 +18,61 @@
 #include "WifiCredentialStore.h"
 
 // Convert legacy settings.
-void applyLegacyStatusBarSettings(CrossPointSettings& settings) {
-  switch (static_cast<CrossPointSettings::STATUS_BAR_MODE>(settings.statusBar)) {
-    case CrossPointSettings::NONE:
+void applyLegacyStatusBarSettings(InkPointSettings& settings) {
+  switch (static_cast<InkPointSettings::STATUS_BAR_MODE>(settings.statusBar)) {
+    case InkPointSettings::NONE:
       settings.statusBarChapterPageCount = 0;
       settings.statusBarBookProgressPercentage = 0;
-      settings.statusBarProgressBar = CrossPointSettings::HIDE_PROGRESS;
-      settings.statusBarTitle = CrossPointSettings::HIDE_TITLE;
+      settings.statusBarProgressBar = InkPointSettings::HIDE_PROGRESS;
+      settings.statusBarTitle = InkPointSettings::HIDE_TITLE;
       settings.statusBarBattery = 0;
       break;
-    case CrossPointSettings::NO_PROGRESS:
+    case InkPointSettings::NO_PROGRESS:
       settings.statusBarChapterPageCount = 0;
       settings.statusBarBookProgressPercentage = 0;
-      settings.statusBarProgressBar = CrossPointSettings::HIDE_PROGRESS;
-      settings.statusBarTitle = CrossPointSettings::CHAPTER_TITLE;
+      settings.statusBarProgressBar = InkPointSettings::HIDE_PROGRESS;
+      settings.statusBarTitle = InkPointSettings::CHAPTER_TITLE;
       settings.statusBarBattery = 1;
       break;
-    case CrossPointSettings::BOOK_PROGRESS_BAR:
+    case InkPointSettings::BOOK_PROGRESS_BAR:
       settings.statusBarChapterPageCount = 1;
       settings.statusBarBookProgressPercentage = 0;
-      settings.statusBarProgressBar = CrossPointSettings::BOOK_PROGRESS;
-      settings.statusBarTitle = CrossPointSettings::CHAPTER_TITLE;
+      settings.statusBarProgressBar = InkPointSettings::BOOK_PROGRESS;
+      settings.statusBarTitle = InkPointSettings::CHAPTER_TITLE;
       settings.statusBarBattery = 1;
       break;
-    case CrossPointSettings::ONLY_BOOK_PROGRESS_BAR:
+    case InkPointSettings::ONLY_BOOK_PROGRESS_BAR:
       settings.statusBarChapterPageCount = 1;
       settings.statusBarBookProgressPercentage = 0;
-      settings.statusBarProgressBar = CrossPointSettings::BOOK_PROGRESS;
-      settings.statusBarTitle = CrossPointSettings::HIDE_TITLE;
+      settings.statusBarProgressBar = InkPointSettings::BOOK_PROGRESS;
+      settings.statusBarTitle = InkPointSettings::HIDE_TITLE;
       settings.statusBarBattery = 0;
       break;
-    case CrossPointSettings::CHAPTER_PROGRESS_BAR:
+    case InkPointSettings::CHAPTER_PROGRESS_BAR:
       settings.statusBarChapterPageCount = 0;
       settings.statusBarBookProgressPercentage = 1;
-      settings.statusBarProgressBar = CrossPointSettings::CHAPTER_PROGRESS;
-      settings.statusBarTitle = CrossPointSettings::CHAPTER_TITLE;
+      settings.statusBarProgressBar = InkPointSettings::CHAPTER_PROGRESS;
+      settings.statusBarTitle = InkPointSettings::CHAPTER_TITLE;
       settings.statusBarBattery = 1;
       break;
-    case CrossPointSettings::FULL:
+    case InkPointSettings::FULL:
     default:
       settings.statusBarChapterPageCount = 1;
       settings.statusBarBookProgressPercentage = 1;
-      settings.statusBarProgressBar = CrossPointSettings::HIDE_PROGRESS;
-      settings.statusBarTitle = CrossPointSettings::CHAPTER_TITLE;
+      settings.statusBarProgressBar = InkPointSettings::HIDE_PROGRESS;
+      settings.statusBarTitle = InkPointSettings::CHAPTER_TITLE;
       settings.statusBarBattery = 1;
       break;
   }
 }
 
-// ---- CrossPointState ----
+// ---- InkPointState ----
 
-bool JsonSettingsIO::saveState(const CrossPointState& s, const char* path) {
+bool JsonSettingsIO::saveState(const InkPointState& s, const char* path) {
   JsonDocument doc;
   doc["openEpubPath"] = s.openEpubPath;
   JsonArray recentArr = doc["recentSleepImages"].to<JsonArray>();
-  for (int i = 0; i < CrossPointState::SLEEP_RECENT_COUNT; i++) recentArr.add(s.recentSleepImages[i]);
+  for (int i = 0; i < InkPointState::SLEEP_RECENT_COUNT; i++) recentArr.add(s.recentSleepImages[i]);
   doc["recentSleepPos"] = s.recentSleepPos;
   doc["recentSleepFill"] = s.recentSleepFill;
   doc["readerActivityLoadCount"] = s.readerActivityLoadCount;
@@ -84,7 +84,7 @@ bool JsonSettingsIO::saveState(const CrossPointState& s, const char* path) {
   return Storage.writeFile(path, json);
 }
 
-bool JsonSettingsIO::loadState(CrossPointState& s, const char* json) {
+bool JsonSettingsIO::loadState(InkPointState& s, const char* json) {
   JsonDocument doc;
   auto error = deserializeJson(doc, json);
   if (error) {
@@ -97,11 +97,11 @@ bool JsonSettingsIO::loadState(CrossPointState& s, const char* json) {
   JsonArrayConst recentArr = doc["recentSleepImages"];
   const int actualCount = recentArr.isNull() ? 0
                                              : std::min(static_cast<int>(recentArr.size()),
-                                                        static_cast<int>(CrossPointState::SLEEP_RECENT_COUNT));
+                                                        static_cast<int>(InkPointState::SLEEP_RECENT_COUNT));
   for (int i = 0; i < actualCount; i++) s.recentSleepImages[i] = recentArr[i] | static_cast<uint16_t>(0);
   s.recentSleepPos = doc["recentSleepPos"] | static_cast<uint8_t>(0);
-  if (s.recentSleepPos >= CrossPointState::SLEEP_RECENT_COUNT)
-    s.recentSleepPos = actualCount > 0 ? s.recentSleepPos % CrossPointState::SLEEP_RECENT_COUNT : 0;
+  if (s.recentSleepPos >= InkPointState::SLEEP_RECENT_COUNT)
+    s.recentSleepPos = actualCount > 0 ? s.recentSleepPos % InkPointState::SLEEP_RECENT_COUNT : 0;
   s.recentSleepFill = doc["recentSleepFill"] | static_cast<uint8_t>(0);
   s.recentSleepFill = static_cast<uint8_t>(std::min(static_cast<int>(s.recentSleepFill), actualCount));
   // Migrate legacy single-image field from old state.json (pre-recency-buffer).
@@ -116,9 +116,9 @@ bool JsonSettingsIO::loadState(CrossPointState& s, const char* json) {
   return true;
 }
 
-// ---- CrossPointSettings ----
+// ---- InkPointSettings ----
 
-bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path) {
+bool JsonSettingsIO::saveSettings(const InkPointSettings& s, const char* path) {
   JsonDocument doc;
 
   for (const auto& info : getSettingsList()) {
@@ -163,7 +163,7 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   return Storage.writeFile(path, json);
 }
 
-bool JsonSettingsIO::loadSettings(CrossPointSettings& s, const char* json, bool* needsResave) {
+bool JsonSettingsIO::loadSettings(InkPointSettings& s, const char* json, bool* needsResave) {
   if (needsResave) *needsResave = false;
   JsonDocument doc;
   auto error = deserializeJson(doc, json);
@@ -227,13 +227,13 @@ bool JsonSettingsIO::loadSettings(CrossPointSettings& s, const char* json, bool*
 
   if (doc["sleepTimeoutMinutes"].isNull() && !doc["sleepTimeout"].isNull()) {
     const uint8_t legacyValue =
-        clamp(doc["sleepTimeout"] | (uint8_t)CrossPointSettings::SLEEP_10_MIN, CrossPointSettings::SLEEP_TIMEOUT_COUNT,
-              (uint8_t)CrossPointSettings::SLEEP_10_MIN);
-    s.sleepTimeoutMinutes = CrossPointSettings::sleepTimeoutEnumToMinutes(legacyValue);
+        clamp(doc["sleepTimeout"] | (uint8_t)InkPointSettings::SLEEP_10_MIN, InkPointSettings::SLEEP_TIMEOUT_COUNT,
+              (uint8_t)InkPointSettings::SLEEP_10_MIN);
+    s.sleepTimeoutMinutes = InkPointSettings::sleepTimeoutEnumToMinutes(legacyValue);
     if (needsResave) *needsResave = true;
   }
   // Front button remap — managed by RemapFrontButtons sub-activity, not in SettingsList.
-  using S = CrossPointSettings;
+  using S = InkPointSettings;
   s.frontButtonBack =
       clamp(doc["frontButtonBack"] | (uint8_t)S::FRONT_HW_BACK, S::FRONT_BUTTON_HARDWARE_COUNT, S::FRONT_HW_BACK);
   s.frontButtonConfirm = clamp(doc["frontButtonConfirm"] | (uint8_t)S::FRONT_HW_CONFIRM, S::FRONT_BUTTON_HARDWARE_COUNT,
@@ -242,21 +242,21 @@ bool JsonSettingsIO::loadSettings(CrossPointSettings& s, const char* json, bool*
       clamp(doc["frontButtonLeft"] | (uint8_t)S::FRONT_HW_LEFT, S::FRONT_BUTTON_HARDWARE_COUNT, S::FRONT_HW_LEFT);
   s.frontButtonRight =
       clamp(doc["frontButtonRight"] | (uint8_t)S::FRONT_HW_RIGHT, S::FRONT_BUTTON_HARDWARE_COUNT, S::FRONT_HW_RIGHT);
-  CrossPointSettings::validateFrontButtonMapping(s);
+  InkPointSettings::validateFrontButtonMapping(s);
 
   // Font family — uses dynamic getter/setter in SettingsList so the generic loop skips it.
   const uint8_t storedFontFamily = doc["fontFamily"] | (uint8_t)0;
-  s.fontFamily = clamp(storedFontFamily, CrossPointSettings::BUILTIN_FONT_COUNT, 0);
+  s.fontFamily = clamp(storedFontFamily, InkPointSettings::BUILTIN_FONT_COUNT, 0);
   // SD card font family name — not in SettingsList, load manually
   const char* sfn = doc["sdFontFamilyName"] | "";
   strncpy(s.sdFontFamilyName, sfn, sizeof(s.sdFontFamilyName) - 1);
   s.sdFontFamilyName[sizeof(s.sdFontFamilyName) - 1] = '\0';
-  if (storedFontFamily == CrossPointSettings::LEGACY_OPENDYSLEXIC && s.sdFontFamilyName[0] == '\0') {
-    s.fontFamily = CrossPointSettings::NOTOSERIF;
+  if (storedFontFamily == InkPointSettings::LEGACY_OPENDYSLEXIC && s.sdFontFamilyName[0] == '\0') {
+    s.fontFamily = InkPointSettings::NOTOSERIF;
     strncpy(s.sdFontFamilyName, "OpenDyslexic", sizeof(s.sdFontFamilyName) - 1);
     s.sdFontFamilyName[sizeof(s.sdFontFamilyName) - 1] = '\0';
     if (needsResave) *needsResave = true;
-  } else if (storedFontFamily >= CrossPointSettings::BUILTIN_FONT_COUNT) {
+  } else if (storedFontFamily >= InkPointSettings::BUILTIN_FONT_COUNT) {
     if (needsResave) *needsResave = true;
   }
 

@@ -17,7 +17,7 @@ target_compile_definitions(HyphenationEvaluationTest PRIVATE
 )
 
 target_link_libraries(HyphenationEvaluationTest PRIVATE
-  crosspoint_test_common
+  inkpoint_test_common
   GTest::gtest_main
 )
 

@@ -1,6 +1,6 @@
 #include "MappedInputManager.h"
 
-#include "CrossPointSettings.h"
+#include "InkPointSettings.h"
 
 bool MappedInputManager::mapButton(const Button button, bool (HalGPIO::*fn)(uint8_t) const) const {
   const auto sideLayout = SETTINGS.sideButtonLayout;
@@ -30,22 +30,22 @@ bool MappedInputManager::mapButton(const Button button, bool (HalGPIO::*fn)(uint
     case Button::PageBack:
       // Reader page navigation uses side buttons and can be swapped via settings.
       switch (sideLayout) {
-        case CrossPointSettings::PREV_NEXT:
+        case InkPointSettings::PREV_NEXT:
           return (gpio.*fn)(HalGPIO::BTN_UP);
-        case CrossPointSettings::NEXT_PREV:
+        case InkPointSettings::NEXT_PREV:
           return (gpio.*fn)(HalGPIO::BTN_DOWN);
-        case CrossPointSettings::SIDE_BUTTONS_DISABLED:
+        case InkPointSettings::SIDE_BUTTONS_DISABLED:
         default:
           return false;
       }
     case Button::PageForward:
       // Reader page navigation uses side buttons and can be swapped via settings.
       switch (sideLayout) {
-        case CrossPointSettings::PREV_NEXT:
+        case InkPointSettings::PREV_NEXT:
           return (gpio.*fn)(HalGPIO::BTN_DOWN);
-        case CrossPointSettings::NEXT_PREV:
+        case InkPointSettings::NEXT_PREV:
           return (gpio.*fn)(HalGPIO::BTN_UP);
-        case CrossPointSettings::SIDE_BUTTONS_DISABLED:
+        case InkPointSettings::SIDE_BUTTONS_DISABLED:
         default:
           return false;
       }
@@ -70,8 +70,8 @@ MappedInputManager::Labels MappedInputManager::mapLabels(const char* back, const
                                                          const char* next) const {
   // Swap previous/next labels to match the page turn direction swap in INVERTED and LANDSCAPE_CCW.
   const bool swapLabels =
-      SETTINGS.frontButtonFollowOrientation && (SETTINGS.orientation == CrossPointSettings::INVERTED ||
-                                                SETTINGS.orientation == CrossPointSettings::LANDSCAPE_CCW);
+      SETTINGS.frontButtonFollowOrientation && (SETTINGS.orientation == InkPointSettings::INVERTED ||
+                                                SETTINGS.orientation == InkPointSettings::LANDSCAPE_CCW);
   const char* leftLabel = swapLabels ? next : previous;
   const char* rightLabel = swapLabels ? previous : next;
 

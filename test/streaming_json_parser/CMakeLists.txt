@@ -8,7 +8,7 @@ target_include_directories(StreamingJsonParserTest PRIVATE
 )
 
 target_link_libraries(StreamingJsonParserTest PRIVATE
-  crosspoint_test_common
+  inkpoint_test_common
   GTest::gtest_main
 )
 

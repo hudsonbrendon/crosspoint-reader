@@ -6,7 +6,7 @@
 #include "JsonSettingsIO.h"
 
 namespace {
-constexpr char READING_STATS_FILE_JSON[] = "/.crosspoint/reading_stats.json";
+constexpr char READING_STATS_FILE_JSON[] = "/.inkpoint/reading_stats.json";
 }  // namespace
 
 ReadingStatsStore ReadingStatsStore::instance;
@@ -19,7 +19,7 @@ void ReadingStatsStore::endSession(uint32_t nowMs) {
 }
 
 bool ReadingStatsStore::saveToFile() const {
-  Storage.mkdir("/.crosspoint");
+  Storage.mkdir("/.inkpoint");
   return JsonSettingsIO::saveReadingStats(*this, READING_STATS_FILE_JSON);
 }
 

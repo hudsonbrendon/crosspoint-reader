@@ -1,8 +1,8 @@
-# CrossPoint User Guide
+# inkpoint User Guide
 
-Welcome to the **CrossPoint** firmware. This guide outlines the hardware controls, navigation, and reading features of the device.
+Welcome to the **inkpoint** firmware. This guide outlines the hardware controls, navigation, and reading features of the device.
 
-- [CrossPoint User Guide](#crosspoint-user-guide)
+- [inkpoint User Guide](#inkpoint-user-guide)
   - [1. Hardware Overview](#1-hardware-overview)
     - [Button Layout](#button-layout)
   - [2. Power \& Startup](#2-power--startup)
@@ -120,7 +120,7 @@ A **Wi-Fi signal strength indicator** (dBm) is displayed on-screen during joined
 
 ### 3.5.1 Calibre Wireless Transfers
 
-CrossPoint supports sending books from Calibre using the CrossPoint Reader device plugin.
+inkpoint supports sending books from Calibre using the CrossPoint Reader device plugin.
 
 1. Install the plugin in Calibre:
    
@@ -144,7 +144,7 @@ The Settings screen allows you to configure the device's behavior. There are a f
 
 - **Sleep Screen**: Which sleep screen to display when the device sleeps:
   
-  - "Dark" (default) - The default dark Crosspoint logo sleep screen
+  - "Dark" (default) - The default dark inkpoint logo sleep screen
   - "Light" - The same default sleep screen, on a white background
   - "Custom" - Custom images from the SD card; see [Sleep Screen](#37-sleep-screen) below for more information
   - "Cover" - The book cover image (Note: this is experimental and may not work as expected)
@@ -181,8 +181,8 @@ The Settings screen allows you to configure the device's behavior. There are a f
 
 - **UI Theme**: Set which UI theme to use:
   
-  - "Classic" - The original Crosspoint theme
-  - "Lyra" - The new theme for Crosspoint featuring rounded elements and menu icons
+  - "Classic" - The original inkpoint theme
+  - "Lyra" - The new theme for inkpoint featuring rounded elements and menu icons
   - "Lyra Extended" - Lyra, but displays 3 books instead of 1 on the **[Home Screen](#31-home-screen)**
   - "RoundedRaff" - A rounded theme with additional visual styling
 
@@ -261,15 +261,15 @@ The Settings screen allows you to configure the device's behavior. There are a f
 
 - **Clear Reading Cache**: Clear the internal SD card cache.
 
-- **Check for updates**: Check for Crosspoint firmware updates over Wi-Fi. Firmware can also be updated without a USB connection by placing a `firmware.bin` file on the SD card.
+- **Check for updates**: Check for inkpoint firmware updates over Wi-Fi. Firmware can also be updated without a USB connection by placing a `firmware.bin` file on the SD card.
 
-- **Language**: Set the UI language. CrossPoint supports 24 languages: English, Spanish, French, German, Czech, Brazilian Portuguese, Russian, Swedish, Romanian, Catalan, Ukrainian, Belarusian, Italian, Polish, Finnish, Danish, Dutch, Turkish, Kazakh, Hungarian, Lithuanian, Slovenian, Valencian, and Hebrew.
+- **Language**: Set the UI language. inkpoint supports 24 languages: English, Spanish, French, German, Czech, Brazilian Portuguese, Russian, Swedish, Romanian, Catalan, Ukrainian, Belarusian, Italian, Polish, Finnish, Danish, Dutch, Turkish, Kazakh, Hungarian, Lithuanian, Slovenian, Valencian, and Hebrew.
 
 - **Manage Fonts**: Browse, download, and manage custom font families installed from the SD card. See [Custom Fonts (SD Card)](#38-custom-fonts-sd-card) for more information.
 
 #### 3.6.5 OPDS Servers (Multiple Libraries)
 
-CrossPoint supports saving multiple OPDS servers and switching between them when browsing catalogs.
+inkpoint supports saving multiple OPDS servers and switching between them when browsing catalogs.
 
 1. Open **Settings -> System -> OPDS Servers**.
 
@@ -303,7 +303,7 @@ For web-based Wi-Fi network management, see [Web Settings (Wi-Fi + OPDS)](#366-w
 While in **File Transfer** mode, the web settings page includes management cards for both **Wi-Fi Networks** and **OPDS Servers**.
 
 1. On device: open **File Transfer** and connect through **Join a Network** or **Create Hotspot**.
-2. In a browser, open `http://<device-ip>/settings` or `http://crosspoint.local`.
+2. In a browser, open `http://<device-ip>/settings` or `http://inkpoint.local`.
 3. In **Wi-Fi Networks**, add, edit, or delete saved network entries (SSID + optional password).
 4. In **OPDS Servers**, add, edit, or delete OPDS catalogs.
 
@@ -315,7 +315,7 @@ Behavior notes:
 
 #### 3.6.7 KOReader Sync Quick Setup
 
-CrossPoint can sync reading progress with KOReader-compatible sync servers.
+inkpoint can sync reading progress with KOReader-compatible sync servers.
 It also interoperates with KOReader apps/devices when they use the same server and credentials.
 
 ##### Option A: Free Public Server (`sync.koreader.rocks`)
@@ -337,11 +337,11 @@ Already have KOReader Sync credentials? Skip registration; basic sync only requi
 
 When this returns `HTTP 402` with `{"code":2002,"message":"Username is already registered."}`, pick a different username or use that existing account.
 
-2. On each CrossPoint device:
+2. On each inkpoint device:
    
    - Go to **Settings -> System -> KOReader Sync**.
    
-   - Set **Username** and **Password** (enter the plain password; CrossPoint computes MD5 internally, and use the same values on all devices).
+   - Set **Username** and **Password** (enter the plain password; inkpoint computes MD5 internally, and use the same values on all devices).
    
    - Set **Sync Server URL** to `https://sync.koreader.rocks`, or leave it empty (both use the same default KOReader sync server).
    
@@ -393,7 +393,7 @@ curl -H "Accept: application/vnd.koreader.v1+json" "http://<server-ip>:17200/hea
 ```
 
 3. Register a user once.
-   CrossPoint authenticates against KOReader Sync (`koreader/kosync`) using an MD5 key, so register using the MD5 of your password:
+   inkpoint authenticates against KOReader Sync (`koreader/kosync`) using an MD5 key, so register using the MD5 of your password:
 
 > [!WARNING]
 > Sending a reusable MD5-derived password over plain HTTP is insecure.
@@ -414,11 +414,11 @@ curl -i "http://<server-ip>:17200/users/create" \
 
 If this returns `HTTP 402` with `{"code":2002,"message":"Username is already registered."}`, the account already exists.
 
-4. On each CrossPoint device:
+4. On each inkpoint device:
    
    - Go to **Settings -> System -> KOReader Sync**.
    
-   - Set **Username** and **Password** (enter the plain password; CrossPoint computes MD5 internally, and use the same values on all devices).
+   - Set **Username** and **Password** (enter the plain password; inkpoint computes MD5 internally, and use the same values on all devices).
    
    - Set **Sync Server URL** to `http://<server-ip>:17200`.
    
@@ -438,8 +438,8 @@ The **Sleep Screen** setting controls what is displayed when the device goes to 
 
 | Mode               | Behavior                                                                                                                     |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Dark** (default) | The CrossPoint logo on a dark background.                                                                                    |
-| **Light**          | The CrossPoint logo on a white background.                                                                                   |
+| **Dark** (default) | The inkpoint logo on a dark background.                                                                                    |
+| **Light**          | The inkpoint logo on a white background.                                                                                   |
 | **Custom**         | A custom image from the SD card (see below). Falls back to **Dark** if no custom image is found.                             |
 | **Cover**          | The cover of the currently open book. Falls back to **Dark** if no book is open.                                             |
 | **Cover + Custom** | The cover of the currently open book, shown only while actively reading. Falls back to **Custom** behavior when not reading. |
@@ -473,7 +473,7 @@ To use custom sleep images, set the sleep screen mode to **Custom** or **Cover +
 
 ### 3.8 Custom Fonts (SD Card)
 
-CrossPoint supports loading additional fonts from the SD card, extending beyond the two built-in families (Noto Serif, Noto Sans). Custom fonts can include extended Unicode coverage, enabling CJK (Chinese, Japanese, Korean) and other scripts.
+inkpoint supports loading additional fonts from the SD card, extending beyond the two built-in families (Noto Serif, Noto Sans). Custom fonts can include extended Unicode coverage, enabling CJK (Chinese, Japanese, Korean) and other scripts.
 
 There are three ways to install fonts:
 
@@ -529,7 +529,7 @@ When reading an EPUB that contains footnotes, you can navigate to the footnote t
 
 ### Supported Languages
 
-CrossPoint renders text using the following Unicode character blocks, enabling support for a wide range of languages:
+inkpoint renders text using the following Unicode character blocks, enabling support for a wide range of languages:
 
 * **Latin Script (Basic, Supplement, Extended-A/B):** Covers English, German, French, Spanish, Portuguese, Italian, Dutch, Swedish, Norwegian, Danish, Finnish, Polish, Czech, Hungarian, Romanian, Slovak, Slovenian, Turkish, Catalan, and others.
 * **Cyrillic Script (Standard and Extended):** Covers Russian, Ukrainian, Belarusian, Bulgarian, Serbian, Macedonian, Kazakh, Kyrgyz, Mongolian, and others.
@@ -576,7 +576,7 @@ To create a bookmark, hold **Confirm** for 1 second while inside a book. A popup
 
 To open bookmarks, press **Confirm** while inside a book. Then navigate to the **Bookmarks** menu. Bookmarks can be opened by navigating to them and pressing **Confirm**, which will redirect you to that place in the book. You can delete bookmarks by holding **Confirm** for 1 second, and then pressing **Confirm** again to confirm deletion, or **Back** to cancel.
 
-Bookmarks are stored in the `.crosspoint/bookmarks` folder in the JSON format.
+Bookmarks are stored in the `.inkpoint/bookmarks` folder in the JSON format.
 
 ## 6. Current Limitations & Roadmap
 
@@ -591,9 +591,9 @@ Please note that this firmware is currently in active development. The following
 
 ## 7. Troubleshooting Issues & Escaping Bootloop
 
-If an issue or crash is encountered while using Crosspoint, feel free to raise an issue ticket and attach the logs.
+If an issue or crash is encountered while using inkpoint, feel free to raise an issue ticket and attach the logs.
 
-**Crash reports on SD card:** After a crash, CrossPoint automatically saves a crash report to the SD card (no USB connection needed). Check the root of the SD card for a crash log file and include it with any bug report.
+**Crash reports on SD card:** After a crash, inkpoint automatically saves a crash report to the SD card (no USB connection needed). Check the root of the SD card for a crash log file and include it with any bug report.
 
 **Serial monitor logs:** For more detailed debugging, connect the device to a computer and run the custom debugging monitor script (requires Python 3 with `pyserial`, `colorama`, and `matplotlib`; install via `pip3 install pyserial colorama matplotlib`):
 
@@ -638,4 +638,4 @@ Press **Ctrl-C** or close the graph window to exit.
 
 If the device is stuck in a bootloop, press and release the Reset button. Then, press and hold on to the configured Back button and the Power Button to boot to the Home Screen.
 
-There can be issues with broken cache or config. In this case, delete the `.crosspoint` directory on your SD card (or consider deleting only `settings.json`, `state.json`, or `epub_*` cache directories in the `.crosspoint/` folder).
+There can be issues with broken cache or config. In this case, delete the `.inkpoint` directory on your SD card (or consider deleting only `settings.json`, `state.json`, or `epub_*` cache directories in the `.inkpoint/` folder).

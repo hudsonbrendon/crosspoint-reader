@@ -18,8 +18,8 @@
 
 #include <cstring>
 
-#include "CrossPointSettings.h"
-#include "CrossPointState.h"
+#include "InkPointSettings.h"
+#include "InkPointState.h"
 #include "KOReaderCredentialStore.h"
 #include "MappedInputManager.h"
 #include "OpdsServerStore.h"
@@ -163,7 +163,7 @@ void silentRestartToReader() {
 // Verify power button press duration on wake-up from deep sleep
 // Pre-condition: isWakeupByPowerButton() == true
 void verifyPowerButtonDuration() {
-  if (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP) {
+  if (SETTINGS.shortPwrBtn == InkPointSettings::SHORT_PWRBTN::SLEEP) {
     // Fast path for short press
     // Needed because inputManager.isPressed() may take up to ~500ms to return the correct state
     return;
@@ -211,7 +211,7 @@ void waitForPowerRelease() {
   }
 }
 
-constexpr char SLEEP_FRAME_FILE[] = "/.crosspoint/sleep_frame.bin";
+constexpr char SLEEP_FRAME_FILE[] = "/.inkpoint/sleep_frame.bin";
 
 static void saveSleepFrameBuffer() {
   HalFile file;
@@ -240,9 +240,9 @@ void enterDeepSleep(bool fromTimeout = false) {
   APP_STATE.lastSleepFromReader = activityManager.isReaderActivity();
 
   const bool isQuickResumeSleep =
-      SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME ||
+      SETTINGS.sleepScreen == InkPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME ||
       (fromTimeout &&
-       SETTINGS.quickResumeSleepScreen == CrossPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT);
+       SETTINGS.quickResumeSleepScreen == InkPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT);
   APP_STATE.showBootScreen = !isQuickResumeSleep;
 
   APP_STATE.saveToFile();
@@ -344,6 +344,13 @@ void setup() {
   }
 
   HalSystem::checkPanic();
+  // One-time data migration: the SD data directory was renamed .crosspoint -> .inkpoint.
+  // Move the old directory across so existing users keep their settings, reading
+  // progress and caches. Skip if the new dir already exists (don't clobber).
+  if (Storage.exists("/.crosspoint") && !Storage.exists("/.inkpoint")) {
+    Storage.rename("/.crosspoint", "/.inkpoint");
+  }
+
 
   SETTINGS.loadFromFile();
   APP_STATE.loadFromFile();
@@ -360,7 +367,7 @@ void setup() {
     case HalGPIO::WakeupReason::PowerButton:
       LOG_DBG("MAIN", "Verifying power button press duration");
       gpio.verifyPowerButtonWakeup(SETTINGS.getPowerButtonDuration(),
-                                   SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP);
+                                   SETTINGS.shortPwrBtn == InkPointSettings::SHORT_PWRBTN::SLEEP);
       break;
     case HalGPIO::WakeupReason::AfterUSBPower:
       // If USB power caused a cold boot, go back to sleep
@@ -394,7 +401,7 @@ void setup() {
   }
 
   // First serial output only here to avoid timing inconsistencies for power button press duration verification
-  LOG_DBG("MAIN", "Starting CrossPoint version " CROSSPOINT_VERSION);
+  LOG_DBG("MAIN", "Starting inkpoint version " INKPOINT_VERSION);
 
   // Resolve the single boot-presentation decision. Skipping the splash also
   // skips the panel-clearing pass and the X3 initial-full-sync arming (see
@@ -567,7 +574,7 @@ void loop() {
   }
 
   // Refresh screen when power button is short-pressed with FORCE_REFRESH setting.
-  if (SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::FORCE_REFRESH &&
+  if (SETTINGS.shortPwrBtn == InkPointSettings::SHORT_PWRBTN::FORCE_REFRESH &&
       mappedInputManager.wasReleased(MappedInputManager::Button::Power)) {
     LOG_DBG("MAIN", "Manual screen refresh triggered");
     RenderLock lock;

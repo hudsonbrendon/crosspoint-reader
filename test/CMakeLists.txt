@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(crosspoint_reader_tests CXX)
+project(inkpoint_reader_tests CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,12 +24,12 @@ FetchContent_MakeAvailable(googletest)
 
 set(REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
-add_library(crosspoint_test_common INTERFACE)
-target_include_directories(crosspoint_test_common INTERFACE
+add_library(inkpoint_test_common INTERFACE)
+target_include_directories(inkpoint_test_common INTERFACE
   ${REPO_ROOT}
   ${REPO_ROOT}/lib
 )
-target_compile_options(crosspoint_test_common INTERFACE
+target_compile_options(inkpoint_test_common INTERFACE
   -Wall
   -Wextra
   -pedantic

@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cstdio>
 
-#include "CrossPointSettings.h"
+#include "InkPointSettings.h"
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"

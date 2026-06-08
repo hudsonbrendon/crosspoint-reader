@@ -42,7 +42,7 @@ void EpubReaderBookmarksActivity::onEnter() {
 
       // pre-compute bookmark page values for quicker rendering
       for (auto& bookmark : bookmarks) {
-        CrossPointPosition pos = ProgressMapper::toCrossPoint(epub, {bookmark.xpath, bookmark.percentage}, renderer);
+        InkPointPosition pos = ProgressMapper::toInkPoint(epub, {bookmark.xpath, bookmark.percentage}, renderer);
         bookmark.computedSpineIndex = pos.spineIndex;
         bookmark.computedChapterPageCount = pos.totalPages;
         bookmark.computedChapterProgress = pos.pageNumber;
@@ -108,7 +108,7 @@ void EpubReaderBookmarksActivity::loop() {
       return;
     }
     auto bookmark = bookmarks.at(selectorIndex);
-    CrossPointPosition pos = ProgressMapper::toCrossPoint(epub, {bookmark.xpath, bookmark.percentage}, renderer);
+    InkPointPosition pos = ProgressMapper::toInkPoint(epub, {bookmark.xpath, bookmark.percentage}, renderer);
     setResult(ProgressChangeResult{pos.spineIndex, pos.pageNumber});
     finish();
     return;

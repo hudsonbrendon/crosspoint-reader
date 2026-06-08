@@ -58,7 +58,7 @@ void RoundedRaffTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const 
   const int titleY = rect.y + 14;
 
   const bool showBatteryPercentage =
-      SETTINGS.hideBatteryPercentage != CrossPointSettings::HIDE_BATTERY_PERCENTAGE::HIDE_ALWAYS;
+      SETTINGS.hideBatteryPercentage != InkPointSettings::HIDE_BATTERY_PERCENTAGE::HIDE_ALWAYS;
   const int batteryIconX = rect.x + rect.width - sidePadding - RoundedRaffMetrics::values.batteryWidth;
 
   // Reserve space for the widest possible percentage text to avoid title/battery overlap

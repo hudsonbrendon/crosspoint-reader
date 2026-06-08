@@ -70,7 +70,7 @@ class KOReaderSyncActivity final : public Activity {
   // Remote progress data
   bool hasRemoteProgress = false;
   KOReaderProgress remoteProgress;
-  CrossPointPosition remotePosition;
+  InkPointPosition remotePosition;
 
   // Local progress as KOReader format (pre-computed before Epub was released)
   SavedProgressPosition localProgress;

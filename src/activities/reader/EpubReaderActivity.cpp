@@ -18,8 +18,8 @@
 #include <limits>
 
 #include "BookmarkEntry.h"
-#include "CrossPointSettings.h"
-#include "CrossPointState.h"
+#include "InkPointSettings.h"
+#include "InkPointState.h"
 #include "EpubReaderBookmarksActivity.h"
 #include "EpubReaderChapterSelectionActivity.h"
 #include "EpubReaderFootnotesActivity.h"
@@ -99,7 +99,7 @@ void moveFinishedBookToReadFolder(const std::string& srcPath, const std::string&
   }
 
   // Cache dir is keyed by hash of the epub path (see Epub ctor), so it must be re-keyed.
-  const std::string newCachePath = "/.crosspoint/epub_" + std::to_string(std::hash<std::string>{}(dstPath));
+  const std::string newCachePath = "/.inkpoint/epub_" + std::to_string(std::hash<std::string>{}(dstPath));
   if (!oldCachePath.empty() && Storage.exists(oldCachePath.c_str())) {
     if (!Storage.rename(oldCachePath.c_str(), newCachePath.c_str())) {
       LOG_ERR("ERS", "Failed to rename cache dir %s -> %s (non-fatal)", oldCachePath.c_str(), newCachePath.c_str());
@@ -573,7 +573,7 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
         }
 
         // Pre-compute local KO position and chapter name while Epub is still in RAM.
-        CrossPointPosition localPos = getCurrentPosition();
+        InkPointPosition localPos = getCurrentPosition();
         SavedProgressPosition localKoPos = ProgressMapper::toSavedProgress(epub, localPos);
         const int tocIdx = epub->getTocIndexForSpineIndex(currentSpineIndex);
         std::string localChapterName = (tocIdx >= 0) ? epub->getTocItem(tocIdx).title : "";
@@ -1095,7 +1095,7 @@ void EpubReaderActivity::renderStatusBar() const {
       textYOffset += UITheme::getInstance().getMetrics().statusBarVerticalMargin;
     }
 
-  } else if (SETTINGS.statusBarTitle == CrossPointSettings::STATUS_BAR_TITLE::CHAPTER_TITLE) {
+  } else if (SETTINGS.statusBarTitle == InkPointSettings::STATUS_BAR_TITLE::CHAPTER_TITLE) {
     title = tr(STR_UNNAMED);
     const int tocIndex = epub->getTocIndexForSpineIndex(currentSpineIndex);
     if (tocIndex != -1) {
@@ -1103,7 +1103,7 @@ void EpubReaderActivity::renderStatusBar() const {
       title = tocItem.title;
     }
 
-  } else if (SETTINGS.statusBarTitle == CrossPointSettings::STATUS_BAR_TITLE::BOOK_TITLE) {
+  } else if (SETTINGS.statusBarTitle == InkPointSettings::STATUS_BAR_TITLE::BOOK_TITLE) {
     title = epub->getTitle();
   }
 
@@ -1242,7 +1242,7 @@ ScreenshotInfo EpubReaderActivity::getScreenshotInfo() const {
   return info;
 }
 
-CrossPointPosition EpubReaderActivity::getCurrentPosition() const {
+InkPointPosition EpubReaderActivity::getCurrentPosition() const {
   const int currentPage = section ? section->currentPage : nextPageNumber;
   const int totalPages = section ? section->pageCount : cachedChapterTotalPageCount;
   std::optional<uint16_t> paragraphIndex;
@@ -1254,7 +1254,7 @@ CrossPointPosition EpubReaderActivity::getCurrentPosition() const {
     }
   }
 
-  CrossPointPosition localPos = {currentSpineIndex, currentPage, totalPages};
+  InkPointPosition localPos = {currentSpineIndex, currentPage, totalPages};
   if (paragraphIndex.has_value()) {
     localPos.paragraphIndex = *paragraphIndex;
     localPos.hasParagraphIndex = true;

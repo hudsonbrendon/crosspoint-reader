@@ -4,18 +4,18 @@
 #include <cstdint>
 #include <iosfwd>
 
-class CrossPointSettings {
+class InkPointSettings {
  private:
   // Private constructor for singleton
-  CrossPointSettings() = default;
+  InkPointSettings() = default;
 
   // Static instance
-  static CrossPointSettings instance;
+  static InkPointSettings instance;
 
  public:
   // Delete copy constructor and assignment
-  CrossPointSettings(const CrossPointSettings&) = delete;
-  CrossPointSettings& operator=(const CrossPointSettings&) = delete;
+  InkPointSettings(const InkPointSettings&) = delete;
+  InkPointSettings& operator=(const InkPointSettings&) = delete;
 
   enum SLEEP_SCREEN_MODE {
     DARK = 0,
@@ -251,10 +251,10 @@ class CrossPointSettings {
   // Quick Resume: keep current content visible with moon icon instead of showing a static sleep screen.
   uint8_t quickResumeSleepScreen = QUICK_RESUME_NEVER;
 
-  ~CrossPointSettings() = default;
+  ~InkPointSettings() = default;
 
   // Get singleton instance
-  static CrossPointSettings& getInstance() { return instance; }
+  static InkPointSettings& getInstance() { return instance; }
 
   static constexpr uint8_t MIN_SLEEP_TIMEOUT_MINUTES = 1;
   static constexpr uint8_t SLEEP_TIMEOUT_NEVER_MINUTES = 31;
@@ -267,7 +267,7 @@ class CrossPointSettings {
   void* sdFontResolverCtx = nullptr;
 
   uint16_t getPowerButtonDuration() const {
-    return (shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP) ? 10 : 400;
+    return (shortPwrBtn == InkPointSettings::SHORT_PWRBTN::SLEEP) ? 10 : 400;
   }
   int getReaderFontId() const;
 
@@ -277,7 +277,7 @@ class CrossPointSettings {
   bool saveToFile() const;
   bool loadFromFile();
 
-  static void validateFrontButtonMapping(CrossPointSettings& settings);
+  static void validateFrontButtonMapping(InkPointSettings& settings);
   static uint8_t sleepTimeoutEnumToMinutes(uint8_t legacyValue);
 
  private:
@@ -291,4 +291,4 @@ class CrossPointSettings {
 };
 
 // Helper macro to access settings
-#define SETTINGS CrossPointSettings::getInstance()
+#define SETTINGS InkPointSettings::getInstance()
