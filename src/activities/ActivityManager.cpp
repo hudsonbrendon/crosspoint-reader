@@ -5,9 +5,11 @@
 #include <algorithm>
 
 #include "OpdsServerStore.h"
+#include "RssFeedStore.h"
 #include "boot_sleep/BootActivity.h"
 #include "boot_sleep/SleepActivity.h"
 #include "browser/OpdsBookBrowserActivity.h"
+#include "browser/RssBrowserActivity.h"
 #include "home/CrashActivity.h"
 #include "home/FileBrowserActivity.h"
 #include "home/HomeActivity.h"
@@ -16,6 +18,7 @@
 #include "network/InkPointWebServerActivity.h"
 #include "reader/ReaderActivity.h"
 #include "settings/OpdsServerListActivity.h"
+#include "settings/RssFeedListActivity.h"
 #include "settings/SettingsActivity.h"
 #include "util/FullScreenMessageActivity.h"
 
@@ -187,6 +190,16 @@ void ActivityManager::goToReadingStats() {
   replaceActivity(std::make_unique<ReadingStatsActivity>(renderer, mappedInput));
 }
 
+void ActivityManager::goToRssFeeds() {
+  replaceActivity(std::make_unique<RssFeedListActivity>(renderer, mappedInput));
+}
+
+void ActivityManager::goToRssBrowser(const std::string& feedUrl, const std::string& feedName) {
+  pushActivity(std::make_unique<RssBrowserActivity>(renderer, mappedInput, feedUrl, feedName));
+}
+
+void ActivityManager::goToTxtReader(const std::string& path) { goToReader(path); }
+
 void ActivityManager::goToBrowser() {
   const auto& servers = OPDS_STORE.getServers();
   // Skip the server picker when there's only one server configured
@@ -227,6 +240,8 @@ void ActivityManager::goHome(HomeMenuItem initialMenuItem) {
       initialMenuItem = HomeMenuItem::SETTINGS_MENU;
     } else if (activityName == "ReadingStats") {
       initialMenuItem = HomeMenuItem::READING_STATS_MENU;
+    } else if (activityName == "RssBrowser" || activityName == "RssFeedList") {
+      initialMenuItem = HomeMenuItem::RSS_BROWSER;
     }
   }
   replaceActivity(std::make_unique<HomeActivity>(renderer, mappedInput, initialMenuItem));
