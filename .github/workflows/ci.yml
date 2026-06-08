@@ -90,7 +90,7 @@ jobs:
           key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
           restore-keys: pio-${{ runner.os }}-
 
-      - name: Build inkpoint
+      - name: Build InkPoint
         run: |
           set -euo pipefail
           pio run | tee pio.log

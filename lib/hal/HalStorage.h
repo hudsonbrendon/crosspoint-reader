@@ -76,9 +76,6 @@ class HalFile : public Print {
   size_t getName(char* name, size_t len);
   size_t size();
   size_t fileSize();
-  // FAT modify timestamp packed as (date << 16) | time, monotonically orderable
-  // (newest == largest). Returns 0 if unavailable. Takes the storage mutex.
-  uint32_t modifiedKey();
   uint64_t fileSize64();
   bool seek(size_t pos);
   bool seek64(uint64_t pos);

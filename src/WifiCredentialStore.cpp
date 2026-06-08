@@ -18,7 +18,7 @@ constexpr char WIFI_FILE_BIN[] = "/.inkpoint/wifi.bin";
 constexpr char WIFI_FILE_JSON[] = "/.inkpoint/wifi.json";
 constexpr char WIFI_FILE_BAK[] = "/.inkpoint/wifi.bin.bak";
 
-// Legacy obfuscation key - "CrossPoint" in ASCII (only used for binary migration)
+// Legacy obfuscation key - "InkPoint" in ASCII (only used for binary migration)
 constexpr uint8_t LEGACY_OBFUSCATION_KEY[] = {0x43, 0x72, 0x6F, 0x73, 0x73, 0x50, 0x6F, 0x69, 0x6E, 0x74};
 constexpr size_t LEGACY_KEY_LENGTH = sizeof(LEGACY_OBFUSCATION_KEY);
 

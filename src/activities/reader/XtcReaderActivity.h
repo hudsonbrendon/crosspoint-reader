@@ -1,7 +1,7 @@
 /**
  * XtcReaderActivity.h
  *
- * XTC ebook reader activity for inkpoint Reader
+ * XTC ebook reader activity for InkPoint Reader
  * Displays pre-rendered XTC pages on e-ink display
  */
 

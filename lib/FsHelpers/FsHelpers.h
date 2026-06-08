@@ -11,10 +11,6 @@ std::string decodeUriEscapes(const std::string& path);
 
 std::string normalisePath(const std::string& path);
 
-// Case-insensitive natural-order compare of two filenames (numbers compared by value).
-// Pure name comparison only — does NOT apply any directory-first rule.
-bool naturalLess(const std::string& a, const std::string& b);
-
 void sortFileList(std::vector<std::string>& strs);
 
 /**

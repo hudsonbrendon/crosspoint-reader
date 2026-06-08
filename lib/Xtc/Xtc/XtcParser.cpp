@@ -2,7 +2,7 @@
  * XtcParser.cpp
  *
  * XTC file parsing implementation
- * XTC ebook support for inkpoint Reader
+ * XTC ebook support for InkPoint Reader
  */
 
 #include "XtcParser.h"

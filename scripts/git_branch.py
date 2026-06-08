@@ -89,7 +89,7 @@ def inject_version(env):
     version_string = f'{base_version}-dev-{branch}-{short_sha}'
 
     env.Append(CPPDEFINES=[('INKPOINT_VERSION', f'\\"{version_string}\\"')])
-    print(f'inkpoint build version: {version_string}')
+    print(f'InkPoint build version: {version_string}')
 
 
 # PlatformIO/SCons entry point — Import and env are SCons builtins injected at runtime.

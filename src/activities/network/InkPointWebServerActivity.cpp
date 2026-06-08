@@ -20,7 +20,7 @@
 
 namespace {
 // AP Mode configuration
-constexpr const char* AP_SSID = "inkpoint";
+constexpr const char* AP_SSID = "InkPoint-Reader";
 constexpr const char* AP_PASSWORD = nullptr;  // Open network for ease of use
 constexpr const char* AP_HOSTNAME = "inkpoint";
 constexpr uint8_t AP_CHANNEL = 1;

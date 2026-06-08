@@ -81,7 +81,7 @@ jobs:
           gh release create "$VERSIONED" dist/* \
             --repo "${{ env.FONTS_REPO }}" \
             --title "$TITLE" \
-            --notes "Pre-built \`.cpfont\` font files for inkpoint.
+            --notes "Pre-built \`.cpfont\` font files for InkPoint Reader.
 
           Download individual files or use **Settings > System > Manage Fonts** on the device.
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Files - inkpoint</title>
+  <title>Files - InkPoint Reader</title>
   <script src="/js/jszip.min.js"></script>
   <style>
     :root {
@@ -1468,7 +1468,7 @@
   </style>
 </head>
 <body>
-<h1>📚 inkpoint</h1>
+<h1>📚 InkPoint Reader</h1>
 
 <div class="nav-links">
   <a href="/">Home</a>
@@ -1515,7 +1515,7 @@
 
 <div class="card">
   <p style="text-align: center; color: #95a5a6; margin: 0;">
-    inkpoint • Open Source
+    InkPoint E-Reader • Open Source
   </p>
 </div>
 
@@ -1771,7 +1771,7 @@
 
   if (currentPath !== '/') {
     const leaf = currentPath.split('/').filter(Boolean).pop();
-    if (leaf) document.title = leaf + ' - Files - inkpoint';
+    if (leaf) document.title = leaf + ' - Files - InkPoint Reader';
   }
 
   // Network status monitoring
@@ -1859,7 +1859,7 @@
   }
 
   async function hydrate() {
-    // Fetch inkpoint version
+    // Fetch InkPoint version
     fetchVersion();
 
     // Close modals when clicking overlay - call proper cleanup functions
@@ -3146,7 +3146,7 @@ const logSection = document.getElementById('log-section');
 const logContainer = document.getElementById('log-container');
 const exportLogCheckbox = document.getElementById('export-log-checkbox');
 
-// inkpoint version (fetched from API)
+// InkPoint version (fetched from API)
 let inkpointVersion = 'Unknown';
 
 // Fetch version from API
@@ -3492,7 +3492,7 @@ function exportLogToFile(filename = null, isBatch = false) {
   }
   // Extract text from log entries
   const entries = logContainer.querySelectorAll('.log-entry');
-  let logText = `inkpoint ${inkpointVersion} - EPUB Conversion Log\n`;
+  let logText = `InkPoint Reader ${inkpointVersion} - EPUB Conversion Log\n`;
   logText += `Generated: ${new Date().toLocaleString()}\n`;
   logText += `${'='.repeat(60)}\n\n`;
 
@@ -4679,7 +4679,7 @@ async function convertEpubFile(file, progressCallback) {
         let modified = false;
 
         // Remove width/height attributes from ALL img tags (dimensions may have changed)
-        // This prevents inkpoint and other readers from using wrong dimensions
+        // This prevents InkPoint and other readers from using wrong dimensions
         const allImgElements = doc.querySelectorAll('img');
         for (const img of allImgElements) {
           if (img.hasAttribute('width')) { img.removeAttribute('width'); modified = true; }

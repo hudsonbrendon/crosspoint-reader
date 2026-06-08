@@ -4,7 +4,7 @@
 
 #include "I18nKeys.h"
 /**
- * Internationalization (i18n) system for inkpoint Reader
+ * Internationalization (i18n) system for InkPoint Reader
  */
 
 class I18n {

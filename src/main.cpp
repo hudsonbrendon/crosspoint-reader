@@ -23,7 +23,6 @@
 #include "KOReaderCredentialStore.h"
 #include "MappedInputManager.h"
 #include "OpdsServerStore.h"
-#include "ReadingStatsStore.h"
 #include "RecentBooksStore.h"
 #include "SdCardFontSystem.h"
 #include "activities/Activity.h"
@@ -344,13 +343,6 @@ void setup() {
   }
 
   HalSystem::checkPanic();
-  // One-time data migration: the SD data directory was renamed .crosspoint -> .inkpoint.
-  // Move the old directory across so existing users keep their settings, reading
-  // progress and caches. Skip if the new dir already exists (don't clobber).
-  if (Storage.exists("/.crosspoint") && !Storage.exists("/.inkpoint")) {
-    Storage.rename("/.crosspoint", "/.inkpoint");
-  }
-
 
   SETTINGS.loadFromFile();
   APP_STATE.loadFromFile();
@@ -358,7 +350,6 @@ void setup() {
   I18N.setLanguage(static_cast<Language>(SETTINGS.language));
   KOREADER_STORE.loadFromFile();
   OPDS_STORE.loadFromFile();
-  READING_STATS.loadFromFile();
   UITheme::getInstance().reload();
   ButtonNavigator::setMappedInputManager(mappedInputManager);
 
@@ -401,7 +392,7 @@ void setup() {
   }
 
   // First serial output only here to avoid timing inconsistencies for power button press duration verification
-  LOG_DBG("MAIN", "Starting inkpoint version " INKPOINT_VERSION);
+  LOG_DBG("MAIN", "Starting InkPoint version " INKPOINT_VERSION);
 
   // Resolve the single boot-presentation decision. Skipping the splash also
   // skips the panel-clearing pass and the X3 initial-full-sync arming (see

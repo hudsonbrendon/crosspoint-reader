@@ -1,4 +1,4 @@
-# inkpoint Development Guide
+# InkPoint Reader Development Guide
 
 Project: Open-source e-reader firmware for Xteink X4 (ESP32-C3)
 Mission: Provide a lightweight, high-performance reading experience focused on EPUB rendering on constrained hardware.
@@ -896,8 +896,8 @@ rm -rf /path/to/sd/.inkpoint/epub_<hash>/sections/
 **Source**: `lib/Epub/Epub/Section.cpp`, `lib/Epub/Epub/BookMetadataCache.cpp`
 
 **Current Versions** (as of docs/file-formats.md):
-- `book.bin`: **Version 7** (metadata structure)
-- `section.bin`: **Version 25** (layout structure)
+- `book.bin`: **Version 5** (metadata structure)
+- `section.bin`: **Version 24** (layout structure)
 
 **Version Increment Rules**:
 1. **ALWAYS increment version** BEFORE changing binary structure
@@ -907,7 +907,7 @@ rm -rf /path/to/sd/.inkpoint/epub_<hash>/sections/
 **Example** (incrementing section format version):
 ```cpp
 // lib/Epub/Epub/Section.cpp
-static constexpr uint8_t SECTION_FILE_VERSION = 26;  // Was 25, now 26
+static constexpr uint8_t SECTION_FILE_VERSION = 25;  // Was 24, now 25
 
 // Add new field to structure
 struct PageLine {

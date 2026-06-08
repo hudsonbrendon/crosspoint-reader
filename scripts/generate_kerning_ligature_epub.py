@@ -214,7 +214,7 @@ def create_cover_image():
 
 BOOK_UUID = str(uuid.uuid4())
 TITLE = "Kerning &amp; Ligature Edge Cases"
-AUTHOR = "inkpoint Test Fixtures"
+AUTHOR = "Crosspoint Test Fixtures"
 DATE = datetime.now().strftime("%Y-%m-%d")
 
 # ── XHTML content pages ──────────────────────────────────────────────

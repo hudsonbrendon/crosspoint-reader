@@ -1,36 +1,72 @@
 # Webserver Endpoints
 
-This document describes the HTTP, WebSocket, WebDAV, and discovery endpoints
-available while inkpoint is in File Transfer or Calibre Wireless mode.
+This document describes all HTTP and WebSocket endpoints available on the InkPoint Reader webserver.
 
-- HTTP server: port 80
-- WebSocket upload server: port 81
-- UDP discovery listener: port 8134
-- WebDAV: port 80, handled by the same HTTP server
+- [Webserver Endpoints](#webserver-endpoints)
+  - [Overview](#overview)
+  - [HTTP Endpoints](#http-endpoints)
+    - [GET `/` - Home Page](#get----home-page)
+    - [GET `/files` - File Browser Page](#get-files---file-browser-page)
+    - [GET `/api/status` - Device Status](#get-apistatus---device-status)
+    - [GET `/api/files` - List Files](#get-apifiles---list-files)
+    - [POST `/upload` - Upload File](#post-upload---upload-file)
+    - [POST `/mkdir` - Create Folder](#post-mkdir---create-folder)
+    - [POST `/delete` - Delete File or Folder](#post-delete---delete-file-or-folder)
+  - [WebSocket Endpoint](#websocket-endpoint)
+    - [Port 81 - Fast Binary Upload](#port-81---fast-binary-upload)
+  - [Network Modes](#network-modes)
+    - [Station Mode (STA)](#station-mode-sta)
+    - [Access Point Mode (AP)](#access-point-mode-ap)
+  - [Notes](#notes)
 
-Examples use `inkpoint.local`. If mDNS does not resolve on your network, use
-the IP address shown on the device screen.
 
-## HTTP Pages
+## Overview
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| `GET` | `/` | Home/status page |
-| `GET` | `/files` | File manager page |
-| `GET` | `/settings` | Web settings page |
-| `GET` | `/fonts` | SD-card font manager page |
-| `GET` | `/js/jszip.min.js` | JavaScript asset used by the file manager |
+The InkPoint Reader exposes a webserver for file management and device monitoring:
 
-## Device Status
+- **HTTP Server**: Port 80
+- **WebSocket Server**: Port 81 (for fast binary uploads)
 
-### `GET /api/status`
+---
 
+## HTTP Endpoints
+
+### GET `/` - Home Page
+
+Serves the home page HTML interface.
+
+**Request:**
+```bash
+curl http://inkpoint.local/
+```
+
+**Response:** HTML page (200 OK)
+
+---
+
+### GET `/files` - File Browser Page
+
+Serves the file browser HTML interface.
+
+**Request:**
+```bash
+curl http://inkpoint.local/files
+```
+
+**Response:** HTML page (200 OK)
+
+---
+
+### GET `/api/status` - Device Status
+
+Returns JSON with device status information.
+
+**Request:**
 ```bash
 curl http://inkpoint.local/api/status
 ```
 
-Response:
-
+**Response (200 OK):**
 ```json
 {
   "version": "1.0.0",
@@ -38,463 +74,259 @@ Response:
   "mode": "STA",
   "rssi": -45,
   "freeHeap": 123456,
-  "uptime": 3600,
-  "device": "X4"
+  "uptime": 3600
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `version` | string | Firmware version |
-| `ip` | string | Device IP address |
-| `mode` | string | `"STA"` for joined Wi-Fi or `"AP"` for hotspot mode |
-| `rssi` | number | Wi-Fi RSSI in dBm; `0` in AP mode |
-| `freeHeap` | number | Free heap in bytes |
-| `uptime` | number | Seconds since boot |
-| `device` | string | `"X3"` or `"X4"` hardware detection |
+| Field      | Type   | Description                                               |
+| ---------- | ------ | --------------------------------------------------------- |
+| `version`  | string | InkPoint firmware version                               |
+| `ip`       | string | Device IP address                                         |
+| `mode`     | string | `"STA"` (connected to WiFi) or `"AP"` (access point mode) |
+| `rssi`     | number | WiFi signal strength in dBm (0 in AP mode)                |
+| `freeHeap` | number | Free heap memory in bytes                                 |
+| `uptime`   | number | Seconds since device boot                                 |
 
-## File Management
+---
 
-### `GET /api/files`
+### GET `/api/files` - List Files
 
-Lists files and folders under a directory.
+Returns a JSON array of files and folders in the specified directory.
 
+**Request:**
 ```bash
+# List root directory
+curl http://inkpoint.local/api/files
+
+# List specific directory
 curl "http://inkpoint.local/api/files?path=/Books"
 ```
 
-Query parameters:
+**Query Parameters:**
 
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `path` | No | `/` | Directory to list |
+| Parameter | Required | Default | Description            |
+| --------- | -------- | ------- | ---------------------- |
+| `path`    | No       | `/`     | Directory path to list |
 
-Response:
-
+**Response (200 OK):**
 ```json
 [
-  {"name":"MyBook.epub","size":1234567,"isDirectory":false,"isEpub":true},
-  {"name":"Notes","size":0,"isDirectory":true,"isEpub":false}
+  {"name": "MyBook.epub", "size": 1234567, "isDirectory": false, "isEpub": true},
+  {"name": "Notes", "size": 0, "isDirectory": true, "isEpub": false},
+  {"name": "document.pdf", "size": 54321, "isDirectory": false, "isEpub": false}
 ]
 ```
 
-Hidden dotfiles are omitted unless the device setting `showHiddenFiles` is
-enabled. `System Volume Information` and `XTCache` are always hidden/protected.
+| Field         | Type    | Description                              |
+| ------------- | ------- | ---------------------------------------- |
+| `name`        | string  | File or folder name                      |
+| `size`        | number  | Size in bytes (0 for directories)        |
+| `isDirectory` | boolean | `true` if the item is a folder           |
+| `isEpub`      | boolean | `true` if the file has `.epub` extension |
 
-### `GET /download`
+**Notes:**
+- Hidden files (starting with `.`) are automatically filtered out
+- System folders (`System Volume Information`, `XTCache`) are hidden
 
-Downloads a file from the SD card.
+---
 
+### POST `/upload` - Upload File
+
+Uploads a file to the SD card via multipart form data.
+
+**Request:**
 ```bash
-curl -OJ "http://inkpoint.local/download?path=/Books/MyBook.epub"
-```
+# Upload to root directory
+curl -X POST -F "file=@mybook.epub" http://inkpoint.local/upload
 
-Query parameters:
-
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `path` | Yes | File path to download |
-
-Protected dotfiles, `System Volume Information`, and `XTCache` cannot be
-downloaded. EPUB files are served as `application/epub+zip`; other files use
-`application/octet-stream`.
-
-### `POST /upload`
-
-Uploads a file with HTTP multipart form data.
-
-```bash
+# Upload to specific directory
 curl -X POST -F "file=@mybook.epub" "http://inkpoint.local/upload?path=/Books"
 ```
 
-Query parameters:
+**Query Parameters:**
 
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `path` | No | `/` | Destination directory |
+| Parameter | Required | Default | Description                     |
+| --------- | -------- | ------- | ------------------------------- |
+| `path`    | No       | `/`     | Target directory for the upload |
 
-Successful response:
-
-```text
+**Response (200 OK):**
+```
 File uploaded successfully: mybook.epub
 ```
 
-Notes:
+**Error Responses:**
 
-- Existing files with the same name are overwritten.
-- EPUB cache data for the uploaded path is cleared after a successful upload.
-- HTTP upload uses a 4 KB write buffer before flushing to the SD card.
+| Status | Body                                            | Cause                       |
+| ------ | ----------------------------------------------- | --------------------------- |
+| 400    | `Failed to create file on SD card`              | Cannot create file          |
+| 400    | `Failed to write to SD card - disk may be full` | Write error during upload   |
+| 400    | `Failed to write final data to SD card`         | Error flushing final buffer |
+| 400    | `Upload aborted`                                | Client aborted the upload   |
+| 400    | `Unknown error during upload`                   | Unspecified error           |
 
-### `POST /mkdir`
+**Notes:**
+- Existing files with the same name will be overwritten
+- Uses a 4KB buffer for efficient SD card writes
 
-Creates a folder.
+---
 
+### POST `/mkdir` - Create Folder
+
+Creates a new folder on the SD card.
+
+**Request:**
 ```bash
 curl -X POST -d "name=NewFolder&path=/" http://inkpoint.local/mkdir
 ```
 
-Form parameters:
+**Form Parameters:**
 
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `name` | Yes | - | New folder name |
-| `path` | No | `/` | Parent folder |
+| Parameter | Required | Default | Description                  |
+| --------- | -------- | ------- | ---------------------------- |
+| `name`    | Yes      | -       | Name of the folder to create |
+| `path`    | No       | `/`     | Parent directory path        |
 
-### `POST /rename`
-
-Renames a file.
-
-```bash
-curl -X POST -d "path=/Books/old.epub&name=new.epub" http://inkpoint.local/rename
+**Response (200 OK):**
+```
+Folder created: NewFolder
 ```
 
-Form parameters:
+**Error Responses:**
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `path` | Yes | Existing file path |
-| `name` | Yes | New file name, not a path |
+| Status | Body                          | Cause                         |
+| ------ | ----------------------------- | ----------------------------- |
+| 400    | `Missing folder name`         | `name` parameter not provided |
+| 400    | `Folder name cannot be empty` | Empty folder name             |
+| 400    | `Folder already exists`       | Folder with same name exists  |
+| 500    | `Failed to create folder`     | SD card error                 |
 
-Only files can be renamed through this endpoint. The old EPUB cache path is
-cleared before the rename.
+---
 
-### `POST /move`
+### POST `/delete` - Delete File or Folder
 
-Moves a file into an existing folder.
+Deletes one or more files or empty folders from the SD card.
 
+**Request:**
 ```bash
-curl -X POST -d "path=/Books/mybook.epub&dest=/Read" http://inkpoint.local/move
-```
-
-Form parameters:
-
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `path` | Yes | Existing file path |
-| `dest` | Yes | Existing destination folder |
-
-Only files can be moved through this endpoint. The old EPUB cache path is
-cleared before the move.
-
-### `POST /delete`
-
-Deletes one or more files or empty folders.
-
-```bash
+# Delete a file
 curl -X POST -d "path=/Books/mybook.epub" http://inkpoint.local/delete
+
+# Delete an empty folder
+curl -X POST -d "path=/OldFolder" http://inkpoint.local/delete
+
+# Delete multiple items
 curl -X POST -d 'paths=["/Books/old.epub","/OldFolder"]' http://inkpoint.local/delete
 ```
 
-Form parameters:
+**Form Parameters:**
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `path` | Yes, unless `paths` is provided | Single path to delete |
-| `paths` | Yes, unless `path` is provided | JSON array of paths to delete |
+| Parameter | Required | Default | Description |
+| --------- | -------- | ------- | ----------- |
+| `path`    | Yes, unless `paths` is provided | - | Path to one item to delete |
+| `paths`   | Yes, unless `path` is provided | - | JSON array of paths to delete |
 
-Protected items cannot be deleted. Non-empty folders are rejected. EPUB cache
-data for deleted files is cleared.
-
-## Settings API
-
-### `GET /api/settings`
-
-Returns a streamed JSON array of editable settings. Each item contains common
-fields plus type-specific fields.
-
-```bash
-curl http://inkpoint.local/api/settings
-```
-
-Example item:
-
-```json
-{
-  "key": "fontSize",
-  "name": "Font Size",
-  "category": "Reader",
-  "type": "enum",
-  "value": 1,
-  "options": ["Small", "Medium", "Large"]
-}
-```
-
-Types:
-
-| Type | Extra fields |
-|------|--------------|
-| `toggle` | `value` (`0` or `1`) |
-| `enum` | `value`, `options` |
-| `value` | `value`, `min`, `max`, `step` |
-| `string` | `value` |
-
-The font-family setting includes SD-card font families when they are installed.
-
-### `POST /api/settings`
-
-Applies a partial settings update from a JSON object.
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"fontSize":2,"showHiddenFiles":1}' \
-  http://inkpoint.local/api/settings
-```
-
-Successful response:
-
+**Response (200 OK):**
 ```text
-Applied 2 setting(s)
+All items deleted successfully
 ```
 
-## Font Management API
+**Error Responses:**
 
-### `GET /api/fonts`
+| Status | Body                                        | Cause                              |
+| ------ | ------------------------------------------- | ---------------------------------- |
+| 400    | `Missing "path" or "paths" argument`        | Neither parameter was provided     |
+| 400    | `Provide either 'path' or 'paths', not both` | Both delete parameters were sent   |
+| 400    | `Invalid paths format`                      | `paths` was not valid JSON         |
+| 400    | `No paths provided`                         | `paths` was an empty JSON array    |
+| 500    | `Failed to delete some items: ...`          | One or more paths could not be deleted |
 
-Lists installed SD-card font families.
+**Protected Items:**
+- Files/folders starting with `.`
+- `System Volume Information`
+- `XTCache`
 
-```bash
-curl http://inkpoint.local/api/fonts
+---
+
+## WebSocket Endpoint
+
+### Port 81 - Fast Binary Upload
+
+A WebSocket endpoint for high-speed binary file uploads. More efficient than HTTP multipart for large files.
+
+**Connection:**
 ```
-
-Response:
-
-```json
-{
-  "maxFamilies": 128,
-  "families": [
-    {
-      "name": "Literata",
-      "sizes": [12, 14, 16, 18],
-      "files": [
-        {"name": "Literata_12.cpfont", "size": 123456}
-      ]
-    }
-  ]
-}
-```
-
-### `POST /api/fonts/upload`
-
-Uploads one `.cpfont` file into a family folder.
-
-```bash
-curl -X POST \
-  -F "family=Literata" \
-  -F "file=@Literata_12.cpfont" \
-  http://inkpoint.local/api/fonts/upload
-```
-
-The handler validates the family name, `.cpfont` filename, and `CPFONT` magic
-bytes before accepting the file.
-
-Successful response:
-
-```json
-{"ok":true}
-```
-
-### `POST /api/fonts/delete`
-
-Deletes an installed font family.
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"family":"Literata"}' \
-  http://inkpoint.local/api/fonts/delete
-```
-
-Successful response:
-
-```json
-{"ok":true}
-```
-
-## OPDS Server API
-
-### `GET /api/opds`
-
-Lists saved OPDS servers. Passwords are never returned.
-
-```bash
-curl http://inkpoint.local/api/opds
-```
-
-Response:
-
-```json
-[
-  {
-    "index": 0,
-    "name": "My Catalog",
-    "url": "http://calibre.local:8080/opds",
-    "username": "reader",
-    "hasPassword": true
-  }
-]
-```
-
-### `POST /api/opds`
-
-Adds or updates an OPDS server. Include `index` to update an existing entry.
-If `password` is omitted during an update, the existing password is preserved.
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"name":"My Catalog","url":"http://calibre.local:8080/opds","username":"reader","password":"secret"}' \
-  http://inkpoint.local/api/opds
-```
-
-### `POST /api/opds/delete`
-
-Deletes an OPDS server by index.
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"index":0}' \
-  http://inkpoint.local/api/opds/delete
-```
-
-## Wi-Fi Credential API
-
-### `GET /api/wifi`
-
-Lists saved Wi-Fi networks. Passwords are never returned.
-
-```bash
-curl http://inkpoint.local/api/wifi
-```
-
-Response:
-
-```json
-[
-  {
-    "index": 0,
-    "ssid": "HomeWiFi",
-    "hasPassword": true,
-    "isLastConnected": true
-  }
-]
-```
-
-### `POST /api/wifi`
-
-Adds or updates a saved Wi-Fi network. Include `index` to update an existing
-entry. If `password` is omitted during an update, the existing password is
-preserved.
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"ssid":"HomeWiFi","password":"secret"}' \
-  http://inkpoint.local/api/wifi
-```
-
-### `POST /api/wifi/delete`
-
-Deletes a saved Wi-Fi network by index.
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"index":0}' \
-  http://inkpoint.local/api/wifi/delete
-```
-
-## WebSocket Upload
-
-### Port 81
-
-The WebSocket path is used for fast binary uploads from the file manager and
-Calibre plugin workflows.
-
-Connection:
-
-```text
 ws://inkpoint.local:81/
 ```
 
-Protocol:
+**Protocol:**
 
-1. Client sends text: `START:<filename>:<size>:<path>`
-2. Server replies `READY`
-3. Client sends binary chunks
-4. Server sends `PROGRESS:<received>:<total>` every 64 KB or at completion
-5. Server sends `DONE` when complete or `ERROR:<message>` on failure
+1. **Client** sends TEXT message: `START:<filename>:<size>:<path>`
+2. **Server** responds with TEXT: `READY`
+3. **Client** sends BINARY messages with file data chunks
+4. **Server** sends TEXT progress updates: `PROGRESS:<received>:<total>`
+5. **Server** sends TEXT when complete: `DONE` or `ERROR:<message>`
 
-Example session:
+**Example Session:**
 
-```text
-Client -> START:mybook.epub:1234567:/Books
-Server -> READY
-Client -> [binary chunk]
-Server -> PROGRESS:65536:1234567
+```
+Client -> "START:mybook.epub:1234567:/Books"
+Server -> "READY"
+Client -> [binary chunk 1]
+Client -> [binary chunk 2]
+Server -> "PROGRESS:65536:1234567"
+Client -> [binary chunk 3]
 ...
-Server -> DONE
+Server -> "PROGRESS:1234567:1234567"
+Server -> "DONE"
 ```
 
-Error messages include:
+**Error Messages:**
 
-| Message | Cause |
-|---------|-------|
-| `ERROR:Upload already in progress` | A second upload was started before the first completed |
-| `ERROR:Invalid START format` | Malformed START message or invalid size token |
-| `ERROR:Failed to create file` | Destination file could not be opened |
-| `ERROR:No upload in progress` | Binary data arrived without a matching START |
-| `ERROR:Upload overflow` | Client sent more bytes than declared |
-| `ERROR:Write failed - disk full?` | SD write failed |
+| Message                           | Cause                              |
+| --------------------------------- | ---------------------------------- |
+| `ERROR:Failed to create file`     | Cannot create file on SD card      |
+| `ERROR:Invalid START format`      | Malformed START message            |
+| `ERROR:No upload in progress`     | Binary data received without START |
+| `ERROR:Write failed - disk full?` | SD card write error                |
 
-Incomplete WebSocket uploads are deleted on disconnect or error.
+**Example with `websocat`:**
+```bash
+# Interactive session
+websocat ws://inkpoint.local:81
 
-## WebDAV
-
-The same HTTP server registers a WebDAV-compatible handler for file manager clients.
-
-Supported methods:
-
-```text
-OPTIONS, GET, HEAD, PUT, DELETE, PROPFIND, MKCOL, MOVE, COPY, LOCK, UNLOCK
+# Then type:
+START:mybook.epub:1234567:/Books
+# Wait for READY, then send binary data
 ```
 
-Notes:
+**Notes:**
+- Progress updates are sent every 64KB or at completion
+- Disconnection during upload will delete the incomplete file
+- Existing files with the same name will be overwritten
 
-- `PUT` writes to a temporary `.davtmp` file first, then renames it into place.
-- Protected paths are rejected.
-- `LOCK` and `UNLOCK` are accepted for client compatibility only. The server
-  does not implement full WebDAV Class 2 locking semantics such as persistent
-  locks or lock discovery.
-
-## UDP Discovery
-
-The server listens on UDP port `8134`. When it receives the text payload
-`hello`, it replies to the sender with:
-
-```text
-inkpoint (on <hostname>);81
-```
-
-The final field is the WebSocket upload port.
+---
 
 ## Network Modes
 
-### Station Mode (STA)
+The device can operate in two network modes:
 
-- Device joins an existing 2.4 GHz Wi-Fi network.
-- `inkpoint.local` is advertised with mDNS when available.
-- `/api/status` returns `"mode": "STA"` and RSSI in dBm.
+### Station Mode (STA)
+- Device connects to an existing WiFi network
+- IP address assigned by router/DHCP
+- `mode` field in `/api/status` returns `"STA"`
+- `rssi` field shows signal strength
 
 ### Access Point Mode (AP)
+- Device creates its own WiFi hotspot
+- Default IP is typically `192.168.4.1`
+- `mode` field in `/api/status` returns `"AP"`
+- `rssi` field returns `0`
 
-- Device creates an open hotspot named `inkpoint-Reader`.
-- The device shows a Wi-Fi QR code and URL QR code.
-- The fallback IP is typically `192.168.4.1`.
-- `/api/status` returns `"mode": "AP"` and `"rssi": 0`.
+---
 
-### Calibre Wireless
+## Notes
 
-Calibre Wireless starts the same web server in STA mode and displays setup
-instructions plus WebSocket upload progress on the device screen.
+- These examples use `inkpoint.local`. If your network does not support mDNS or the address does not resolve, replace it with the specific **IP Address** displayed on your device screen (e.g., `http://192.168.1.102/`).
+- All paths on the SD card start with `/`
+- Trailing slashes are automatically stripped (except for root `/`)
+- The webserver uses chunked transfer encoding for file listings
