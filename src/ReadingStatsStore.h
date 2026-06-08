@@ -12,7 +12,7 @@ bool loadReadingStats(ReadingStatsStore& store, const char* json);
 
 // Singleton wrapper around the pure ReadingStatsAggregator that adds SD-card
 // persistence. Mirrors RecentBooksStore. Reading data is stored at
-// /.crosspoint/reading_stats.json.
+// /.inkpoint/reading_stats.json.
 class ReadingStatsStore {
   static ReadingStatsStore instance;
   reading_stats::ReadingStatsAggregator aggregator;

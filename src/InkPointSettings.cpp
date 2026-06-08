@@ -1,4 +1,4 @@
-#include "CrossPointSettings.h"
+#include "InkPointSettings.h"
 
 #include <HalStorage.h>
 #include <JsonSettingsIO.h>
@@ -12,7 +12,7 @@
 #include "fontIds.h"
 
 // Initialize the static instance
-CrossPointSettings CrossPointSettings::instance;
+InkPointSettings InkPointSettings::instance;
 
 void readAndValidate(HalFile& file, uint8_t& member, const uint8_t maxValue) {
   uint8_t tempValue;
@@ -24,46 +24,46 @@ void readAndValidate(HalFile& file, uint8_t& member, const uint8_t maxValue) {
 
 namespace {
 constexpr uint8_t SETTINGS_FILE_VERSION = 1;
-constexpr char SETTINGS_FILE_BIN[] = "/.crosspoint/settings.bin";
-constexpr char SETTINGS_FILE_JSON[] = "/.crosspoint/settings.json";
-constexpr char SETTINGS_FILE_BAK[] = "/.crosspoint/settings.bin.bak";
-constexpr char LANG_FILE_BIN[] = "/.crosspoint/language.bin";
-constexpr char LANG_FILE_BAK[] = "/.crosspoint/language.bin.bak";
+constexpr char SETTINGS_FILE_BIN[] = "/.inkpoint/settings.bin";
+constexpr char SETTINGS_FILE_JSON[] = "/.inkpoint/settings.json";
+constexpr char SETTINGS_FILE_BAK[] = "/.inkpoint/settings.bin.bak";
+constexpr char LANG_FILE_BIN[] = "/.inkpoint/language.bin";
+constexpr char LANG_FILE_BAK[] = "/.inkpoint/language.bin.bak";
 
 // Convert legacy front button layout into explicit logical->hardware mapping.
-void applyLegacyFrontButtonLayout(CrossPointSettings& settings) {
-  switch (static_cast<CrossPointSettings::FRONT_BUTTON_LAYOUT>(settings.frontButtonLayout)) {
-    case CrossPointSettings::LEFT_RIGHT_BACK_CONFIRM:
-      settings.frontButtonBack = CrossPointSettings::FRONT_HW_LEFT;
-      settings.frontButtonConfirm = CrossPointSettings::FRONT_HW_RIGHT;
-      settings.frontButtonLeft = CrossPointSettings::FRONT_HW_BACK;
-      settings.frontButtonRight = CrossPointSettings::FRONT_HW_CONFIRM;
+void applyLegacyFrontButtonLayout(InkPointSettings& settings) {
+  switch (static_cast<InkPointSettings::FRONT_BUTTON_LAYOUT>(settings.frontButtonLayout)) {
+    case InkPointSettings::LEFT_RIGHT_BACK_CONFIRM:
+      settings.frontButtonBack = InkPointSettings::FRONT_HW_LEFT;
+      settings.frontButtonConfirm = InkPointSettings::FRONT_HW_RIGHT;
+      settings.frontButtonLeft = InkPointSettings::FRONT_HW_BACK;
+      settings.frontButtonRight = InkPointSettings::FRONT_HW_CONFIRM;
       break;
-    case CrossPointSettings::LEFT_BACK_CONFIRM_RIGHT:
-      settings.frontButtonBack = CrossPointSettings::FRONT_HW_CONFIRM;
-      settings.frontButtonConfirm = CrossPointSettings::FRONT_HW_LEFT;
-      settings.frontButtonLeft = CrossPointSettings::FRONT_HW_BACK;
-      settings.frontButtonRight = CrossPointSettings::FRONT_HW_RIGHT;
+    case InkPointSettings::LEFT_BACK_CONFIRM_RIGHT:
+      settings.frontButtonBack = InkPointSettings::FRONT_HW_CONFIRM;
+      settings.frontButtonConfirm = InkPointSettings::FRONT_HW_LEFT;
+      settings.frontButtonLeft = InkPointSettings::FRONT_HW_BACK;
+      settings.frontButtonRight = InkPointSettings::FRONT_HW_RIGHT;
       break;
-    case CrossPointSettings::BACK_CONFIRM_RIGHT_LEFT:
-      settings.frontButtonBack = CrossPointSettings::FRONT_HW_BACK;
-      settings.frontButtonConfirm = CrossPointSettings::FRONT_HW_CONFIRM;
-      settings.frontButtonLeft = CrossPointSettings::FRONT_HW_RIGHT;
-      settings.frontButtonRight = CrossPointSettings::FRONT_HW_LEFT;
+    case InkPointSettings::BACK_CONFIRM_RIGHT_LEFT:
+      settings.frontButtonBack = InkPointSettings::FRONT_HW_BACK;
+      settings.frontButtonConfirm = InkPointSettings::FRONT_HW_CONFIRM;
+      settings.frontButtonLeft = InkPointSettings::FRONT_HW_RIGHT;
+      settings.frontButtonRight = InkPointSettings::FRONT_HW_LEFT;
       break;
-    case CrossPointSettings::BACK_CONFIRM_LEFT_RIGHT:
+    case InkPointSettings::BACK_CONFIRM_LEFT_RIGHT:
     default:
-      settings.frontButtonBack = CrossPointSettings::FRONT_HW_BACK;
-      settings.frontButtonConfirm = CrossPointSettings::FRONT_HW_CONFIRM;
-      settings.frontButtonLeft = CrossPointSettings::FRONT_HW_LEFT;
-      settings.frontButtonRight = CrossPointSettings::FRONT_HW_RIGHT;
+      settings.frontButtonBack = InkPointSettings::FRONT_HW_BACK;
+      settings.frontButtonConfirm = InkPointSettings::FRONT_HW_CONFIRM;
+      settings.frontButtonLeft = InkPointSettings::FRONT_HW_LEFT;
+      settings.frontButtonRight = InkPointSettings::FRONT_HW_RIGHT;
       break;
   }
 }
 
 }  // namespace
 
-void CrossPointSettings::validateFrontButtonMapping(CrossPointSettings& settings) {
+void InkPointSettings::validateFrontButtonMapping(InkPointSettings& settings) {
   const uint8_t mapping[] = {settings.frontButtonBack, settings.frontButtonConfirm, settings.frontButtonLeft,
                              settings.frontButtonRight};
   for (size_t i = 0; i < 4; i++) {
@@ -79,7 +79,7 @@ void CrossPointSettings::validateFrontButtonMapping(CrossPointSettings& settings
   }
 }
 
-uint8_t CrossPointSettings::sleepTimeoutEnumToMinutes(const uint8_t legacyValue) {
+uint8_t InkPointSettings::sleepTimeoutEnumToMinutes(const uint8_t legacyValue) {
   switch (legacyValue) {
     case SLEEP_1_MIN:
       return 1;
@@ -95,12 +95,12 @@ uint8_t CrossPointSettings::sleepTimeoutEnumToMinutes(const uint8_t legacyValue)
   }
 }
 
-bool CrossPointSettings::saveToFile() const {
-  Storage.mkdir("/.crosspoint");
+bool InkPointSettings::saveToFile() const {
+  Storage.mkdir("/.inkpoint");
   return JsonSettingsIO::saveSettings(*this, SETTINGS_FILE_JSON);
 }
 
-bool CrossPointSettings::loadFromFile() {
+bool InkPointSettings::loadFromFile() {
   // Try JSON first
   if (Storage.exists(SETTINGS_FILE_JSON)) {
     String json = Storage.readFile(SETTINGS_FILE_JSON);
@@ -138,7 +138,7 @@ bool CrossPointSettings::loadFromFile() {
   return migrateLanguageBinaryFile();
 }
 
-bool CrossPointSettings::migrateLanguageBinaryFile() {
+bool InkPointSettings::migrateLanguageBinaryFile() {
   // V1_LANGUAGES / V1_LANGUAGE_COUNT are emitted by gen_i18n.py with the
   // frozen enum order from 2f969a9.
   if (!Storage.exists(LANG_FILE_BIN)) return false;
@@ -161,7 +161,7 @@ bool CrossPointSettings::migrateLanguageBinaryFile() {
   return true;
 }
 
-bool CrossPointSettings::loadFromBinaryFile() {
+bool InkPointSettings::loadFromBinaryFile() {
   HalFile inputFile;
   if (!Storage.openFileForRead("CPS", SETTINGS_FILE_BIN, inputFile)) {
     return false;
@@ -273,7 +273,7 @@ bool CrossPointSettings::loadFromBinaryFile() {
   } while (false);
 
   if (frontButtonMappingRead) {
-    CrossPointSettings::validateFrontButtonMapping(*this);
+    InkPointSettings::validateFrontButtonMapping(*this);
   } else {
     applyLegacyFrontButtonLayout(*this);
   }
@@ -282,7 +282,7 @@ bool CrossPointSettings::loadFromBinaryFile() {
   return true;
 }
 
-float CrossPointSettings::getReaderLineCompression() const {
+float InkPointSettings::getReaderLineCompression() const {
   // SD card fonts use same compression as Bookerly (the most neutral values)
   if (sdFontFamilyName[0] != '\0') {
     switch (lineSpacing) {
@@ -321,14 +321,14 @@ float CrossPointSettings::getReaderLineCompression() const {
   }
 }
 
-unsigned long CrossPointSettings::getSleepTimeoutMs() const {
+unsigned long InkPointSettings::getSleepTimeoutMs() const {
   if (sleepTimeoutMinutes >= SLEEP_TIMEOUT_NEVER_MINUTES) return 0UL;
   const uint8_t minutes =
       std::clamp(sleepTimeoutMinutes, MIN_SLEEP_TIMEOUT_MINUTES, static_cast<uint8_t>(SLEEP_TIMEOUT_NEVER_MINUTES - 1));
   return static_cast<unsigned long>(minutes) * 60UL * 1000UL;
 }
 
-int CrossPointSettings::getRefreshFrequency() const {
+int InkPointSettings::getRefreshFrequency() const {
   switch (refreshFrequency) {
     case REFRESH_1:
       return 1;
@@ -344,7 +344,7 @@ int CrossPointSettings::getRefreshFrequency() const {
   }
 }
 
-int CrossPointSettings::getReaderFontId() const {
+int InkPointSettings::getReaderFontId() const {
   // Check SD card font first
   if (sdFontFamilyName[0] != '\0' && sdFontIdResolver) {
     int id = sdFontIdResolver(sdFontResolverCtx, sdFontFamilyName, fontSize);

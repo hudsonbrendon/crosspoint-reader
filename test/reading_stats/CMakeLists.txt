@@ -9,7 +9,7 @@ target_include_directories(ReadingStatsTest PRIVATE
 )
 
 target_link_libraries(ReadingStatsTest PRIVATE
-  crosspoint_test_common
+  inkpoint_test_common
   GTest::gtest_main
 )
 

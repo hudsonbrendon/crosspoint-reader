@@ -1,6 +1,6 @@
 # Testing and Debugging
 
-CrossPoint runs on real hardware, so debugging usually combines local build checks and on-device logs.
+inkpoint runs on real hardware, so debugging usually combines local build checks and on-device logs.
 
 ## Local checks
 
@@ -40,7 +40,7 @@ python3 scripts/debugging_monitor.py
 - Exact steps to reproduce
 - Expected vs actual behavior
 - Serial logs from boot through failure
-- Whether issue reproduces after clearing `.crosspoint/` cache on SD card
+- Whether issue reproduces after clearing `.inkpoint/` cache on SD card
 
 ## Common troubleshooting references
 

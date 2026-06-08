@@ -14,9 +14,9 @@ namespace {
 constexpr uint8_t WIFI_FILE_VERSION = 2;
 
 // File paths
-constexpr char WIFI_FILE_BIN[] = "/.crosspoint/wifi.bin";
-constexpr char WIFI_FILE_JSON[] = "/.crosspoint/wifi.json";
-constexpr char WIFI_FILE_BAK[] = "/.crosspoint/wifi.bin.bak";
+constexpr char WIFI_FILE_BIN[] = "/.inkpoint/wifi.bin";
+constexpr char WIFI_FILE_JSON[] = "/.inkpoint/wifi.json";
+constexpr char WIFI_FILE_BAK[] = "/.inkpoint/wifi.bin.bak";
 
 // Legacy obfuscation key - "CrossPoint" in ASCII (only used for binary migration)
 constexpr uint8_t LEGACY_OBFUSCATION_KEY[] = {0x43, 0x72, 0x6F, 0x73, 0x73, 0x50, 0x6F, 0x69, 0x6E, 0x74};
@@ -30,7 +30,7 @@ void legacyDeobfuscate(std::string& data) {
 }  // namespace
 
 bool WifiCredentialStore::saveToFile() const {
-  Storage.mkdir("/.crosspoint");
+  Storage.mkdir("/.inkpoint");
   return JsonSettingsIO::saveWifi(*this, WIFI_FILE_JSON);
 }
 

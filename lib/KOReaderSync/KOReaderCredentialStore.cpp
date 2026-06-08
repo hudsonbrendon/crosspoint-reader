@@ -16,9 +16,9 @@ namespace {
 constexpr uint8_t KOREADER_FILE_VERSION = 1;
 
 // File paths
-constexpr char KOREADER_FILE_BIN[] = "/.crosspoint/koreader.bin";
-constexpr char KOREADER_FILE_JSON[] = "/.crosspoint/koreader.json";
-constexpr char KOREADER_FILE_BAK[] = "/.crosspoint/koreader.bin.bak";
+constexpr char KOREADER_FILE_BIN[] = "/.inkpoint/koreader.bin";
+constexpr char KOREADER_FILE_JSON[] = "/.inkpoint/koreader.json";
+constexpr char KOREADER_FILE_BAK[] = "/.inkpoint/koreader.bin.bak";
 
 // Default sync server URL
 constexpr char DEFAULT_SERVER_URL[] = "https://sync.koreader.rocks:443";
@@ -35,7 +35,7 @@ void legacyDeobfuscate(std::string& data) {
 }  // namespace
 
 bool KOReaderCredentialStore::saveToFile() const {
-  Storage.mkdir("/.crosspoint");
+  Storage.mkdir("/.inkpoint");
   return KOReaderJsonIO::save(*this, KOREADER_FILE_JSON);
 }
 

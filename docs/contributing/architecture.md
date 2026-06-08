@@ -1,6 +1,6 @@
 # Architecture Overview
 
-CrossPoint is firmware for the Xteink X4 (unaffiliated with Xteink), built with PlatformIO targeting the ESP32-C3 microcontroller.
+inkpoint is firmware for the Xteink X4 (unaffiliated with Xteink), built with PlatformIO targeting the ESP32-C3 microcontroller.
 
 At a high level, it is firmware that uses an activity-driven application architecture loop with persistent settings/state, SD-card-first caching, and a rendering pipeline optimized for e-ink constraints.
 
@@ -17,7 +17,7 @@ graph TD
     E --> H[Home/Library/Settings flows]
     E --> I[Network/Web server flows]
     G --> J[lib/Epub parsing + layout + hyphenation]
-    J --> K[SD cache in .crosspoint]
+    J --> K[SD cache in .inkpoint]
     E --> L[GfxRenderer]
     L --> M[E-ink display buffer]
 ```
@@ -136,13 +136,13 @@ Notes:
 
 Two singletons are central:
 
-- `src/CrossPointSettings.h` (`SETTINGS`): user preferences and behavior flags
-- `src/CrossPointState.h` (`APP_STATE`): runtime/session state such as current book and sleep context
+- `src/inkpointSettings.h` (`SETTINGS`): user preferences and behavior flags
+- `src/inkpointState.h` (`APP_STATE`): runtime/session state such as current book and sleep context
 
 Typical persisted areas on SD:
 
 ```text
-/.crosspoint/
+/.inkpoint/
   epub_<hash>/
     book.bin
     css_rules.cache
@@ -160,7 +160,7 @@ binary cache formats, see `docs/file-formats.md`.
 
 ## Networking architecture
 
-Network file transfer is controlled by `src/activities/network/CrossPointWebServerActivity.h` and served by `src/network/CrossPointWebServer.h`.
+Network file transfer is controlled by `src/activities/network/inkpointWebServerActivity.h` and served by `src/network/inkpointWebServer.h`.
 
 Modes:
 

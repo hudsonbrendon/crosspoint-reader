@@ -2,8 +2,8 @@
 
 #include <vector>
 
-class CrossPointSettings;
-class CrossPointState;
+class InkPointSettings;
+class InkPointState;
 class WifiCredentialStore;
 class RecentBooksStore;
 class OpdsServerStore;
@@ -12,13 +12,13 @@ struct BookmarkEntry;
 
 namespace JsonSettingsIO {
 
-// CrossPointSettings
-bool saveSettings(const CrossPointSettings& s, const char* path);
-bool loadSettings(CrossPointSettings& s, const char* json, bool* needsResave = nullptr);
+// InkPointSettings
+bool saveSettings(const InkPointSettings& s, const char* path);
+bool loadSettings(InkPointSettings& s, const char* json, bool* needsResave = nullptr);
 
-// CrossPointState
-bool saveState(const CrossPointState& s, const char* path);
-bool loadState(CrossPointState& s, const char* json);
+// InkPointState
+bool saveState(const InkPointState& s, const char* path);
+bool loadState(InkPointState& s, const char* json);
 
 // WifiCredentialStore
 bool saveWifi(const WifiCredentialStore& store, const char* path);

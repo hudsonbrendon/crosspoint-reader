@@ -8,8 +8,8 @@
 #include <Serialization.h>
 #include <Utf8.h>
 
-#include "CrossPointSettings.h"
-#include "CrossPointState.h"
+#include "InkPointSettings.h"
+#include "InkPointState.h"
 #include "MappedInputManager.h"
 #include "ReaderUtils.h"
 #include "RecentBooksStore.h"
@@ -361,27 +361,27 @@ void TxtReaderActivity::renderPage() {
         int x = cachedOrientedMarginLeft;
         const bool lineIsRtl = BidiUtils::startsWithRtl(line.c_str(), BidiUtils::RTL_PARAGRAPH_PROBE_DEPTH);
         uint8_t effectiveAlignment = cachedParagraphAlignment;
-        if (lineIsRtl && (effectiveAlignment == CrossPointSettings::LEFT_ALIGN ||
-                          effectiveAlignment == CrossPointSettings::JUSTIFIED)) {
-          effectiveAlignment = CrossPointSettings::RIGHT_ALIGN;
+        if (lineIsRtl && (effectiveAlignment == InkPointSettings::LEFT_ALIGN ||
+                          effectiveAlignment == InkPointSettings::JUSTIFIED)) {
+          effectiveAlignment = InkPointSettings::RIGHT_ALIGN;
         }
         const int textWidth = renderer.getTextAdvanceX(cachedFontId, line.c_str(), EpdFontFamily::REGULAR);
 
         // Apply text alignment
         switch (effectiveAlignment) {
-          case CrossPointSettings::LEFT_ALIGN:
+          case InkPointSettings::LEFT_ALIGN:
           default:
             // x already set to left margin
             break;
-          case CrossPointSettings::CENTER_ALIGN: {
+          case InkPointSettings::CENTER_ALIGN: {
             x = cachedOrientedMarginLeft + (contentWidth - textWidth) / 2;
             break;
           }
-          case CrossPointSettings::RIGHT_ALIGN: {
+          case InkPointSettings::RIGHT_ALIGN: {
             x = cachedOrientedMarginLeft + contentWidth - textWidth;
             break;
           }
-          case CrossPointSettings::JUSTIFIED:
+          case InkPointSettings::JUSTIFIED:
             // For plain text, justified is treated as left-aligned
             // (true justification would require word spacing adjustments)
             break;
@@ -414,7 +414,7 @@ void TxtReaderActivity::renderPage() {
 void TxtReaderActivity::renderStatusBar() const {
   const float progress = totalPages > 0 ? (currentPage + 1) * 100.0f / totalPages : 0;
   std::string title;
-  if (SETTINGS.statusBarTitle != CrossPointSettings::STATUS_BAR_TITLE::HIDE_TITLE) {
+  if (SETTINGS.statusBarTitle != InkPointSettings::STATUS_BAR_TITLE::HIDE_TITLE) {
     title = txt->getTitle();
   }
   GUI.drawStatusBar(renderer, progress, currentPage + 1, totalPages, title);

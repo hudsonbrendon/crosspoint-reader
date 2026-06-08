@@ -6,16 +6,16 @@
 
 #include <cstring>
 
-#include "CrossPointSettings.h"
+#include "InkPointSettings.h"
 
 OpdsServerStore OpdsServerStore::instance;
 
 namespace {
-constexpr char OPDS_FILE_JSON[] = "/.crosspoint/opds.json";
+constexpr char OPDS_FILE_JSON[] = "/.inkpoint/opds.json";
 }  // namespace
 
 bool OpdsServerStore::saveToFile() const {
-  Storage.mkdir("/.crosspoint");
+  Storage.mkdir("/.inkpoint");
   return JsonSettingsIO::saveOpds(*this, OPDS_FILE_JSON);
 }
 
@@ -35,7 +35,7 @@ bool OpdsServerStore::loadFromFile() {
   }
 
   // No opds.json found — attempt one-time migration from the legacy single-server
-  // fields in CrossPointSettings (opdsServerUrl/opdsUsername/opdsPassword).
+  // fields in InkPointSettings (opdsServerUrl/opdsUsername/opdsPassword).
   if (migrateFromSettings()) {
     LOG_DBG("OPS", "Migrated legacy OPDS settings");
     return true;
