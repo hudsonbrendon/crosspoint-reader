@@ -135,6 +135,12 @@ class InkPointWebServer {
   void handlePostOpdsServer();
   void handleDeleteOpdsServer();
 
+  // RSS feed handlers
+  void handleRssFeedsPage() const;
+  void handleGetRssFeeds() const;
+  void handlePostRssFeed();
+  void handleDeleteRssFeed();
+
   // Wi-Fi credential handlers
   void handleGetWifiNetworks() const;
   void handlePostWifiNetwork();
