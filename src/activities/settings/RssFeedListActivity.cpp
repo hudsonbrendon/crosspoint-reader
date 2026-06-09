@@ -15,7 +15,7 @@ RssFeedListActivity::RssFeedListActivity(GfxRenderer& renderer, MappedInputManag
     : Activity("RssFeedList", renderer, mappedInput) {}
 
 int RssFeedListActivity::getItemCount() const {
-  // Feed rows + "Add Feed" row + "Manage on web" row
+  // "Add Feed" row + "Manage on web" row + feed rows
   return static_cast<int>(RSS_STORE.getCount()) + 2;
 }
 
@@ -26,16 +26,23 @@ std::string RssFeedListActivity::hostOf(const std::string& url) {
   return url.substr(s, (e == std::string::npos ? url.size() : e) - s);
 }
 
-// Hold Confirm at least this long on a feed row to delete it (matches the file
-// browser's long-press-to-delete gesture). A short press opens the feed.
-constexpr unsigned long LONG_PRESS_MS = 1000;
+// Hold Confirm at least this long on a feed row to delete it. The delete dialog
+// pops automatically once the threshold is reached, while the button is still
+// held; a shorter press opens the feed instead.
+constexpr unsigned long LONG_PRESS_MS = 3000;
+
+// Row layout: 0 = "Add Feed", 1 = "Manage on web", 2.. = registered feeds.
+static constexpr int ROW_ADD = 0;
+static constexpr int ROW_MANAGE = 1;
+static constexpr int FIRST_FEED_ROW = 2;
 
 void RssFeedListActivity::onEnter() {
   Activity::onEnter();
   RSS_STORE.loadFromFile();
   selectedIndex = 0;
+  longPressFired = false;
   // If Confirm is still held from selecting this screen in the parent menu,
-  // swallow its release so it doesn't act on the first feed.
+  // swallow its release so it doesn't act on the first row.
   lockNextConfirmRelease = mappedInput.isPressed(MappedInputManager::Button::Confirm);
   requestUpdate();
 }
@@ -48,24 +55,39 @@ void RssFeedListActivity::loop() {
     return;
   }
 
-  // Act on Confirm release: a short press opens the row; a long press on a feed
-  // row deletes it. Navigation (Up/Down) never triggers delete.
+  // A fresh press starts a new hold cycle.
+  if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
+    longPressFired = false;
+  }
+
+  const int feedCount = static_cast<int>(RSS_STORE.getCount());
+  const bool onFeed = selectedIndex >= FIRST_FEED_ROW && selectedIndex < FIRST_FEED_ROW + feedCount;
+
+  // Hold-to-delete: fire automatically while the button is still held, once the
+  // threshold is reached. Navigation (Up/Down) never reaches this.
+  if (onFeed && !lockNextConfirmRelease && !longPressFired &&
+      mappedInput.isPressed(MappedInputManager::Button::Confirm) && mappedInput.getHeldTime() >= LONG_PRESS_MS) {
+    longPressFired = true;
+    onDeleteFeed(static_cast<size_t>(selectedIndex - FIRST_FEED_ROW));
+    return;
+  }
+
+  // Confirm release: open the selected row (unless the hold already deleted it).
   if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
     if (lockNextConfirmRelease) {
       lockNextConfirmRelease = false;
       return;
     }
-    const int feedCount = static_cast<int>(RSS_STORE.getCount());
-    if (selectedIndex < feedCount) {
-      if (mappedInput.getHeldTime() >= LONG_PRESS_MS) {
-        onDeleteFeed(static_cast<size_t>(selectedIndex));
-      } else {
-        onSelectFeed(static_cast<size_t>(selectedIndex));
-      }
-    } else if (selectedIndex == feedCount) {
+    if (longPressFired) {
+      longPressFired = false;
+      return;
+    }
+    if (selectedIndex == ROW_ADD) {
       onAddFeed();
-    } else {
+    } else if (selectedIndex == ROW_MANAGE) {
       onManageOnWeb();
+    } else if (onFeed) {
+      onSelectFeed(static_cast<size_t>(selectedIndex - FIRST_FEED_ROW));
     }
     return;
   }
@@ -104,19 +126,20 @@ void RssFeedListActivity::render(RenderLock&&) {
 
   GUI.drawList(
       renderer, Rect{0, contentTop, pageWidth, contentHeight}, itemCount, selectedIndex,
-      [feedCount](int index) {
-        if (index < feedCount) {
-          const auto* feed = RSS_STORE.getFeed(static_cast<size_t>(index));
-          if (feed) return feed->name.empty() ? feed->url : feed->name;
-        }
-        if (index == feedCount) {
+      [](int index) {
+        if (index == ROW_ADD) {
           return std::string(I18n::getInstance().get(StrId::STR_RSS_ADD_FEED));
         }
-        return std::string(I18n::getInstance().get(StrId::STR_RSS_MANAGE_WEB));
+        if (index == ROW_MANAGE) {
+          return std::string(I18n::getInstance().get(StrId::STR_RSS_MANAGE_WEB));
+        }
+        const auto* feed = RSS_STORE.getFeed(static_cast<size_t>(index - FIRST_FEED_ROW));
+        if (feed) return feed->name.empty() ? feed->url : feed->name;
+        return std::string("");
       },
-      [feedCount](int index) {
-        if (index < feedCount) {
-          const auto* feed = RSS_STORE.getFeed(static_cast<size_t>(index));
+      [](int index) {
+        if (index >= FIRST_FEED_ROW) {
+          const auto* feed = RSS_STORE.getFeed(static_cast<size_t>(index - FIRST_FEED_ROW));
           if (feed && !feed->name.empty()) return feed->url;
         }
         return std::string("");

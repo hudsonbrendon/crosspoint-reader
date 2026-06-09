@@ -26,5 +26,10 @@ class RssFeedListActivity final : public Activity {
   // parent menu, so it doesn't immediately open/delete the first feed.
   bool lockNextConfirmRelease = false;
 
+  // Set once the hold-to-delete dialog has fired for the current press so it
+  // doesn't fire twice, and so the eventual Confirm release doesn't also open
+  // the feed. Reset on the next Confirm press.
+  bool longPressFired = false;
+
   int getItemCount() const;
 };
