@@ -177,6 +177,29 @@ void EpubReaderActivity::onExit() {
   // onEnter early-returns without starting a session when there is no book, so
   // skipping here avoids a no-op SD write on that path.
   if (epub) {
+    // Detect "book finished": user is on the last page of the last spine item.
+    // Do NOT use progressPercent >= 100 — calculateProgress returns < 1.0 even on
+    // the final page (chapterProgress = currentPage/pageCount < 1), so it never
+    // rounds to 100. The structural check is the reliable finish signal.
+    const int lastSpine = epub->getSpineItemsCount() - 1;
+    const bool atLastPageOfLastSpine =
+        lastSpine >= 0 && currentSpineIndex == lastSpine && section && section->pageCount > 0 &&
+        section->currentPage >= section->pageCount - 1;
+    if (atLastPageOfLastSpine) {
+      READING_STATS.incrementBooksFinished();
+      LOG_INF("ERS", "Book finished: %s", epub->getPath().c_str());
+    }
+
+    // Phase 1: no reliable wall-clock on X4, so the streak day is not stamped.
+    // Phase 2 (X4 wall-clock module) will replace `false` with a real (year,
+    // dayOfYear) acquisition and call READING_STATS.recordReadingDay(...) here.
+    constexpr bool haveValidDate = false;
+    if (haveValidDate) {
+      // Phase 2 fills in: READING_STATS.recordReadingDay(year, dayOfYear);
+    }
+
+    // endSession() banks the final time slice and persists everything (including
+    // the booksFinished bump above) in one SD write.
     READING_STATS.endSession(millis());
   }
 
