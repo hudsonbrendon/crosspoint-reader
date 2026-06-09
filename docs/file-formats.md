@@ -105,7 +105,9 @@ if (parsedSize != fileSize) {
 
 ## `section.bin`
 
-### Version 24
+### Version 26
+
+v26 adds `forceParagraphIndents` and `guideReadingEnabled` booleans to the section header, immediately after `focusReadingEnabled`.
 
 ImHex Pattern:
 
@@ -115,7 +117,7 @@ import std.string;
 import std.core;
 
 // === Configuration ===
-#define EXPECTED_VERSION 24
+#define EXPECTED_VERSION 26
 #define MAX_STRING_LENGTH 65535
 
 // === String Structure ===
