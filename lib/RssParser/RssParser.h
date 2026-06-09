@@ -34,20 +34,30 @@ class RssParser final : public Print {
   std::vector<RssEntry> getEntries() && { return std::move(entries); }
   void clear();
 
-  // Streaming mode: when set, each completed item is passed to the callback
-  // (which can persist it and drop the heavy content) instead of being buffered
-  // in `entries`. This keeps at most one item's content in RAM — essential for
-  // full-text feeds on the 380KB device. Without a callback, items accumulate in
-  // `entries` (used by the unit tests).
-  using ItemCallback = std::function<void(RssEntry&)>;
-  void setItemCallback(ItemCallback cb) { itemCallback = std::move(cb); }
+  // Streaming sink: the memory-safe path for full-text feeds. When set, the big
+  // <content:encoded>/<content> field is delivered chunk-by-chunk to onContent
+  // (the consumer writes straight to SD) and is NEVER buffered in RAM — crucial
+  // because free heap during a live TLS/HTTPS fetch is only tens of KB on the
+  // 380KB device. onBegin fires at <item>/<entry> start; onEnd fires at close
+  // with the lightweight metadata (title/date) and, when no content streamed,
+  // the small description fallback in meta.contentHtml. Without a sink, items
+  // accumulate in `entries` (used by the unit tests via getEntries()).
+  using ContentSink = std::function<void(const char* data, size_t len)>;
+  using ItemBoundary = std::function<void()>;
+  using ItemComplete = std::function<void(const RssEntry& meta, bool wroteContent)>;
+  void setStreamingSink(ItemBoundary onBegin, ContentSink onContent, ItemComplete onEnd) {
+    streamBegin = std::move(onBegin);
+    streamContent = std::move(onContent);
+    streamEnd = std::move(onEnd);
+    streaming = true;
+  }
 
-  // Hard cap on bytes accumulated for any single field (e.g. a huge <content>).
-  // The field buffer is reserved to this size ONCE (see the constructor) so
-  // appends never reallocate — std::string's capacity-doubling would otherwise
-  // spike to ~2x and OOM under the heap pressure of a live TLS/HTTPS session.
-  // Articles longer than this are truncated (no crash). ~16KB ≈ 3000 words.
-  static constexpr size_t MAX_FIELD_BYTES = 16 * 1024;
+  // Hard cap on bytes buffered for any single SMALL field (title/date/
+  // description). The field buffer is reserved to this size ONCE (constructor)
+  // so appends never reallocate — std::string capacity-doubling would otherwise
+  // spike and OOM under TLS heap pressure. The big content field is streamed,
+  // not buffered, so it is not bounded here (the consumer caps the file).
+  static constexpr size_t MAX_FIELD_BYTES = 8 * 1024;
 
  private:
   static void XMLCALL startElement(void* userData, const XML_Char* name, const XML_Char** atts);
@@ -59,7 +69,11 @@ class RssParser final : public Print {
 
   XML_Parser parser = nullptr;
   std::vector<RssEntry> entries;
-  ItemCallback itemCallback;
+  bool streaming = false;
+  bool wroteContent = false;  // did the content field stream any bytes this item
+  ItemBoundary streamBegin;
+  ContentSink streamContent;
+  ItemComplete streamEnd;
   RssEntry current;
   std::string descriptionHtml;  // holds <description>/<summary> until we know if <content:encoded> exists
   std::string text;             // accumulator for the element currently being read
