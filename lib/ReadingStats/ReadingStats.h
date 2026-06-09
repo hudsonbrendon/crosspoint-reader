@@ -84,8 +84,7 @@ class ReadingStatsAggregator {
   }
 
   // Restore persisted lifetime counters (used by JsonSettingsIO on load).
-  void setLifetimeCounters(uint16_t current, uint16_t longest, uint16_t finished, int16_t lastYear,
-                           int16_t lastDay) {
+  void setLifetimeCounters(uint16_t current, uint16_t longest, uint16_t finished, int16_t lastYear, int16_t lastDay) {
     currentStreak_ = current;
     longestStreak_ = longest;
     booksFinished_ = finished;

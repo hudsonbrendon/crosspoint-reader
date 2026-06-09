@@ -226,9 +226,8 @@ bool JsonSettingsIO::loadSettings(InkPointSettings& s, const char* json, bool* n
   }
 
   if (doc["sleepTimeoutMinutes"].isNull() && !doc["sleepTimeout"].isNull()) {
-    const uint8_t legacyValue =
-        clamp(doc["sleepTimeout"] | (uint8_t)InkPointSettings::SLEEP_10_MIN, InkPointSettings::SLEEP_TIMEOUT_COUNT,
-              (uint8_t)InkPointSettings::SLEEP_10_MIN);
+    const uint8_t legacyValue = clamp(doc["sleepTimeout"] | (uint8_t)InkPointSettings::SLEEP_10_MIN,
+                                      InkPointSettings::SLEEP_TIMEOUT_COUNT, (uint8_t)InkPointSettings::SLEEP_10_MIN);
     s.sleepTimeoutMinutes = InkPointSettings::sleepTimeoutEnumToMinutes(legacyValue);
     if (needsResave) *needsResave = true;
   }
@@ -408,11 +407,10 @@ bool JsonSettingsIO::loadReadingStats(ReadingStatsStore& store, const char* json
   }
 
   store.loadBooks(std::move(books));
-  store.setLifetimeCounters(static_cast<uint16_t>(doc["currentStreak"] | 0u),
-                            static_cast<uint16_t>(doc["longestStreak"] | 0u),
-                            static_cast<uint16_t>(doc["booksFinished"] | 0u),
-                            static_cast<int16_t>(doc["lastReadYear"] | -1),
-                            static_cast<int16_t>(doc["lastReadDayOfYear"] | -1));
+  store.setLifetimeCounters(
+      static_cast<uint16_t>(doc["currentStreak"] | 0u), static_cast<uint16_t>(doc["longestStreak"] | 0u),
+      static_cast<uint16_t>(doc["booksFinished"] | 0u), static_cast<int16_t>(doc["lastReadYear"] | -1),
+      static_cast<int16_t>(doc["lastReadDayOfYear"] | -1));
   LOG_DBG("RSS", "Reading stats loaded (%d books)", static_cast<int>(store.books().size()));
   return true;
 }

@@ -18,13 +18,13 @@
 #include <limits>
 
 #include "BookmarkEntry.h"
-#include "InkPointSettings.h"
-#include "InkPointState.h"
 #include "EpubReaderBookmarksActivity.h"
 #include "EpubReaderChapterSelectionActivity.h"
 #include "EpubReaderFootnotesActivity.h"
 #include "EpubReaderPercentSelectionActivity.h"
 #include "EpubReaderUtils.h"
+#include "InkPointSettings.h"
+#include "InkPointState.h"
 #include "KOReaderCredentialStore.h"
 #include "KOReaderSyncActivity.h"
 #include "MappedInputManager.h"
@@ -182,9 +182,8 @@ void EpubReaderActivity::onExit() {
     // the final page (chapterProgress = currentPage/pageCount < 1), so it never
     // rounds to 100. The structural check is the reliable finish signal.
     const int lastSpine = epub->getSpineItemsCount() - 1;
-    const bool atLastPageOfLastSpine =
-        lastSpine >= 0 && currentSpineIndex == lastSpine && section && section->pageCount > 0 &&
-        section->currentPage >= section->pageCount - 1;
+    const bool atLastPageOfLastSpine = lastSpine >= 0 && currentSpineIndex == lastSpine && section &&
+                                       section->pageCount > 0 && section->currentPage >= section->pageCount - 1;
     if (atLastPageOfLastSpine) {
       READING_STATS.incrementBooksFinished();
       LOG_INF("ERS", "Book finished: %s", epub->getPath().c_str());
@@ -784,8 +783,8 @@ void EpubReaderActivity::render(RenderLock&& lock) {
     if (!section->loadSectionFile(SETTINGS.getReaderFontId(), SETTINGS.getReaderLineCompression(),
                                   SETTINGS.extraParagraphSpacing, SETTINGS.paragraphAlignment, viewportWidth,
                                   viewportHeight, SETTINGS.hyphenationEnabled, SETTINGS.embeddedStyle,
-                                  SETTINGS.imageRendering, SETTINGS.focusReadingEnabled,
-                                  SETTINGS.forceParagraphIndents, SETTINGS.guideReadingEnabled)) {
+                                  SETTINGS.imageRendering, SETTINGS.focusReadingEnabled, SETTINGS.forceParagraphIndents,
+                                  SETTINGS.guideReadingEnabled)) {
       LOG_DBG("ERS", "Cache not found, building...");
 
       GUI.drawPopup(renderer, tr(STR_INDEXING));
@@ -931,8 +930,8 @@ void EpubReaderActivity::silentIndexNextChapterIfNeeded(const uint16_t viewportW
   if (nextSection.loadSectionFile(SETTINGS.getReaderFontId(), SETTINGS.getReaderLineCompression(),
                                   SETTINGS.extraParagraphSpacing, SETTINGS.paragraphAlignment, viewportWidth,
                                   viewportHeight, SETTINGS.hyphenationEnabled, SETTINGS.embeddedStyle,
-                                  SETTINGS.imageRendering, SETTINGS.focusReadingEnabled,
-                                  SETTINGS.forceParagraphIndents, SETTINGS.guideReadingEnabled)) {
+                                  SETTINGS.imageRendering, SETTINGS.focusReadingEnabled, SETTINGS.forceParagraphIndents,
+                                  SETTINGS.guideReadingEnabled)) {
     return;
   }
 

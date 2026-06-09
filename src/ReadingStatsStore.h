@@ -60,8 +60,7 @@ class ReadingStatsStore {
   void loadBooks(std::vector<reading_stats::BookStats> books) { aggregator.load(std::move(books)); }
 
   // Only JsonSettingsIO may restore persisted lifetime counters (used on load).
-  void setLifetimeCounters(uint16_t current, uint16_t longest, uint16_t finished, int16_t lastYear,
-                           int16_t lastDay) {
+  void setLifetimeCounters(uint16_t current, uint16_t longest, uint16_t finished, int16_t lastYear, int16_t lastDay) {
     aggregator.setLifetimeCounters(current, longest, finished, lastYear, lastDay);
   }
 

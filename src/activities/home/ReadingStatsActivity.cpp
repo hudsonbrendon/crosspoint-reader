@@ -14,9 +14,9 @@
 #include "fontIds.h"
 
 namespace {
-// Vertical space reserved above the list for the totals block (two text rows).
+// Vertical space reserved above the list for the totals block (totals + streak + books-finished rows).
 // Sized so the list's selection highlight (drawn at contentTop - 2) clears the
-// second totals line; too small and selecting the first row overlaps the totals.
+// last totals line; too small and selecting the first row overlaps the totals.
 constexpr int TOTALS_BLOCK_HEIGHT = 132;
 }  // namespace
 
@@ -105,14 +105,13 @@ void ReadingStatsActivity::render(RenderLock&&) {
 
   // Streak / books-finished rows. Streak values render "—" when no wall-clock
   // day has been recorded (X4 Phase 1).
-  const std::string streakVal =
-      haveStreakClock ? (std::to_string(currentStreak) + " " + tr(STR_READING_STATS_DAYS)) : tr(STR_READING_STATS_NO_CLOCK);
-  const std::string longestVal =
-      haveStreakClock ? (std::to_string(longestStreak) + " " + tr(STR_READING_STATS_DAYS)) : tr(STR_READING_STATS_NO_CLOCK);
+  const std::string streakVal = haveStreakClock ? (std::to_string(currentStreak) + " " + tr(STR_READING_STATS_DAYS))
+                                                : tr(STR_READING_STATS_NO_CLOCK);
+  const std::string longestVal = haveStreakClock ? (std::to_string(longestStreak) + " " + tr(STR_READING_STATS_DAYS))
+                                                 : tr(STR_READING_STATS_NO_CLOCK);
   const std::string line3 = std::string(tr(STR_READING_STATS_STREAK)) + ": " + streakVal;
   const std::string line4 = std::string(tr(STR_READING_STATS_LONGEST_STREAK)) + ": " + longestVal;
-  const std::string line5 =
-      std::string(tr(STR_READING_STATS_BOOKS_FINISHED)) + ": " + std::to_string(booksFinished);
+  const std::string line5 = std::string(tr(STR_READING_STATS_BOOKS_FINISHED)) + ": " + std::to_string(booksFinished);
   renderer.drawText(SMALL_FONT_ID, metrics.contentSidePadding, headerBottom + 56, line3.c_str());
   renderer.drawText(SMALL_FONT_ID, metrics.contentSidePadding, headerBottom + 76, line4.c_str());
   renderer.drawText(SMALL_FONT_ID, metrics.contentSidePadding, headerBottom + 96, line5.c_str());
