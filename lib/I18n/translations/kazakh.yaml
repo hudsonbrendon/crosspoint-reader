@@ -386,6 +386,10 @@ STR_VALIDATING_FIRMWARE: "Микробағдарлама тексерілуде.
 STR_XTC_STATUS_BAR: "XTC күй жолағы"
 
 STR_NO_READING_STATS: "Оқу статистикасы жоқ"
+STR_READING_STATS_STREAK: "Ағымдағы серия"
+STR_READING_STATS_LONGEST_STREAK: "Ең ұзақ серия"
+STR_READING_STATS_BOOKS_FINISHED: "Аяқталған кітаптар"
+STR_READING_STATS_DAYS: "күн"
 STR_READING_STATS_AVERAGE: "Орташа"
 STR_READING_STATS_BOOKS: "кітап"
 STR_READING_STATS_LABEL_PAGES: "Беттер"
