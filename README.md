@@ -14,6 +14,8 @@ InkPoint is open-source e-reader firmware - community-built, fully hackable, fre
 
 - **Various formats**: native handling for `.epub`, `.xtc/.xtch`, `.txt`, and `.bmp`.
 
+- **RSS/Atom reader**: subscribe to feeds, fetch over WiFi, and cache articles to the SD card for offline reading in the text reader. Feeds are managed on-device or from the browser via Web Management, and read articles appear in Recent Books with the article title and source.
+
 - **Screenshots.**
 
 - **Custom fonts**: install your favorite fonts on the SD card.
@@ -32,6 +34,7 @@ InkPoint is open-source e-reader firmware - community-built, fully hackable, fre
   - AP mode (hotspot) and STA mode (join existing WiFi), both with QR helpers
   - Calibre wireless connect flow
   - OPDS browser with saved servers (up to 8), search, pagination, and direct download
+  - RSS/Atom feed management web UI (add, edit, delete feeds from the browser)
   - OTA update checks and installs from GitHub releases
 
 - **Customization**: multiple themes (Classic, Lyra, Lyra Extended, RoundedRaff), sleep screen modes, front/side button remapping, status bar controls, power-button behavior, refresh cadence, and more.
