@@ -42,9 +42,12 @@ class RssParser final : public Print {
   using ItemCallback = std::function<void(RssEntry&)>;
   void setItemCallback(ItemCallback cb) { itemCallback = std::move(cb); }
 
-  // Hard cap on bytes accumulated for any single field (e.g. a huge <content>),
-  // so one pathological article can't exhaust the heap. Excess is dropped.
-  static constexpr size_t MAX_FIELD_BYTES = 24 * 1024;
+  // Hard cap on bytes accumulated for any single field (e.g. a huge <content>).
+  // The field buffer is reserved to this size ONCE (see the constructor) so
+  // appends never reallocate — std::string's capacity-doubling would otherwise
+  // spike to ~2x and OOM under the heap pressure of a live TLS/HTTPS session.
+  // Articles longer than this are truncated (no crash). ~16KB ≈ 3000 words.
+  static constexpr size_t MAX_FIELD_BYTES = 16 * 1024;
 
  private:
   static void XMLCALL startElement(void* userData, const XML_Char* name, const XML_Char** atts);
