@@ -242,6 +242,10 @@ class InkPointSettings {
   uint8_t embeddedStyle = 1;
   // Focus Reading - emphasizes the first part of words with bold
   uint8_t focusReadingEnabled = 0;
+  // Force Paragraph Indents - always indent the first line of natural-aligned paragraphs even when extra paragraph spacing is on
+  uint8_t forceParagraphIndents = 0;
+  // Guide Reading - render a middle dot between words to guide the eye across the line
+  uint8_t guideReadingEnabled = 0;
   // SD card font family name (empty = use built-in fontFamily)
   char sdFontFamilyName[32] = "";
   // Show hidden files/directories (starting with '.') in the file browser (0 = hidden, 1 = show)

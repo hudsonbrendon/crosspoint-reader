@@ -262,8 +262,8 @@ void ParsedText::addWord(std::string word, const EpdFontFamily::Style fontStyle,
 }
 
 int ParsedText::resolveFirstLineIndent(const bool isFirstLine) const {
-  if (isFirstLine && blockStyle.textIndentDefined && (blockStyle.textIndent < 0 || !extraParagraphSpacing) &&
-      isNaturalAlign) {
+  if (isFirstLine && blockStyle.textIndentDefined &&
+      (blockStyle.textIndent < 0 || !extraParagraphSpacing || forceParagraphIndents) && isNaturalAlign) {
     return blockStyle.textIndent;
   }
   return 0;
@@ -463,7 +463,7 @@ std::vector<size_t> ParsedText::computeLineBreaks(const GfxRenderer& renderer, c
 }
 
 void ParsedText::applyParagraphIndent() {
-  if (extraParagraphSpacing || words.empty()) {
+  if ((extraParagraphSpacing && !forceParagraphIndents) || words.empty()) {
     return;
   }
 
