@@ -176,6 +176,10 @@ void ActivityManager::goToFileTransfer() {
   replaceActivity(std::make_unique<InkPointWebServerActivity>(renderer, mappedInput));
 }
 
+void ActivityManager::goToWebManagement() {
+  replaceActivity(std::make_unique<InkPointWebServerActivity>(renderer, mappedInput, /*webManagement=*/true));
+}
+
 void ActivityManager::goToSettings() { replaceActivity(std::make_unique<SettingsActivity>(renderer, mappedInput)); }
 
 void ActivityManager::goToFileBrowser(std::string path) {

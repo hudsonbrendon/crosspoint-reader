@@ -3,12 +3,30 @@
 #include <GfxRenderer.h>
 #include <I18n.h>
 
+#include <vector>
+
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
 
 namespace {
-constexpr int MENU_ITEM_COUNT = 3;
+struct ModeInfo {
+  NetworkMode mode;
+  StrId label;
+  StrId desc;
+  UIIcon icon;
+};
+constexpr ModeInfo kJoin{NetworkMode::JOIN_NETWORK, StrId::STR_JOIN_NETWORK, StrId::STR_JOIN_DESC, UIIcon::Wifi};
+constexpr ModeInfo kCalibre{NetworkMode::CONNECT_CALIBRE, StrId::STR_CALIBRE_WIRELESS, StrId::STR_CALIBRE_DESC,
+                            UIIcon::Library};
+constexpr ModeInfo kHotspot{NetworkMode::CREATE_HOTSPOT, StrId::STR_CREATE_HOTSPOT, StrId::STR_HOTSPOT_DESC,
+                            UIIcon::Hotspot};
+
+// The active menu, in display order. Calibre is hidden in the web-management variant.
+std::vector<ModeInfo> activeModes(bool showCalibre) {
+  if (showCalibre) return {kJoin, kCalibre, kHotspot};
+  return {kJoin, kHotspot};
+}
 }  // namespace
 
 void NetworkModeSelectionActivity::onEnter() {
@@ -32,24 +50,22 @@ void NetworkModeSelectionActivity::loop() {
 
   // Handle confirm button - select current option
   if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
-    NetworkMode mode = NetworkMode::JOIN_NETWORK;
-    if (selectedIndex == 1) {
-      mode = NetworkMode::CONNECT_CALIBRE;
-    } else if (selectedIndex == 2) {
-      mode = NetworkMode::CREATE_HOTSPOT;
+    const auto modes = activeModes(showCalibre);
+    if (selectedIndex >= 0 && selectedIndex < static_cast<int>(modes.size())) {
+      onModeSelected(modes[static_cast<size_t>(selectedIndex)].mode);
     }
-    onModeSelected(mode);
     return;
   }
 
   // Handle navigation
-  buttonNavigator.onNext([this] {
-    selectedIndex = ButtonNavigator::nextIndex(selectedIndex, MENU_ITEM_COUNT);
+  const int count = static_cast<int>(activeModes(showCalibre).size());
+  buttonNavigator.onNext([this, count] {
+    selectedIndex = ButtonNavigator::nextIndex(selectedIndex, count);
     requestUpdate();
   });
 
-  buttonNavigator.onPrevious([this] {
-    selectedIndex = ButtonNavigator::previousIndex(selectedIndex, MENU_ITEM_COUNT);
+  buttonNavigator.onPrevious([this, count] {
+    selectedIndex = ButtonNavigator::previousIndex(selectedIndex, count);
     requestUpdate();
   });
 }
@@ -61,21 +77,17 @@ void NetworkModeSelectionActivity::render(RenderLock&&) {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, tr(STR_FILE_TRANSFER));
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, I18N.get(titleStr));
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing * 2;
-  // Menu items and descriptions
-  static constexpr StrId menuItems[MENU_ITEM_COUNT] = {StrId::STR_JOIN_NETWORK, StrId::STR_CALIBRE_WIRELESS,
-                                                       StrId::STR_CREATE_HOTSPOT};
-  static constexpr StrId menuDescs[MENU_ITEM_COUNT] = {StrId::STR_JOIN_DESC, StrId::STR_CALIBRE_DESC,
-                                                       StrId::STR_HOTSPOT_DESC};
-  static constexpr UIIcon menuIcons[MENU_ITEM_COUNT] = {UIIcon::Wifi, UIIcon::Library, UIIcon::Hotspot};
+  const auto modes = activeModes(showCalibre);
 
   GUI.drawList(
-      renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(MENU_ITEM_COUNT), selectedIndex,
-      [](int index) { return std::string(I18N.get(menuItems[index])); },
-      [](int index) { return std::string(I18N.get(menuDescs[index])); }, [](int index) { return menuIcons[index]; });
+      renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(modes.size()), selectedIndex,
+      [&modes](int index) { return std::string(I18N.get(modes[static_cast<size_t>(index)].label)); },
+      [&modes](int index) { return std::string(I18N.get(modes[static_cast<size_t>(index)].desc)); },
+      [&modes](int index) { return modes[static_cast<size_t>(index)].icon; });
 
   // Draw help text at bottom
   const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));

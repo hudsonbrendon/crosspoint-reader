@@ -76,7 +76,9 @@ void InkPointWebServerActivity::onEnter() {
 
   // Launch network mode selection subactivity
   LOG_DBG("WEBACT", "Launching NetworkModeSelectionActivity...");
-  startActivityForResult(std::make_unique<NetworkModeSelectionActivity>(renderer, mappedInput),
+  startActivityForResult(std::make_unique<NetworkModeSelectionActivity>(
+                             renderer, mappedInput, /*showCalibre=*/!webManagement,
+                             webManagement ? StrId::STR_WEB_MANAGEMENT : StrId::STR_FILE_TRANSFER),
                          [this](const ActivityResult& result) {
                            if (result.isCancelled) {
                              onGoHome();
@@ -126,7 +128,9 @@ void InkPointWebServerActivity::onNetworkModeSelected(const NetworkMode mode) {
         std::make_unique<CalibreConnectActivity>(renderer, mappedInput), [this](const ActivityResult& result) {
           state = WebServerActivityState::MODE_SELECTION;
 
-          startActivityForResult(std::make_unique<NetworkModeSelectionActivity>(renderer, mappedInput),
+          startActivityForResult(std::make_unique<NetworkModeSelectionActivity>(
+                                     renderer, mappedInput, /*showCalibre=*/!webManagement,
+                                     webManagement ? StrId::STR_WEB_MANAGEMENT : StrId::STR_FILE_TRANSFER),
                                  [this](const ActivityResult& result) {
                                    if (result.isCancelled) {
                                      onGoHome();
@@ -178,7 +182,9 @@ void InkPointWebServerActivity::onWifiSelectionComplete(const bool connected) {
     // User cancelled - go back to mode selection
     state = WebServerActivityState::MODE_SELECTION;
 
-    startActivityForResult(std::make_unique<NetworkModeSelectionActivity>(renderer, mappedInput),
+    startActivityForResult(std::make_unique<NetworkModeSelectionActivity>(
+                               renderer, mappedInput, /*showCalibre=*/!webManagement,
+                               webManagement ? StrId::STR_WEB_MANAGEMENT : StrId::STR_FILE_TRANSFER),
                            [this](const ActivityResult& result) {
                              if (result.isCancelled) {
                                onGoHome();
@@ -373,7 +379,7 @@ void InkPointWebServerActivity::render(RenderLock&&) {
     const auto pageHeight = renderer.getScreenHeight();
 
     GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   isApMode ? tr(STR_HOTSPOT_MODE) : tr(STR_FILE_TRANSFER), nullptr);
+                   isApMode ? tr(STR_HOTSPOT_MODE) : I18N.get(webManagement ? StrId::STR_WEB_MANAGEMENT : StrId::STR_FILE_TRANSFER), nullptr);
 
     if (state == WebServerActivityState::SERVER_RUNNING) {
       GUI.drawSubHeader(renderer, Rect{0, metrics.topPadding + metrics.headerHeight, pageWidth, metrics.tabBarHeight},
@@ -393,7 +399,7 @@ void InkPointWebServerActivity::renderServerRunning() const {
   const auto pageWidth = renderer.getScreenWidth();
 
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 isApMode ? tr(STR_HOTSPOT_MODE) : tr(STR_FILE_TRANSFER), nullptr);
+                 isApMode ? tr(STR_HOTSPOT_MODE) : I18N.get(webManagement ? StrId::STR_WEB_MANAGEMENT : StrId::STR_FILE_TRANSFER), nullptr);
   GUI.drawSubHeader(renderer, Rect{0, metrics.topPadding + metrics.headerHeight, pageWidth, metrics.tabBarHeight},
                     connectedSSID.c_str());
 
