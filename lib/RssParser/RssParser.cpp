@@ -1,5 +1,6 @@
 #include "RssParser.h"
 
+#include <algorithm>
 #include <cstring>
 
 RssParser::RssParser() {
@@ -102,9 +103,17 @@ void RssParser::endElement(void* userData, const XML_Char* name) {
   if (strcmp(tag, "item") == 0 || strcmp(tag, "entry") == 0) {
     // content:encoded/content wins; else description/summary.
     if (self->current.contentHtml.empty()) self->current.contentHtml = self->descriptionHtml;
-    self->entries.push_back(std::move(self->current));
+    if (self->itemCallback) {
+      // Streaming: hand the item off (caller persists it) and free its content
+      // immediately, so we never hold more than one item's content in RAM.
+      self->itemCallback(self->current);
+    } else {
+      self->entries.push_back(std::move(self->current));
+    }
     self->current = RssEntry{};
     self->descriptionHtml.clear();
+    self->text.clear();
+    self->text.shrink_to_fit();
     self->inItem = false;
     return;
   }
@@ -131,6 +140,9 @@ void RssParser::endElement(void* userData, const XML_Char* name) {
 void RssParser::characterData(void* userData, const XML_Char* s, int len) {
   auto* self = static_cast<RssParser*>(userData);
   if (self->inTitle || self->inLink || self->inDate || self->inContentEncoded || self->inDescription) {
-    self->text.append(s, static_cast<size_t>(len));
+    // Cap accumulation so a single huge field (full-text article) can't OOM the heap.
+    if (self->text.size() >= MAX_FIELD_BYTES) return;
+    const size_t room = MAX_FIELD_BYTES - self->text.size();
+    self->text.append(s, std::min(static_cast<size_t>(len), room));
   }
 }

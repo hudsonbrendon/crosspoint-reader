@@ -2,6 +2,7 @@
 #include <Print.h>
 #include <expat.h>
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -33,6 +34,18 @@ class RssParser final : public Print {
   std::vector<RssEntry> getEntries() && { return std::move(entries); }
   void clear();
 
+  // Streaming mode: when set, each completed item is passed to the callback
+  // (which can persist it and drop the heavy content) instead of being buffered
+  // in `entries`. This keeps at most one item's content in RAM — essential for
+  // full-text feeds on the 380KB device. Without a callback, items accumulate in
+  // `entries` (used by the unit tests).
+  using ItemCallback = std::function<void(RssEntry&)>;
+  void setItemCallback(ItemCallback cb) { itemCallback = std::move(cb); }
+
+  // Hard cap on bytes accumulated for any single field (e.g. a huge <content>),
+  // so one pathological article can't exhaust the heap. Excess is dropped.
+  static constexpr size_t MAX_FIELD_BYTES = 24 * 1024;
+
  private:
   static void XMLCALL startElement(void* userData, const XML_Char* name, const XML_Char** atts);
   static void XMLCALL endElement(void* userData, const XML_Char* name);
@@ -43,6 +56,7 @@ class RssParser final : public Print {
 
   XML_Parser parser = nullptr;
   std::vector<RssEntry> entries;
+  ItemCallback itemCallback;
   RssEntry current;
   std::string descriptionHtml;  // holds <description>/<summary> until we know if <content:encoded> exists
   std::string text;             // accumulator for the element currently being read
