@@ -17,7 +17,7 @@ namespace {
 // Vertical space reserved above the list for the totals block (two text rows).
 // Sized so the list's selection highlight (drawn at contentTop - 2) clears the
 // second totals line; too small and selecting the first row overlaps the totals.
-constexpr int TOTALS_BLOCK_HEIGHT = 72;
+constexpr int TOTALS_BLOCK_HEIGHT = 132;
 }  // namespace
 
 void ReadingStatsActivity::loadStats() {
@@ -27,6 +27,12 @@ void ReadingStatsActivity::loadStats() {
   });
   totalPages = READING_STATS.totalPagesRead();
   totalMs = READING_STATS.totalReadingMs();
+  currentStreak = READING_STATS.currentStreak();
+  longestStreak = READING_STATS.longestStreak();
+  booksFinished = READING_STATS.booksFinished();
+  // A valid wall-clock day has been recorded iff lastReadYear >= 0. On X4 (no
+  // RTC, Phase 1) this is always false, so streak rows render "—".
+  haveStreakClock = READING_STATS.lastReadYear() >= 0;
 }
 
 void ReadingStatsActivity::onEnter() {
@@ -96,6 +102,20 @@ void ReadingStatsActivity::render(RenderLock&&) {
                             tr(STR_READING_STATS_BOOKS);
   renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, headerBottom + 14, line1.c_str());
   renderer.drawText(SMALL_FONT_ID, metrics.contentSidePadding, headerBottom + 36, line2.c_str());
+
+  // Streak / books-finished rows. Streak values render "—" when no wall-clock
+  // day has been recorded (X4 Phase 1).
+  const std::string streakVal =
+      haveStreakClock ? (std::to_string(currentStreak) + " " + tr(STR_READING_STATS_DAYS)) : tr(STR_READING_STATS_NO_CLOCK);
+  const std::string longestVal =
+      haveStreakClock ? (std::to_string(longestStreak) + " " + tr(STR_READING_STATS_DAYS)) : tr(STR_READING_STATS_NO_CLOCK);
+  const std::string line3 = std::string(tr(STR_READING_STATS_STREAK)) + ": " + streakVal;
+  const std::string line4 = std::string(tr(STR_READING_STATS_LONGEST_STREAK)) + ": " + longestVal;
+  const std::string line5 =
+      std::string(tr(STR_READING_STATS_BOOKS_FINISHED)) + ": " + std::to_string(booksFinished);
+  renderer.drawText(SMALL_FONT_ID, metrics.contentSidePadding, headerBottom + 56, line3.c_str());
+  renderer.drawText(SMALL_FONT_ID, metrics.contentSidePadding, headerBottom + 76, line4.c_str());
+  renderer.drawText(SMALL_FONT_ID, metrics.contentSidePadding, headerBottom + 96, line5.c_str());
 
   const int contentTop = headerBottom + TOTALS_BLOCK_HEIGHT;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;

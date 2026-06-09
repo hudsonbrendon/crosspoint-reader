@@ -14,6 +14,10 @@ class ReadingStatsActivity final : public Activity {
   std::vector<reading_stats::BookStats> books;  // snapshot, sorted by time desc
   uint32_t totalPages = 0;
   uint32_t totalMs = 0;
+  uint16_t currentStreak = 0;
+  uint16_t longestStreak = 0;
+  uint16_t booksFinished = 0;
+  bool haveStreakClock = false;  // false on X4 until Phase 2 -> render "—"
 
   void loadStats();
 
