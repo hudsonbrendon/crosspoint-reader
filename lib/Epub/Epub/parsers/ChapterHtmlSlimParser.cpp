@@ -134,7 +134,11 @@ void ChapterHtmlSlimParser::flushPendingAnchor() {
     if (currentPage && !currentPage->elements.empty()) {
       completePageFn(std::move(currentPage), xpathParagraphIndex, xpathListItemIndex);
       completedPageCount++;
-      currentPage.reset(new Page());
+      currentPage.reset(new (std::nothrow) Page());
+      if (!currentPage) {
+        LOG_ERR("EHP", "OOM: Page in flushPendingAnchor");
+        return;
+      }
       currentPageNextY = 0;
     }
   }
@@ -198,8 +202,12 @@ void ChapterHtmlSlimParser::startNewTextBlock(const BlockStyle& blockStyle) {
   // If the pending anchor is a TOC chapter boundary, force a page break after the previous
   // block is flushed so the chapter starts on a fresh page.
   flushPendingAnchor();
-  currentTextBlock.reset(new ParsedText(extraParagraphSpacing, hyphenationEnabled, focusReadingEnabled,
-                                        forceParagraphIndents, guideReadingEnabled, blockStyle));
+  currentTextBlock.reset(new (std::nothrow) ParsedText(extraParagraphSpacing, hyphenationEnabled, focusReadingEnabled,
+                                                       forceParagraphIndents, guideReadingEnabled, blockStyle));
+  if (!currentTextBlock) {
+    LOG_ERR("EHP", "OOM: ParsedText in startNewTextBlock");
+    return;
+  }
   wordsExtractedInBlock = 0;
 }
 
@@ -602,16 +610,16 @@ void XMLCALL ChapterHtmlSlimParser::startElement(void* userData, const XML_Char*
                   self->completePageFn(std::move(self->currentPage), self->xpathParagraphIndex,
                                        self->xpathListItemIndex);
                   self->completedPageCount++;
-                  self->currentPage.reset(new Page());
+                  self->currentPage.reset(new (std::nothrow) Page());
                   if (!self->currentPage) {
-                    LOG_ERR("EHP", "Failed to create new page");
+                    LOG_ERR("EHP", "OOM: Page for image break");
                     return;
                   }
                   self->currentPageNextY = 0;
                 } else if (!self->currentPage) {
-                  self->currentPage.reset(new Page());
+                  self->currentPage.reset(new (std::nothrow) Page());
                   if (!self->currentPage) {
-                    LOG_ERR("EHP", "Failed to create initial page");
+                    LOG_ERR("EHP", "OOM: initial Page for image");
                     return;
                   }
                   self->currentPageNextY = 0;
@@ -1329,14 +1337,22 @@ void ChapterHtmlSlimParser::addLineToPage(std::shared_ptr<TextBlock> line) {
   const int lineHeight = renderer.getLineHeight(fontId) * lineCompression;
 
   if (!currentPage) {
-    currentPage.reset(new Page());
+    currentPage.reset(new (std::nothrow) Page());
+    if (!currentPage) {
+      LOG_ERR("EHP", "OOM: Page in addLineToPage");
+      return;
+    }
     currentPageNextY = 0;
   }
 
   if (currentPageNextY + lineHeight > viewportHeight) {
     completePageFn(std::move(currentPage), xpathParagraphIndex, xpathListItemIndex);
     completedPageCount++;
-    currentPage.reset(new Page());
+    currentPage.reset(new (std::nothrow) Page());
+    if (!currentPage) {
+      LOG_ERR("EHP", "OOM: Page (overflow) in addLineToPage");
+      return;
+    }
     currentPageNextY = 0;
   }
 
@@ -1362,7 +1378,11 @@ void ChapterHtmlSlimParser::makePages() {
   }
 
   if (!currentPage) {
-    currentPage.reset(new Page());
+    currentPage.reset(new (std::nothrow) Page());
+    if (!currentPage) {
+      LOG_ERR("EHP", "OOM: Page in makePages");
+      return;
+    }
     currentPageNextY = 0;
   }
 
