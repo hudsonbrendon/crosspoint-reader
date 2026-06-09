@@ -11,11 +11,14 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
   // Focus annotations are optional: empty vectors mean no word in this block has a split.
   // When present, they must be sized in lockstep with words[].
   const bool hasFocus = !wordFocusBoundary.empty();
+  const bool hasGuide = !wordGuideDotXOffset.empty();
   if (words.size() != wordXpos.size() || words.size() != wordStyles.size() ||
-      (hasFocus && (words.size() != wordFocusBoundary.size() || words.size() != wordFocusSuffixX.size()))) {
-    LOG_ERR("TXB", "Render skipped: size mismatch (words=%u, xpos=%u, styles=%u, boundary=%u, suffixX=%u)\n",
+      (hasFocus && (words.size() != wordFocusBoundary.size() || words.size() != wordFocusSuffixX.size())) ||
+      (hasGuide && words.size() != wordGuideDotXOffset.size())) {
+    LOG_ERR("TXB", "Render skipped: size mismatch (words=%u, xpos=%u, styles=%u, boundary=%u, suffixX=%u, guide=%u)\n",
             (uint32_t)words.size(), (uint32_t)wordXpos.size(), (uint32_t)wordStyles.size(),
-            (uint32_t)wordFocusBoundary.size(), (uint32_t)wordFocusSuffixX.size());
+            (uint32_t)wordFocusBoundary.size(), (uint32_t)wordFocusSuffixX.size(),
+            (uint32_t)wordGuideDotXOffset.size());
     return;
   }
 
@@ -59,6 +62,15 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
       renderer.drawText(fontId, wordX, wordY, words[i].c_str(), true, currentStyle, baseDir);
     }
 
+      // Guide dot: redraw the middle dot (U+00B7) at the pre-computed offset after this word.
+      // The dot was merged out of the word stream at layout time; offset 0 means none.
+      if (hasGuide) {
+        const uint16_t dotOffset = wordGuideDotXOffset[i];
+        if (dotOffset > 0) {
+          renderer.drawText(fontId, wordX + dotOffset, wordY, "\xc2\xb7", true, EpdFontFamily::REGULAR, baseDir);
+        }
+      }
+
     if (!scanning && (currentStyle & EpdFontFamily::UNDERLINE) != 0) {
       const std::string& w = words[i];
       const int fullWordWidth = renderer.getTextWidth(fontId, w.c_str(), currentStyle, baseDir);
@@ -94,12 +106,14 @@ bool TextBlock::serialize(HalFile& file) const {
   // Focus annotations are optional; vectors are either empty (no splits in this block)
   // or sized in lockstep with words[].
   const bool hasFocus = !wordFocusBoundary.empty();
+  const bool hasGuide = !wordGuideDotXOffset.empty();
   if (words.size() != wordXpos.size() || words.size() != wordStyles.size() ||
-      (hasFocus && (words.size() != wordFocusBoundary.size() || words.size() != wordFocusSuffixX.size()))) {
-    LOG_ERR("TXB", "Serialization failed: size mismatch (words=%u, xpos=%u, styles=%u, boundary=%u, suffixX=%u)\n",
+      (hasFocus && (words.size() != wordFocusBoundary.size() || words.size() != wordFocusSuffixX.size())) ||
+      (hasGuide && words.size() != wordGuideDotXOffset.size())) {
+    LOG_ERR("TXB", "Serialization failed: size mismatch (words=%u, xpos=%u, styles=%u, boundary=%u, suffixX=%u, guide=%u)\n",
             static_cast<uint32_t>(words.size()), static_cast<uint32_t>(wordXpos.size()),
             static_cast<uint32_t>(wordStyles.size()), static_cast<uint32_t>(wordFocusBoundary.size()),
-            static_cast<uint32_t>(wordFocusSuffixX.size()));
+            static_cast<uint32_t>(wordFocusSuffixX.size()), static_cast<uint32_t>(wordGuideDotXOffset.size()));
     return false;
   }
 
@@ -114,6 +128,11 @@ bool TextBlock::serialize(HalFile& file) const {
   if (hasFocus) {
     for (auto b : wordFocusBoundary) serialization::writePod(file, b);
     for (auto sx : wordFocusSuffixX) serialization::writePod(file, sx);
+  }
+  // Guide block: 1-byte presence flag, then the per-word offsets only when present.
+  serialization::writePod(file, static_cast<uint8_t>(hasGuide ? 1 : 0));
+  if (hasGuide) {
+    for (auto gx : wordGuideDotXOffset) serialization::writePod(file, gx);
   }
 
   // Style (alignment + margins/padding/indent)
@@ -142,6 +161,7 @@ std::unique_ptr<TextBlock> TextBlock::deserialize(HalFile& file) {
   std::vector<EpdFontFamily::Style> wordStyles;
   std::vector<uint8_t> wordFocusBoundary;
   std::vector<uint16_t> wordFocusSuffixX;
+  std::vector<uint16_t> wordGuideDotXOffset;
   BlockStyle blockStyle;
 
   // Word count
@@ -170,6 +190,12 @@ std::unique_ptr<TextBlock> TextBlock::deserialize(HalFile& file) {
     for (auto& b : wordFocusBoundary) serialization::readPod(file, b);
     for (auto& sx : wordFocusSuffixX) serialization::readPod(file, sx);
   }
+  uint8_t hasGuide;
+  serialization::readPod(file, hasGuide);
+  if (hasGuide) {
+    wordGuideDotXOffset.resize(wc);
+    for (auto& gx : wordGuideDotXOffset) serialization::readPod(file, gx);
+  }
 
   // Style (alignment + margins/padding/indent)
   serialization::readPod(file, blockStyle.alignment);
@@ -189,5 +215,5 @@ std::unique_ptr<TextBlock> TextBlock::deserialize(HalFile& file) {
 
   return std::unique_ptr<TextBlock>(new TextBlock(std::move(words), std::move(wordXpos), std::move(wordStyles),
                                                   std::move(wordFocusBoundary), std::move(wordFocusSuffixX),
-                                                  blockStyle));
+                                                  std::move(wordGuideDotXOffset), blockStyle));
 }

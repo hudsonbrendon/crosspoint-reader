@@ -132,12 +132,24 @@ void ParsedText::addWord(std::string word, const EpdFontFamily::Style fontStyle,
   const bool wordStartsRtl = !hasRtlWord && mayContainRtlBytes(word.c_str()) &&
                              BidiUtils::startsWithRtl(word.c_str(), RTL_PER_WORD_PROBE_DEPTH);
 
+  // Guide Reading: before pushing this word, emit a standalone middle-dot token (U+00B7)
+  // that sits in the gap before it. Only between words (not before the first word of the
+  // block, and never for tokens that attach to the previous one with no space).
+  if (guideReadingEnabled && !attachToPrevious && !words.empty()) {
+    words.push_back("\xc2\xb7");
+    wordStyles.push_back(EpdFontFamily::REGULAR);
+    wordContinues.push_back(false);
+    wordIsFocusSuffix.push_back(false);
+    wordIsGuideDot.push_back(true);
+  }
+
   // Already-bold text should stay fully bold; focus splitting would make its suffix regular later.
   if (!this->focusReadingEnabled || (baseStyle & EpdFontFamily::BOLD) != 0) {
     words.push_back(std::move(word));
     wordStyles.push_back(baseStyle);
     wordContinues.push_back(attachToPrevious);
     wordIsFocusSuffix.push_back(false);
+    wordIsGuideDot.push_back(false);
     if (wordStartsRtl) {
       hasRtlWord = true;
     }
@@ -167,6 +179,7 @@ void ParsedText::addWord(std::string word, const EpdFontFamily::Style fontStyle,
     wordStyles.reserve(newCapacity);
     wordContinues.reserve(newCapacity);
     wordIsFocusSuffix.reserve(newCapacity);
+    wordIsGuideDot.reserve(newCapacity);
   }
 
   // Lambda helper to process and push individual sub-segments of the string
@@ -178,6 +191,7 @@ void ParsedText::addWord(std::string word, const EpdFontFamily::Style fontStyle,
       wordStyles.push_back(baseStyle);
       wordContinues.push_back(attach);
       wordIsFocusSuffix.push_back(false);
+      wordIsGuideDot.push_back(false);
     } else {
       size_t charCount = 0;
       const unsigned char* countPtr = reinterpret_cast<const unsigned char*>(segment.data());
@@ -199,6 +213,7 @@ void ParsedText::addWord(std::string word, const EpdFontFamily::Style fontStyle,
         wordStyles.push_back(static_cast<EpdFontFamily::Style>(baseStyle | EpdFontFamily::BOLD));
         wordContinues.push_back(attach);
         wordIsFocusSuffix.push_back(false);
+        wordIsGuideDot.push_back(false);
       } else {
         countPtr = reinterpret_cast<const unsigned char*>(segment.data());
         for (size_t i = 0; i < targetBoldChars; ++i) {
@@ -211,12 +226,14 @@ void ParsedText::addWord(std::string word, const EpdFontFamily::Style fontStyle,
         wordStyles.push_back(static_cast<EpdFontFamily::Style>(baseStyle | EpdFontFamily::BOLD));
         wordContinues.push_back(attach);
         wordIsFocusSuffix.push_back(false);
+        wordIsGuideDot.push_back(false);
 
         // Regular suffix - marked so extractLine can merge it back into single TextBlock entry
         words.emplace_back(segment.substr(splitByteOffset));
         wordStyles.push_back(baseStyle);
         wordContinues.push_back(true);
         wordIsFocusSuffix.push_back(true);
+        wordIsGuideDot.push_back(false);
       }
     }
   };
@@ -336,6 +353,7 @@ void ParsedText::layoutAndExtractLines(const GfxRenderer& renderer, const int fo
     wordStyles.erase(wordStyles.begin(), wordStyles.begin() + consumed);
     wordContinues.erase(wordContinues.begin(), wordContinues.begin() + consumed);
     wordIsFocusSuffix.erase(wordIsFocusSuffix.begin(), wordIsFocusSuffix.begin() + consumed);
+    wordIsGuideDot.erase(wordIsGuideDot.begin(), wordIsGuideDot.begin() + consumed);
   }
 }
 
@@ -605,6 +623,7 @@ bool ParsedText::hyphenateWordAtIndex(const size_t wordIndex, const int availabl
   wordStyles.insert(wordStyles.begin() + wordIndex + 1, style);
   // The hyphen remainder is not a focus suffix - it starts fresh on the next line.
   wordIsFocusSuffix.insert(wordIsFocusSuffix.begin() + wordIndex + 1, false);
+  wordIsGuideDot.insert(wordIsGuideDot.begin() + wordIndex + 1, false);
 
   // Continuation flag handling after splitting a word into prefix + remainder.
   //
@@ -719,11 +738,13 @@ void ParsedText::extractLine(const size_t breakIndex, const int pageWidth, const
     reorderedWidthsScratch.clear();
     reorderedContinuesScratch.clear();
     reorderedFocusSuffixScratch.clear();
+    reorderedGuideDotScratch.clear();
     reorderedWordsScratch.reserve(visualOrderScratch.size());
     reorderedStylesScratch.reserve(visualOrderScratch.size());
     reorderedWidthsScratch.reserve(visualOrderScratch.size());
     reorderedContinuesScratch.reserve(visualOrderScratch.size());
     reorderedFocusSuffixScratch.reserve(visualOrderScratch.size());
+    reorderedGuideDotScratch.reserve(visualOrderScratch.size());
 
     for (size_t i = 0; i < visualOrderScratch.size(); ++i) {
       const uint16_t src = visualOrderScratch[i];
@@ -731,6 +752,7 @@ void ParsedText::extractLine(const size_t breakIndex, const int pageWidth, const
       reorderedStylesScratch.push_back(lineWordStyles[src]);
       reorderedWidthsScratch.push_back(wordWidths[lastBreakAt + src]);
       reorderedFocusSuffixScratch.push_back(wordIsFocusSuffix[lastBreakAt + src]);
+      reorderedGuideDotScratch.push_back(wordIsGuideDot[lastBreakAt + src]);
 
       // Continuation means "no break/gap between two adjacent logical tokens".
       // After visual reordering (common in RTL), an adjacent logical pair can appear
@@ -905,6 +927,9 @@ void ParsedText::extractLine(const size_t breakIndex, const int pageWidth, const
   const auto isFocusSuffixAt = [&](const size_t idx) {
     return willReorder ? reorderedFocusSuffixScratch[idx] : wordIsFocusSuffix[lastBreakAt + idx];
   };
+  const auto isGuideDotAt = [&](const size_t idx) {
+    return willReorder ? reorderedGuideDotScratch[idx] : wordIsGuideDot[lastBreakAt + idx];
+  };
 
   // Fast path: when no word on this line was split for focus reading, skip the merge work
   // entirely and pass empty boundary/suffixX vectors. TextBlock pays zero per-word RAM cost
@@ -916,28 +941,49 @@ void ParsedText::extractLine(const size_t breakIndex, const int pageWidth, const
       break;
     }
   }
+  bool lineHasGuideDot = false;
+  for (size_t i = 0; i < lineWordCount; i++) {
+    if (isGuideDotAt(i)) {
+      lineHasGuideDot = true;
+      break;
+    }
+  }
 
-  if (!lineHasFocusSplit) {
+  if (!lineHasFocusSplit && !lineHasGuideDot) {
     processLine(std::make_shared<TextBlock>(std::move(lineWords), std::move(lineXPos), std::move(lineWordStyles),
-                                            std::vector<uint8_t>{}, std::vector<uint16_t>{}, blockStyle));
+                                            std::vector<uint8_t>{}, std::vector<uint16_t>{}, std::vector<uint16_t>{},
+                                            blockStyle));
     return;
   }
 
-  // Slow path: merge focus suffix tokens back into their preceding word entry so each
-  // original word occupies one TextBlock slot. Splits are recorded as per-word annotations
-  // applied at render time, cutting the token count significantly when the feature is active.
+  // Slow path: merge focus-suffix tokens back into their preceding word entry, and drop
+  // guide-dot tokens while recording their pixel offset on the preceding real word. Each
+  // original word occupies one TextBlock slot; splits/dots are per-word annotations applied
+  // at render time.
   std::vector<std::string> outWords;
   std::vector<int16_t> outXPos;
   std::vector<EpdFontFamily::Style> outStyles;
   std::vector<uint8_t> outBoundaries;
   std::vector<uint16_t> outSuffixX;
+  std::vector<uint16_t> outGuideDotXOffset;
   outWords.reserve(lineWordCount);
   outXPos.reserve(lineWordCount);
   outStyles.reserve(lineWordCount);
   outBoundaries.reserve(lineWordCount);
   outSuffixX.reserve(lineWordCount);
+  outGuideDotXOffset.reserve(lineWordCount);
 
   for (size_t i = 0; i < lineWordCount; i++) {
+    if (isGuideDotAt(i)) {
+      // Guide dot token: do not emit a word. Record its x offset on the most recently
+      // emitted real word (offset = dot x minus that word's x). If there is no preceding
+      // emitted word (e.g. dot is first on the line after reorder), drop it silently.
+      if (!outWords.empty()) {
+        const int dotDelta = static_cast<int>(lineXPos[i]) - static_cast<int>(outXPos.back());
+        outGuideDotXOffset.back() = static_cast<uint16_t>(dotDelta > 0 ? dotDelta : 0);
+      }
+      continue;
+    }
     if (isFocusSuffixAt(i) && !outWords.empty()) {
       // Focus suffix: merge string into the preceding bold-prefix entry.
       outWords.back() += lineWords[i];
@@ -947,23 +993,42 @@ void ParsedText::extractLine(const size_t breakIndex, const int pageWidth, const
       uint16_t suffixX = 0;
       if (i + 1 < lineWordCount && isFocusSuffixAt(i + 1)) {
         boundary = static_cast<uint8_t>(std::min(lineWords[i].size(), size_t{255}));
-        // Suffix x offset = layout-time advance of the bold prefix, already known from xpos table.
         const int suffixDelta = static_cast<int>(lineXPos[i + 1]) - static_cast<int>(lineXPos[i]);
         suffixX = static_cast<uint16_t>(suffixDelta > 0 ? suffixDelta : 0);
       }
       outWords.push_back(std::move(lineWords[i]));
       outXPos.push_back(lineXPos[i]);
-      // For focus entries with a suffix, strip BOLD from the stored style.
-      // Render re-applies it to the prefix portion only, via the boundary field.
       const EpdFontFamily::Style storedStyle =
           boundary > 0 ? static_cast<EpdFontFamily::Style>(lineWordStyles[i] & ~EpdFontFamily::BOLD)
                        : lineWordStyles[i];
       outStyles.push_back(storedStyle);
       outBoundaries.push_back(boundary);
       outSuffixX.push_back(suffixX);
+      outGuideDotXOffset.push_back(0);  // default: no dot follows; patched when the next token is a dot
     }
   }
 
+  // If no focus split occurred on this line, the boundary/suffixX vectors are all-zero and
+  // can be dropped to save per-word RAM. Same for the guide vector if no dot was recorded.
+  bool anyBoundary = false;
+  for (const auto b : outBoundaries) {
+    if (b > 0) {
+      anyBoundary = true;
+      break;
+    }
+  }
+  bool anyGuide = false;
+  for (const auto g : outGuideDotXOffset) {
+    if (g > 0) {
+      anyGuide = true;
+      break;
+    }
+  }
+  std::vector<uint8_t> finalBoundaries = anyBoundary ? std::move(outBoundaries) : std::vector<uint8_t>{};
+  std::vector<uint16_t> finalSuffixX = anyBoundary ? std::move(outSuffixX) : std::vector<uint16_t>{};
+  std::vector<uint16_t> finalGuide = anyGuide ? std::move(outGuideDotXOffset) : std::vector<uint16_t>{};
+
   processLine(std::make_shared<TextBlock>(std::move(outWords), std::move(outXPos), std::move(outStyles),
-                                          std::move(outBoundaries), std::move(outSuffixX), blockStyle));
+                                          std::move(finalBoundaries), std::move(finalSuffixX), std::move(finalGuide),
+                                          blockStyle));
 }

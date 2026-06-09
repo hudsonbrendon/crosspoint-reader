@@ -109,6 +109,8 @@ if (parsedSize != fileSize) {
 
 v26 adds `forceParagraphIndents` and `guideReadingEnabled` booleans to the section header, immediately after `focusReadingEnabled`.
 
+Each serialized `TextBlock` now also carries a guide-dot block after the focus block: a 1-byte presence flag, followed (when 1) by `u16 wordGuideDotXOffset[wordCount]`.
+
 ImHex Pattern:
 
 ```c++

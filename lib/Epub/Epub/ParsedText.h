@@ -17,11 +17,13 @@ class ParsedText {
   std::vector<EpdFontFamily::Style> wordStyles;
   std::vector<bool> wordContinues;      // true = word attaches to previous (no space before it)
   std::vector<bool> wordIsFocusSuffix;  // true = token is the regular tail of a focus bold-prefix split
+  std::vector<bool> wordIsGuideDot;     // true = token is a standalone guide dot (U+00B7) emitted between words
   BlockStyle blockStyle;
   bool extraParagraphSpacing;
   bool hyphenationEnabled;
   bool focusReadingEnabled;
   bool forceParagraphIndents;
+  bool guideReadingEnabled;
   bool isNaturalAlign;
   bool hasRtlWord;
   std::vector<std::string> reorderedWordsScratch;
@@ -29,6 +31,7 @@ class ParsedText {
   std::vector<uint16_t> reorderedWidthsScratch;
   std::vector<bool> reorderedContinuesScratch;
   std::vector<bool> reorderedFocusSuffixScratch;
+  std::vector<bool> reorderedGuideDotScratch;
   std::vector<uint16_t> visualOrderScratch;
 
   void applyParagraphIndent();
@@ -48,12 +51,13 @@ class ParsedText {
  public:
   explicit ParsedText(const bool extraParagraphSpacing, const bool hyphenationEnabled = false,
                       const bool focusReadingEnabled = false, const bool forceParagraphIndents = false,
-                      const BlockStyle& blockStyle = BlockStyle())
+                      const bool guideReadingEnabled = false, const BlockStyle& blockStyle = BlockStyle())
       : blockStyle(blockStyle),
         extraParagraphSpacing(extraParagraphSpacing),
         hyphenationEnabled(hyphenationEnabled),
         focusReadingEnabled(focusReadingEnabled),
         forceParagraphIndents(forceParagraphIndents),
+        guideReadingEnabled(guideReadingEnabled),
         isNaturalAlign(false),
         hasRtlWord(false) {}
   ~ParsedText() = default;
