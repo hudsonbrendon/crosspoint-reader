@@ -5,6 +5,7 @@
 #include <I18n.h>
 #include <Logging.h>
 #include <WiFi.h>
+#include <esp_http_client.h>
 #include <esp_sntp.h>
 #include <esp_wifi.h>
 
@@ -24,6 +25,26 @@
 #include "fontIds.h"
 
 namespace {
+// Fast captive-portal / no-internet check. Some APs associate but block or
+// hijack traffic (cafe portals); without this, NTP + the TLS handshake spend
+// ~45s retrying and the activity looks frozen. A 4s probe to a known 204
+// endpoint fails fast instead.
+bool probeInternet() {
+  esp_http_client_config_t cfg = {};
+  cfg.url = "http://cp.cloudflare.com/generate_204";
+  cfg.timeout_ms = 4000;
+  cfg.buffer_size = 256;
+  cfg.buffer_size_tx = 256;
+  cfg.disable_auto_redirect = true;
+  esp_http_client_handle_t client = esp_http_client_init(&cfg);
+  if (!client) return false;
+  const esp_err_t err = esp_http_client_perform(client);
+  const int code = esp_http_client_get_status_code(client);
+  esp_http_client_cleanup(client);
+  LOG_DBG("KOSync", "Internet probe: err=%d code=%d", err, code);
+  return err == ESP_OK && code == 204;
+}
+
 void syncTimeWithNTP() {
   // Stop SNTP if already running (can't reconfigure while running)
   if (esp_sntp_enabled()) {
@@ -99,6 +120,18 @@ void KOReaderSyncActivity::onWifiSelectionComplete(const bool success) {
     statusMessage = tr(STR_SYNCING_TIME);
   }
   requestUpdate(true);
+
+  // Captive-portal / no-internet check before the slow NTP + TLS path.
+  if (!probeInternet()) {
+    LOG_DBG("KOSync", "Internet probe failed, aborting sync");
+    {
+      RenderLock lock(*this);
+      state = SYNC_FAILED;
+      statusMessage = tr(STR_NO_INTERNET);
+    }
+    requestUpdate(true);
+    return;
+  }
 
   // Sync time with NTP before making API requests
   syncTimeWithNTP();
