@@ -234,3 +234,76 @@ TEST(StatsCompute, AveragesGuardZero) {
   EXPECT_EQ(avgMsPerSession(60000, 0), 0u);
   EXPECT_EQ(avgMsPerSession(90000, 3), 30000u);
 }
+
+// ---- Streak math (pure updateStreak) ----
+using reading_stats::updateStreak;
+
+TEST(Streak, FirstEverDayStartsAtOne) {
+  int16_t lastYear = -1, lastDay = -1;
+  uint16_t current = 0, longest = 0;
+  updateStreak(2026, 100, lastYear, lastDay, current, longest);
+  EXPECT_EQ(current, 1u);
+  EXPECT_EQ(longest, 1u);
+  EXPECT_EQ(lastYear, 2026);
+  EXPECT_EQ(lastDay, 100);
+}
+
+TEST(Streak, ConsecutiveDayIncrements) {
+  int16_t lastYear = 2026, lastDay = 100;
+  uint16_t current = 1, longest = 1;
+  updateStreak(2026, 101, lastYear, lastDay, current, longest);
+  EXPECT_EQ(current, 2u);
+  EXPECT_EQ(longest, 2u);
+}
+
+TEST(Streak, SameDayIsNoOp) {
+  int16_t lastYear = 2026, lastDay = 100;
+  uint16_t current = 5, longest = 7;
+  updateStreak(2026, 100, lastYear, lastDay, current, longest);
+  EXPECT_EQ(current, 5u);   // unchanged
+  EXPECT_EQ(longest, 7u);   // unchanged
+  EXPECT_EQ(lastDay, 100);  // unchanged
+}
+
+TEST(Streak, GapResetsToOne) {
+  int16_t lastYear = 2026, lastDay = 100;
+  uint16_t current = 9, longest = 9;
+  updateStreak(2026, 105, lastYear, lastDay, current, longest);  // 5-day gap
+  EXPECT_EQ(current, 1u);
+  EXPECT_EQ(longest, 9u);  // longest preserved
+}
+
+TEST(Streak, YearBoundaryDec31ToJan1Continues) {
+  // Non-leap year 2025 has 365 days, yday 0..364; Dec 31 = yday 364.
+  int16_t lastYear = 2025, lastDay = 364;
+  uint16_t current = 3, longest = 3;
+  updateStreak(2026, 0, lastYear, lastDay, current, longest);  // Jan 1 2026
+  EXPECT_EQ(current, 4u);
+  EXPECT_EQ(longest, 4u);
+}
+
+TEST(Streak, LeapYearDec31ToJan1Continues) {
+  // Leap year 2024 has 366 days, yday 0..365; Dec 31 = yday 365.
+  int16_t lastYear = 2024, lastDay = 365;
+  uint16_t current = 2, longest = 2;
+  updateStreak(2025, 0, lastYear, lastDay, current, longest);  // Jan 1 2025
+  EXPECT_EQ(current, 3u);
+  EXPECT_EQ(longest, 3u);
+}
+
+TEST(Streak, YearJumpWithMidYearDaysResets) {
+  // New year but not a Dec31->Jan1 rollover (e.g. opened mid-year) -> reset.
+  int16_t lastYear = 2025, lastDay = 200;
+  uint16_t current = 8, longest = 8;
+  updateStreak(2026, 10, lastYear, lastDay, current, longest);
+  EXPECT_EQ(current, 1u);
+  EXPECT_EQ(longest, 8u);
+}
+
+TEST(Streak, LongestTracksHistoricalMax) {
+  int16_t lastYear = 2026, lastDay = 10;
+  uint16_t current = 4, longest = 6;
+  updateStreak(2026, 11, lastYear, lastDay, current, longest);  // current 4->5, still < longest
+  EXPECT_EQ(current, 5u);
+  EXPECT_EQ(longest, 6u);
+}
