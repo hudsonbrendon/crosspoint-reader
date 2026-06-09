@@ -487,6 +487,31 @@ See [docs/sd-card-fonts.md](./docs/sd-card-fonts.md) for full installation detai
 
 ---
 
+### 3.8 RSS Reader
+
+InkPoint can subscribe to **RSS 2.0 and Atom** feeds, fetch them over WiFi, cache them on the SD card, and read articles offline.
+
+Open it from **Home → RSS Reader**. You'll see your list of feeds.
+
+**Adding feeds**
+
+- **On the device:** select **Add Feed**, then type the feed URL with the on-screen keyboard.
+- **From the browser (easier):** select **Manage on web** on the feed screen. The device starts a **Web Management** server and shows a QR code / URL (the same screen used for File Transfer, but limited to *Join a Network* / *Create Hotspot*). Open the URL, go to the **RSS Feeds** page, and add, edit, or delete feeds. Changes apply to the device immediately.
+
+**Reading**
+
+1. Select a feed. With WiFi connected, InkPoint fetches it and lists the items (title + date). If WiFi is off but the feed was fetched before, it shows the cached items (a *Showing cached items (offline)* banner appears).
+2. Select an item to read its content in the text reader. Press **Back** to return to the article list; select another item to keep reading.
+3. Read articles appear in **Recent Books** with the article title and the feed name as the source, so you can resume them later from Home or Recents.
+
+**Feed content note**
+
+InkPoint shows the text the feed itself publishes. Many feeds (for example **Hacker News** or some blogs) only include a short summary or a link, so only that snippet is shown. **Full-text feeds** (many WordPress blogs, e.g. `https://www.joelonsoftware.com/feed/`) include the whole article, which is displayed in full (very long articles are capped to protect memory).
+
+Feeds are stored at `/.inkpoint/rss/feeds.json` and cached articles under `/.inkpoint/rss/feed_<hash>/` on the SD card.
+
+---
+
 ## 4. Reading Mode
 
 Once you have opened a book, the button layout changes to facilitate reading.
