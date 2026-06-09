@@ -33,6 +33,8 @@ class InkPointWebServerActivity final : public Activity {
   // Network mode
   NetworkMode networkMode = NetworkMode::JOIN_NETWORK;
   bool isApMode = false;
+  // When true, this is the RSS "Manage on web" variant: hide Calibre, title "Web Management".
+  bool webManagement = false;
 
   // Web server - owned by this activity
   std::unique_ptr<InkPointWebServer> webServer;
@@ -61,8 +63,9 @@ class InkPointWebServerActivity final : public Activity {
   void startWebServer();
 
  public:
-  explicit InkPointWebServerActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
-      : Activity("InkPointWebServer", renderer, mappedInput) {}
+  explicit InkPointWebServerActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,
+                                     bool webManagement = false)
+      : Activity("InkPointWebServer", renderer, mappedInput), webManagement(webManagement) {}
   void onEnter() override;
   void onExit() override;
   void loop() override;

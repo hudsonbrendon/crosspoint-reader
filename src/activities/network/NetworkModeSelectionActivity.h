@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "I18n.h"
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 
@@ -15,15 +16,21 @@ enum class NetworkMode { JOIN_NETWORK, CONNECT_CALIBRE, CREATE_HOTSPOT };
  *
  * The onModeSelected callback is called with the user's choice.
  * The onCancel callback is called if the user presses back.
+ *
+ * showCalibre: when false, the Calibre option is hidden (web-management variant).
+ * titleStr: the StrId to display as the screen header.
  */
 class NetworkModeSelectionActivity final : public Activity {
   ButtonNavigator buttonNavigator;
 
   int selectedIndex = 0;
+  bool showCalibre = true;
+  StrId titleStr = StrId::STR_FILE_TRANSFER;
 
  public:
-  explicit NetworkModeSelectionActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
-      : Activity("NetworkModeSelection", renderer, mappedInput) {}
+  explicit NetworkModeSelectionActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,
+                                        bool showCalibre = true, StrId titleStr = StrId::STR_FILE_TRANSFER)
+      : Activity("NetworkModeSelection", renderer, mappedInput), showCalibre(showCalibre), titleStr(titleStr) {}
   void onEnter() override;
   void onExit() override;
   void loop() override;

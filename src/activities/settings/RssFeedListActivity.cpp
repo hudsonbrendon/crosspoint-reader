@@ -162,4 +162,4 @@ void RssFeedListActivity::onDeleteFeed(size_t index) {
       });
 }
 
-void RssFeedListActivity::onManageOnWeb() { activityManager.goToFileTransfer(); }
+void RssFeedListActivity::onManageOnWeb() { activityManager.goToWebManagement(); }
