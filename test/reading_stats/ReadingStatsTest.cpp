@@ -307,3 +307,35 @@ TEST(Streak, LongestTracksHistoricalMax) {
   EXPECT_EQ(current, 5u);
   EXPECT_EQ(longest, 6u);
 }
+
+// ---- Books finished counter ----
+TEST(BooksFinished, IncrementsAndSaturates) {
+  ReadingStatsAggregator agg;
+  EXPECT_EQ(agg.booksFinished(), 0u);
+  agg.incrementBooksFinished();
+  agg.incrementBooksFinished();
+  EXPECT_EQ(agg.booksFinished(), 2u);
+}
+
+TEST(BooksFinished, RecordReadingDayDrivesStreakAccessors) {
+  ReadingStatsAggregator agg;
+  EXPECT_EQ(agg.currentStreak(), 0u);
+  agg.recordReadingDay(2026, 50);
+  EXPECT_EQ(agg.currentStreak(), 1u);
+  EXPECT_EQ(agg.longestStreak(), 1u);
+  agg.recordReadingDay(2026, 51);
+  EXPECT_EQ(agg.currentStreak(), 2u);
+  EXPECT_EQ(agg.longestStreak(), 2u);
+  agg.recordReadingDay(2026, 51);  // same day -> no-op
+  EXPECT_EQ(agg.currentStreak(), 2u);
+}
+
+TEST(BooksFinished, SetLifetimeCountersRoundTrips) {
+  ReadingStatsAggregator agg;
+  agg.setLifetimeCounters(3, 9, 12, 2026, 100);
+  EXPECT_EQ(agg.currentStreak(), 3u);
+  EXPECT_EQ(agg.longestStreak(), 9u);
+  EXPECT_EQ(agg.booksFinished(), 12u);
+  EXPECT_EQ(agg.lastReadYear(), 2026);
+  EXPECT_EQ(agg.lastReadDayOfYear(), 100);
+}
