@@ -375,6 +375,13 @@ bool JsonSettingsIO::saveReadingStats(const ReadingStatsStore& store, const char
     obj["sessionCount"] = book.sessionCount;
   }
 
+  doc["v"] = 1;
+  doc["currentStreak"] = store.currentStreak();
+  doc["longestStreak"] = store.longestStreak();
+  doc["booksFinished"] = store.booksFinished();
+  doc["lastReadYear"] = store.lastReadYear();
+  doc["lastReadDayOfYear"] = store.lastReadDayOfYear();
+
   String json;
   serializeJson(doc, json);
   return Storage.writeFile(path, json);
@@ -401,6 +408,11 @@ bool JsonSettingsIO::loadReadingStats(ReadingStatsStore& store, const char* json
   }
 
   store.loadBooks(std::move(books));
+  store.setLifetimeCounters(static_cast<uint16_t>(doc["currentStreak"] | 0u),
+                            static_cast<uint16_t>(doc["longestStreak"] | 0u),
+                            static_cast<uint16_t>(doc["booksFinished"] | 0u),
+                            static_cast<int16_t>(doc["lastReadYear"] | -1),
+                            static_cast<int16_t>(doc["lastReadDayOfYear"] | -1));
   LOG_DBG("RSS", "Reading stats loaded (%d books)", static_cast<int>(store.books().size()));
   return true;
 }

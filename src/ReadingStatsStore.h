@@ -41,11 +41,29 @@ class ReadingStatsStore {
   uint32_t totalReadingMs() const { return aggregator.totalReadingMs(); }
   uint32_t pagesPerHour(const std::string& path) const { return aggregator.pagesPerHour(path); }
 
+  uint16_t currentStreak() const { return aggregator.currentStreak(); }
+  uint16_t longestStreak() const { return aggregator.longestStreak(); }
+  uint16_t booksFinished() const { return aggregator.booksFinished(); }
+  int16_t lastReadYear() const { return aggregator.lastReadYear(); }
+  int16_t lastReadDayOfYear() const { return aggregator.lastReadDayOfYear(); }
+
+  // Called by the reader when a book is finished (read to the last page).
+  void incrementBooksFinished() { aggregator.incrementBooksFinished(); }
+
+  // Stamp today's reading day into the streak (valid wall-clock only).
+  void recordReadingDay(int16_t year, int16_t dayOfYear) { aggregator.recordReadingDay(year, dayOfYear); }
+
  private:
   ReadingStatsStore() = default;
 
   // Only JsonSettingsIO may replace the in-memory stats wholesale (used on load).
   void loadBooks(std::vector<reading_stats::BookStats> books) { aggregator.load(std::move(books)); }
+
+  // Only JsonSettingsIO may restore persisted lifetime counters (used on load).
+  void setLifetimeCounters(uint16_t current, uint16_t longest, uint16_t finished, int16_t lastYear,
+                           int16_t lastDay) {
+    aggregator.setLifetimeCounters(current, longest, finished, lastYear, lastDay);
+  }
 
   friend bool JsonSettingsIO::loadReadingStats(ReadingStatsStore& store, const char* json);
 };
