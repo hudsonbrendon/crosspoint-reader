@@ -450,11 +450,13 @@ void LyraTheme::drawRecentBookCover(GfxRenderer& renderer, Rect rect, const std:
                         LyraMetrics::values.homeCoverHeight, true);
 
       if (!hasCover) {
-        // Render empty cover
-        renderer.fillRect(tileX + hPaddingInSelection,
-                          tileY + hPaddingInSelection + (LyraMetrics::values.homeCoverHeight / 3), coverWidth,
-                          2 * LyraMetrics::values.homeCoverHeight / 3, true);
-        renderer.drawIcon(CoverIcon, tileX + hPaddingInSelection + 24, tileY + hPaddingInSelection + 24, 32, 32);
+        // Render empty cover: all-white box with a centered book icon
+        constexpr int iconSize = 32;
+        const int boxX = tileX + hPaddingInSelection;
+        const int boxY = tileY + hPaddingInSelection;
+        const int iconX = boxX + (coverWidth - iconSize) / 2;
+        const int iconY = boxY + (LyraMetrics::values.homeCoverHeight - iconSize) / 2;
+        renderer.drawIcon(CoverIcon, iconX, iconY, iconSize, iconSize);
       }
 
       coverBufferStored = storeCoverBuffer();
