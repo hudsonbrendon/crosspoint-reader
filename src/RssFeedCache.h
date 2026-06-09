@@ -30,6 +30,11 @@ std::string itemTextPath(const std::string& feedUrl, size_t index);
 // (reading.txt). openSelectedItem() writes the stripped article here and opens it.
 std::string readingTextPath(const std::string& feedUrl);
 
+// Build a filesystem-safe slug from an article title.
+// Lowercases ASCII, replaces runs of non-alphanumeric chars with '-',
+// trims leading/trailing '-', caps at 48 chars. Falls back to "article".
+std::string rssSlug(const std::string& title);
+
 // True if a cache exists for this feed.
 bool hasCache(const std::string& feedUrl);
 }  // namespace RssFeedCache

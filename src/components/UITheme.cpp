@@ -115,6 +115,11 @@ UIIcon UITheme::getFileIcon(const std::string& filename) {
   if (filename.back() == '/') {
     return Folder;
   }
+  // RSS article files live under /.inkpoint/rss/ — use the Library icon so
+  // Recents and any file-icon usage show the RSS feed icon rather than Text.
+  if (filename.find("/.inkpoint/rss/") != std::string::npos) {
+    return Library;
+  }
   if (FsHelpers::hasEpubExtension(filename) || FsHelpers::hasXtcExtension(filename)) {
     return Book;
   }
