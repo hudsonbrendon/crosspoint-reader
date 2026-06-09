@@ -1,10 +1,12 @@
 #include "RssBrowserActivity.h"
 
 #include <GfxRenderer.h>
+#include <HalStorage.h>
 #include <I18n.h>
 #include <Logging.h>
 #include <WiFi.h>
 
+#include "InkPointState.h"
 #include "MappedInputManager.h"
 #include "RssFeedCache.h"
 #include "RssParser.h"
@@ -212,6 +214,26 @@ void RssBrowserActivity::loadFromCache() {
 void RssBrowserActivity::openSelectedItem() {
   if (selectorIndex < 0 || static_cast<size_t>(selectorIndex) >= items.size()) return;
   const std::string path = RssFeedCache::itemTextPath(feedUrl, static_cast<size_t>(selectorIndex));
+  if (!Storage.exists(path.c_str())) {
+    LOG_ERR("RSS", "Cached article missing: %s", path.c_str());
+    return;
+  }
+
+  if (wifiWasConnected && WiFi.getMode() != WIFI_MODE_NULL) {
+    // This session brought WiFi up, so we must clear the ~50KB of LWIP heap
+    // fragmentation on the way out (same reason onExit() reboots). Navigating
+    // directly would trigger onExit()'s silentRestart() and reboot us to Home,
+    // losing the article. Instead, reboot straight into the reader showing this
+    // cached article (it reads offline from /.inkpoint/rss/). goToReader()
+    // dispatches by extension, so the .txt opens in the TXT reader.
+    APP_STATE.openEpubPath = path;
+    APP_STATE.saveToFile();
+    WiFi.disconnect(false);
+    silentRestartToReader();
+    return;
+  }
+
+  // Pure offline browse (no WiFi session this time) — navigate directly, no reboot.
   activityManager.goToTxtReader(path);
 }
 
