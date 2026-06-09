@@ -81,4 +81,26 @@ uint32_t ReadingStatsAggregator::pagesPerHour(const std::string& bookPath) const
   return static_cast<uint32_t>(static_cast<uint64_t>(s->pagesRead) * 3600000ULL / s->totalReadingMs);
 }
 
+void updateStreak(int16_t curYear, int16_t curDay, int16_t& lastYear, int16_t& lastDay, uint16_t& current,
+                  uint16_t& longest) {
+  // First ever valid day, or no prior date recorded.
+  if (lastYear < 0 || lastDay < 0) {
+    current = 1;
+  } else if (curYear == lastYear && curDay == lastDay) {
+    // Same calendar day: already counted; nothing to do but keep lastYear/lastDay.
+    return;
+  } else {
+    const bool sameYearNext = (curYear == lastYear) && (curDay == lastDay + 1);
+    const bool yearRollover = (curYear == lastYear + 1) && (curDay == 0) && (lastDay == 364 || lastDay == 365);
+    if (sameYearNext || yearRollover) {
+      if (current < UINT16_MAX) current++;
+    } else {
+      current = 1;
+    }
+  }
+  if (current > longest) longest = current;
+  lastYear = curYear;
+  lastDay = curDay;
+}
+
 }  // namespace reading_stats
