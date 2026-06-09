@@ -30,6 +30,23 @@ bool startsWithImageMediaType(const std::string& mediaType) {
 
   return true;
 }
+
+// ASCII case-insensitive string equality. EPUBs sometimes declare
+// meta name="cover" content="cover" against an item id="Cover" (case
+// mismatch); a strict compare then misses the cover image.
+bool equalsIgnoreCaseAscii(const std::string& a, const std::string& b) {
+  if (a.size() != b.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < a.size(); ++i) {
+    const unsigned char ca = static_cast<unsigned char>(a[i]);
+    const unsigned char cb = static_cast<unsigned char>(b[i]);
+    if (std::tolower(ca) != std::tolower(cb)) {
+      return false;
+    }
+  }
+  return true;
+}
 }  // namespace
 
 bool ContentOpfParser::setup() {
@@ -207,7 +224,7 @@ void XMLCALL ContentOpfParser::startElement(void* userData, const XML_Char* name
     serialization::writeString(self->tempItemStore, itemId);
     serialization::writeString(self->tempItemStore, href);
 
-    if (itemId == self->coverItemId) {
+    if (!self->coverItemId.empty() && equalsIgnoreCaseAscii(itemId, self->coverItemId)) {
       // Some EPUBs set meta name="cover" to an XHTML wrapper item.
       // Only treat it as a cover image when the manifest media-type is image/*.
       if (startsWithImageMediaType(mediaType)) {
@@ -229,6 +246,12 @@ void XMLCALL ContentOpfParser::startElement(void* userData, const XML_Char* name
     // Collect CSS files
     if (mediaType == MEDIA_TYPE_CSS) {
       self->cssFiles.push_back(href);
+    }
+
+    // Remember the first image item as a last-resort cover fallback for EPUBs
+    // that declare no cover at all.
+    if (self->firstImageHref.empty() && startsWithImageMediaType(mediaType)) {
+      self->firstImageHref = href;
     }
 
     // EPUB 3: Check for nav document (properties contains "nav")
@@ -372,6 +395,12 @@ void XMLCALL ContentOpfParser::endElement(void* userData, const XML_Char* name) 
   if (self->state == IN_MANIFEST && (strcmp(name, "manifest") == 0 || strcmp(name, "opf:manifest") == 0)) {
     self->state = IN_PACKAGE;
     self->tempItemStore.close();
+    // Last-resort cover fallback: no explicit cover resolved during the
+    // manifest walk, so use the first image item if there was one.
+    if (self->coverItemHref.empty() && !self->firstImageHref.empty()) {
+      LOG_DBG("COF", "No explicit cover; falling back to first image: %s", self->firstImageHref.c_str());
+      self->coverItemHref = self->firstImageHref;
+    }
     return;
   }
 

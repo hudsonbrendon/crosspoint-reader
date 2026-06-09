@@ -31,6 +31,7 @@ class ContentOpfParser final : public Print {
   BookMetadataCache* cache;
   HalFile tempItemStore;
   std::string coverItemId;
+  std::string firstImageHref;  // first image-media-type item; cover fallback
 
   // Index for fast idref→href lookup (used only for large EPUBs)
   struct ItemIndexEntry {
