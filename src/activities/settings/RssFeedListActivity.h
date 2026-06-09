@@ -14,11 +14,12 @@ class RssFeedListActivity final : public Activity {
 
  private:
   void onAddFeed();
+  void onManageOnWeb();
   void onSelectFeed(size_t index);
   void onDeleteFeed(size_t index);
   static std::string hostOf(const std::string& url);
 
-  int selectedIndex = 0;  // 0..feedCount-1 = feeds; feedCount = "Add Feed" row
+  int selectedIndex = 0;  // 0..feedCount-1 = feeds; feedCount = "Add Feed"; feedCount+1 = "Manage on web"
   ButtonNavigator buttonNavigator;
 
   int getItemCount() const;

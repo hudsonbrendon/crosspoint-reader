@@ -15,8 +15,8 @@ RssFeedListActivity::RssFeedListActivity(GfxRenderer& renderer, MappedInputManag
     : Activity("RssFeedList", renderer, mappedInput) {}
 
 int RssFeedListActivity::getItemCount() const {
-  // Feed rows + 1 "Add Feed" row
-  return static_cast<int>(RSS_STORE.getCount()) + 1;
+  // Feed rows + "Add Feed" row + "Manage on web" row
+  return static_cast<int>(RSS_STORE.getCount()) + 2;
 }
 
 std::string RssFeedListActivity::hostOf(const std::string& url) {
@@ -45,8 +45,10 @@ void RssFeedListActivity::loop() {
     const int feedCount = static_cast<int>(RSS_STORE.getCount());
     if (selectedIndex < feedCount) {
       onSelectFeed(static_cast<size_t>(selectedIndex));
-    } else {
+    } else if (selectedIndex == feedCount) {
       onAddFeed();
+    } else {
+      onManageOnWeb();
     }
     return;
   }
@@ -99,7 +101,10 @@ void RssFeedListActivity::render(RenderLock&&) {
           const auto* feed = RSS_STORE.getFeed(static_cast<size_t>(index));
           if (feed) return feed->name.empty() ? feed->url : feed->name;
         }
-        return std::string(I18n::getInstance().get(StrId::STR_RSS_ADD_FEED));
+        if (index == feedCount) {
+          return std::string(I18n::getInstance().get(StrId::STR_RSS_ADD_FEED));
+        }
+        return std::string(I18n::getInstance().get(StrId::STR_RSS_MANAGE_WEB));
       },
       [feedCount](int index) {
         if (index < feedCount) {
@@ -156,3 +161,5 @@ void RssFeedListActivity::onDeleteFeed(size_t index) {
         requestUpdate();
       });
 }
+
+void RssFeedListActivity::onManageOnWeb() { activityManager.goToFileTransfer(); }
