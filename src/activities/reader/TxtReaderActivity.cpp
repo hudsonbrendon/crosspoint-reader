@@ -34,12 +34,15 @@ void TxtReaderActivity::onEnter() {
 
   txt->setupCacheDir();
 
-  // Save current txt as last opened file and add to recent books
-  auto filePath = txt->getPath();
-  auto fileName = filePath.substr(filePath.rfind('/') + 1);
-  APP_STATE.openEpubPath = filePath;
-  APP_STATE.saveToFile();
-  RECENT_BOOKS.addBook(filePath, fileName, "", "");
+  if (!transient) {
+    // Save current txt as last opened file and add to recent books. Skipped for
+    // transient readers (RSS articles) — they are not library books.
+    auto filePath = txt->getPath();
+    auto fileName = filePath.substr(filePath.rfind('/') + 1);
+    APP_STATE.openEpubPath = filePath;
+    APP_STATE.saveToFile();
+    RECENT_BOOKS.addBook(filePath, fileName, "", "");
+  }
 
   // Trigger first update
   requestUpdate();
@@ -59,16 +62,25 @@ void TxtReaderActivity::onExit() {
 }
 
 void TxtReaderActivity::loop() {
-  // Long press BACK (1s+) goes to file selection
+  // Long press BACK (1s+) goes to file selection (transient: pop back to caller).
   if (mappedInput.isPressed(MappedInputManager::Button::Back) && mappedInput.getHeldTime() >= ReaderUtils::GO_HOME_MS) {
-    activityManager.goToFileBrowser(txt ? txt->getPath() : "");
+    if (transient) {
+      activityManager.popActivity();
+    } else {
+      activityManager.goToFileBrowser(txt ? txt->getPath() : "");
+    }
     return;
   }
 
-  // Short press BACK goes directly to home
+  // Short press BACK: transient pops to the caller (e.g. the RSS article list);
+  // otherwise go Home.
   if (mappedInput.wasReleased(MappedInputManager::Button::Back) &&
       mappedInput.getHeldTime() < ReaderUtils::GO_HOME_MS) {
-    onGoHome();
+    if (transient) {
+      activityManager.popActivity();
+    } else {
+      onGoHome();
+    }
     return;
   }
 
@@ -84,6 +96,8 @@ void TxtReaderActivity::loop() {
     if (currentPage < totalPages - 1) {
       currentPage++;
       requestUpdate();
+    } else if (transient) {
+      activityManager.popActivity();
     } else {
       onGoHome();
     }

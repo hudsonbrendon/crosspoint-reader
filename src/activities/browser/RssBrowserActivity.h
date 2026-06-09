@@ -34,4 +34,7 @@ class RssBrowserActivity final : public Activity {
   int selectorIndex = 0;
   ButtonNavigator buttonNavigator;
   std::string errorMessage;
+  // Swallow the Confirm release that carried us into this activity (held while
+  // selecting the feed) so a cached feed doesn't instantly auto-open item 0.
+  bool lockNextConfirmRelease = false;
 };
