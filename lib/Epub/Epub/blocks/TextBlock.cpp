@@ -62,14 +62,14 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
       renderer.drawText(fontId, wordX, wordY, words[i].c_str(), true, currentStyle, baseDir);
     }
 
-      // Guide dot: redraw the middle dot (U+00B7) at the pre-computed offset after this word.
-      // The dot was merged out of the word stream at layout time; offset 0 means none.
-      if (hasGuide) {
-        const uint16_t dotOffset = wordGuideDotXOffset[i];
-        if (dotOffset > 0) {
-          renderer.drawText(fontId, wordX + dotOffset, wordY, "\xc2\xb7", true, EpdFontFamily::REGULAR, baseDir);
-        }
+    // Guide dot: redraw the middle dot (U+00B7) at the pre-computed offset after this word.
+    // The dot was merged out of the word stream at layout time; offset 0 means none.
+    if (hasGuide) {
+      const uint16_t dotOffset = wordGuideDotXOffset[i];
+      if (dotOffset > 0) {
+        renderer.drawText(fontId, wordX + dotOffset, wordY, "\xc2\xb7", true, EpdFontFamily::REGULAR, baseDir);
       }
+    }
 
     if (!scanning && (currentStyle & EpdFontFamily::UNDERLINE) != 0) {
       const std::string& w = words[i];
@@ -110,7 +110,8 @@ bool TextBlock::serialize(HalFile& file) const {
   if (words.size() != wordXpos.size() || words.size() != wordStyles.size() ||
       (hasFocus && (words.size() != wordFocusBoundary.size() || words.size() != wordFocusSuffixX.size())) ||
       (hasGuide && words.size() != wordGuideDotXOffset.size())) {
-    LOG_ERR("TXB", "Serialization failed: size mismatch (words=%u, xpos=%u, styles=%u, boundary=%u, suffixX=%u, guide=%u)\n",
+    LOG_ERR("TXB",
+            "Serialization failed: size mismatch (words=%u, xpos=%u, styles=%u, boundary=%u, suffixX=%u, guide=%u)\n",
             static_cast<uint32_t>(words.size()), static_cast<uint32_t>(wordXpos.size()),
             static_cast<uint32_t>(wordStyles.size()), static_cast<uint32_t>(wordFocusBoundary.size()),
             static_cast<uint32_t>(wordFocusSuffixX.size()), static_cast<uint32_t>(wordGuideDotXOffset.size()));
