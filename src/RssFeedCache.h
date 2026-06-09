@@ -12,6 +12,14 @@ std::string feedDir(const std::string& feedUrl);
 // Write index.json + item_<n>.txt (htmlToText of each item's content). Returns false on I/O error.
 bool writeFeed(const std::string& feedUrl, const std::vector<RssEntry>& items);
 
+// --- Streaming API (memory-safe for full-text feeds) ---
+// Ensure the feed's cache directory exists. Call once before writeItemText().
+bool ensureFeedDir(const std::string& feedUrl);
+// Write one item's already-stripped plaintext to item_<index>.txt.
+bool writeItemText(const std::string& feedUrl, size_t index, const std::string& text);
+// Write index.json from a list of items (only title + date are used).
+bool writeIndex(const std::string& feedUrl, const std::vector<RssEntry>& items);
+
 // Read the cached item list (title + date) for offline browsing. Empty if none cached.
 std::vector<RssEntry> readIndex(const std::string& feedUrl);
 

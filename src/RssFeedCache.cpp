@@ -50,6 +50,25 @@ bool RssFeedCache::writeFeed(const std::string& feedUrl, const std::vector<RssEn
   return Storage.writeFile((dir + "/index.json").c_str(), String(index.c_str()));
 }
 
+bool RssFeedCache::ensureFeedDir(const std::string& feedUrl) {
+  Storage.ensureDirectoryExists(RSS_DIR);
+  return Storage.ensureDirectoryExists(feedDir(feedUrl).c_str());
+}
+
+bool RssFeedCache::writeItemText(const std::string& feedUrl, size_t index, const std::string& text) {
+  const std::string path = feedDir(feedUrl) + "/item_" + std::to_string(index) + ".txt";
+  if (!Storage.writeFile(path.c_str(), String(text.c_str()))) {
+    LOG_ERR("RSS", "Failed to write %s", path.c_str());
+    return false;
+  }
+  return true;
+}
+
+bool RssFeedCache::writeIndex(const std::string& feedUrl, const std::vector<RssEntry>& items) {
+  const std::string index = RssJsonIO::serializeIndex(items);
+  return Storage.writeFile((feedDir(feedUrl) + "/index.json").c_str(), String(index.c_str()));
+}
+
 std::vector<RssEntry> RssFeedCache::readIndex(const std::string& feedUrl) {
   std::vector<RssEntry> out;
   const std::string path = feedDir(feedUrl) + "/index.json";

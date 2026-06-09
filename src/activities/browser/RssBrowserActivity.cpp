@@ -6,6 +6,7 @@
 #include <Logging.h>
 #include <WiFi.h>
 
+#include "HtmlToText.h"
 #include "InkPointState.h"
 #include "MappedInputManager.h"
 #include "RssFeedCache.h"
@@ -19,7 +20,9 @@
 
 namespace {
 constexpr int PAGE_ITEMS = 23;
-}
+// Cap the items kept/cached per feed — bounds RAM (metadata vector) and SD files.
+constexpr size_t MAX_FEED_ITEMS = 40;
+}  // namespace
 
 RssBrowserActivity::RssBrowserActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::string feedUrl,
                                        std::string feedName)
@@ -164,24 +167,42 @@ void RssBrowserActivity::fetchFeed() {
   state = State::FETCHING;
   requestUpdate(true);
 
+  // Stream each item straight to SD as it is parsed, keeping only title+date in
+  // RAM. Full-text feeds (large <content>) would otherwise buffer every article
+  // at once and exhaust the 380KB heap. See RssParser::setItemCallback.
+  RssFeedCache::ensureFeedDir(feedUrl);
+  items.clear();
   RssParser parser;
+  parser.setItemCallback([this](RssEntry& e) {
+    if (items.size() >= MAX_FEED_ITEMS) return;
+    RssFeedCache::writeItemText(feedUrl, items.size(), htmlToText(e.contentHtml));
+    RssEntry meta;  // keep metadata only — the body lives in the cache file now
+    meta.title = std::move(e.title);
+    meta.date = std::move(e.date);
+    items.push_back(std::move(meta));
+  });
+
   const bool ok = HttpDownloader::fetchUrl(feedUrl, [&parser](const uint8_t* data, size_t len) {
     parser.write(data, len);
     return true;
   });
   parser.flush();
+
   if (!ok || parser.error()) {
-    if (RssFeedCache::hasCache(feedUrl)) {
+    // Network/parse failure mid-stream: prefer a complete previous cache if any.
+    if (items.empty() && RssFeedCache::hasCache(feedUrl)) {
       loadFromCache();
       return;
     }
-    errorMessage = tr(STR_RSS_FETCH_FAILED);
-    state = State::ERROR;
-    requestUpdate();
-    return;
+    if (items.empty()) {
+      errorMessage = tr(STR_RSS_FETCH_FAILED);
+      state = State::ERROR;
+      requestUpdate();
+      return;
+    }
+    // else: we streamed at least some items before the error — show them.
   }
 
-  items = std::move(parser).getEntries();
   if (items.empty()) {
     errorMessage = tr(STR_RSS_NO_ITEMS);
     state = State::ERROR;
@@ -189,9 +210,7 @@ void RssBrowserActivity::fetchFeed() {
     return;
   }
 
-  if (!RssFeedCache::writeFeed(feedUrl, items)) {
-    LOG_ERR("RSS", "Cache write failed (continuing live)");
-  }
+  RssFeedCache::writeIndex(feedUrl, items);
   selectorIndex = 0;
   offline = false;
   state = State::BROWSING;
