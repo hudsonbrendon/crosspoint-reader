@@ -154,6 +154,8 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
                             StrId::STR_CAT_READER),
         SettingInfo::Toggle(StrId::STR_FORCE_INDENTS, &InkPointSettings::forceParagraphIndents, "forceParagraphIndents",
                             StrId::STR_CAT_READER),
+        SettingInfo::Toggle(StrId::STR_GUIDE_READING, &InkPointSettings::guideReadingEnabled, "guideReadingEnabled",
+                            StrId::STR_CAT_READER),
         SettingInfo::Toggle(StrId::STR_HYPHENATION, &InkPointSettings::hyphenationEnabled, "hyphenationEnabled",
                             StrId::STR_CAT_READER),
         SettingInfo::Enum(StrId::STR_ORIENTATION, &InkPointSettings::orientation,
