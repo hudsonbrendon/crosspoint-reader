@@ -170,14 +170,13 @@ void RssBrowserActivity::render(RenderLock&&) {
       const int listTop = offline ? LIST_TOP_OFFLINE : LIST_TOP_ONLINE;
       const int listHeight = pageHeight - listTop - BUTTON_HINTS_HEIGHT - LIST_BOTTOM_MARGIN;
 
+      // Title on top, date as the subtitle. Passing a subtitle callback selects
+      // the two-line row layout, which is the path that actually renders the row
+      // icon (the single-line layout reserves the icon column but draws nothing).
       GUI.drawList(renderer, Rect{0, listTop, pageWidth, listHeight},
                    static_cast<int>(items.size()), selectorIndex,
-                   [this](int index) {
-                     std::string text = items[index].title;
-                     if (!items[index].date.empty()) text += " (" + items[index].date + ")";
-                     return text;
-                   },
-                   nullptr,
+                   [this](int index) { return items[index].title; },
+                   [this](int index) { return items[index].date; },
                    [](int /*index*/) { return UIIcon::Library; });
     }
     renderer.displayBuffer();

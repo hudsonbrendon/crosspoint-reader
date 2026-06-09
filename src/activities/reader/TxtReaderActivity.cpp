@@ -35,13 +35,29 @@ void TxtReaderActivity::onEnter() {
   txt->setupCacheDir();
 
   if (!transient) {
-    // Save current txt as last opened file and add to recent books. Skipped for
-    // transient readers (RSS articles) — they are not library books.
+    // Save current txt as last opened file and add to recent books.
     auto filePath = txt->getPath();
     auto fileName = filePath.substr(filePath.rfind('/') + 1);
+    std::string recentTitle = fileName;
+    std::string recentAuthor;
+    // RSS articles (under /.inkpoint/rss/): the slug filename is meaningless to
+    // show. Reuse the nice title + feed name already stored in Recents (set when
+    // the article was first opened from the feed) so every screen — Recents row,
+    // Home "currently reading", and this reader's status bar — shows the article
+    // title on top and the RSS source below, consistently.
+    if (filePath.find("/.inkpoint/rss/") != std::string::npos) {
+      for (const auto& b : RECENT_BOOKS.getBooks()) {
+        if (b.path == filePath) {
+          recentTitle = b.title;
+          recentAuthor = b.author;
+          break;
+        }
+      }
+      if (displayTitle.empty()) displayTitle = recentTitle;  // status bar
+    }
     APP_STATE.openEpubPath = filePath;
     APP_STATE.saveToFile();
-    RECENT_BOOKS.addBook(filePath, fileName, "", "");
+    RECENT_BOOKS.addBook(filePath, recentTitle, recentAuthor, "");
   }
 
   // Trigger first update
