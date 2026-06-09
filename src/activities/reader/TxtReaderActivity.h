@@ -9,6 +9,9 @@
 
 class TxtReaderActivity final : public Activity {
   std::unique_ptr<Txt> txt;
+  // Transient reader (e.g. an RSS article): not a library book — skip Recents
+  // and "last opened" state, and Back pops to the caller instead of going Home.
+  bool transient = false;
 
   int currentPage = 0;
   int totalPages = 1;
@@ -42,8 +45,9 @@ class TxtReaderActivity final : public Activity {
   void loadProgress();
 
  public:
-  explicit TxtReaderActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::unique_ptr<Txt> txt)
-      : Activity("TxtReader", renderer, mappedInput), txt(std::move(txt)) {}
+  explicit TxtReaderActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::unique_ptr<Txt> txt,
+                             bool transient = false)
+      : Activity("TxtReader", renderer, mappedInput), txt(std::move(txt)), transient(transient) {}
   void onEnter() override;
   void onExit() override;
   void loop() override;

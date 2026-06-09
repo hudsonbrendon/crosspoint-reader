@@ -4,18 +4,20 @@
 #include <HalStorage.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <Memory.h>
+#include <Txt.h>
 #include <WiFi.h>
 
 #include <algorithm>
 
 #include "HtmlToText.h"
-#include "InkPointState.h"
 #include "MappedInputManager.h"
 #include "RssFeedCache.h"
 #include "RssParser.h"
 #include "SilentRestart.h"
 #include "activities/ActivityManager.h"
 #include "activities/network/WifiSelectionActivity.h"
+#include "activities/reader/TxtReaderActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "network/HttpDownloader.h"
@@ -45,6 +47,9 @@ void RssBrowserActivity::onEnter() {
   offline = false;
   wifiWasConnected = false;
   errorMessage.clear();
+  // If we were opened while Confirm was held (selecting the feed in the list),
+  // ignore its release so an instantly-cached feed doesn't auto-open item 0.
+  lockNextConfirmRelease = mappedInput.isPressed(MappedInputManager::Button::Confirm);
   requestUpdate();
 
   if (WiFi.status() == WL_CONNECTED && WiFi.localIP() != IPAddress(0, 0, 0, 0)) {
@@ -89,7 +94,9 @@ void RssBrowserActivity::loop() {
 
   if (state == State::BROWSING) {
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
-      if (!items.empty()) {
+      if (lockNextConfirmRelease) {
+        lockNextConfirmRelease = false;  // swallow the entry release; don't open
+      } else if (!items.empty()) {
         openSelectedItem();
       }
     } else if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
@@ -286,21 +293,21 @@ void RssBrowserActivity::openSelectedItem() {
     return;
   }
 
-  if (wifiWasConnected && WiFi.getMode() != WIFI_MODE_NULL) {
-    // This session brought WiFi up, so we must clear the LWIP heap fragmentation
-    // on the way out (same reason onExit() reboots). Navigating directly would
-    // trigger onExit()'s silentRestart() and reboot us to Home, losing the
-    // article. Instead, reboot straight into the reader showing this article.
-    // goToReader() dispatches by extension, so the .txt opens in the TXT reader.
-    APP_STATE.openEpubPath = readingPath;
-    APP_STATE.saveToFile();
-    WiFi.disconnect(false);
-    silentRestartToReader();
+  // Open the article as a transient reader PUSHED on top of this browser. Back
+  // then returns to the article list (this browser resumes with its list intact),
+  // not Home. No reboot here — the browser stays alive and its onExit() does the
+  // WiFi teardown + heap-clearing reboot only when the user fully leaves the feed.
+  auto txt = makeUniqueNoThrow<Txt>(readingPath.c_str(), "/.inkpoint");
+  if (!txt || !txt->load()) {
+    LOG_ERR("RSS", "Failed to open article %s", readingPath.c_str());
     return;
   }
-
-  // Pure offline browse (no WiFi session this time) — navigate directly, no reboot.
-  activityManager.goToTxtReader(readingPath);
+  auto reader = makeUniqueNoThrow<TxtReaderActivity>(renderer, mappedInput, std::move(txt), /*transient=*/true);
+  if (!reader) {
+    LOG_ERR("RSS", "OOM creating article reader");
+    return;
+  }
+  activityManager.pushActivity(std::move(reader));
 }
 
 void RssBrowserActivity::launchWifiSelection() {
