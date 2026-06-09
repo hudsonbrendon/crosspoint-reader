@@ -177,14 +177,17 @@ void EpubReaderActivity::onExit() {
   // onEnter early-returns without starting a session when there is no book, so
   // skipping here avoids a no-op SD write on that path.
   if (epub) {
-    // Detect "book finished": user is on the last page of the last spine item.
-    // Do NOT use progressPercent >= 100 — calculateProgress returns < 1.0 even on
-    // the final page (chapterProgress = currentPage/pageCount < 1), so it never
-    // rounds to 100. The structural check is the reliable finish signal.
-    const int lastSpine = epub->getSpineItemsCount() - 1;
-    const bool atLastPageOfLastSpine = lastSpine >= 0 && currentSpineIndex == lastSpine && section &&
-                                       section->pageCount > 0 && section->currentPage >= section->pageCount - 1;
-    if (atLastPageOfLastSpine) {
+    // Detect "book finished" using the reader's OWN end-of-book definition: the
+    // user paged past the last page of the last spine item, so currentSpineIndex
+    // reaches (or passes) the spine count and the "End of Book" screen is shown.
+    // This mirrors the `atEndOfBook` check the reader's other finished-book
+    // features key off (see render()/loop()). A "last page of last spine" check is
+    // unreliable: real EPUBs carry back-matter spine items after the last TOC
+    // chapter, and reaching the true end means the End-of-Book screen, not merely
+    // the last page. (progressPercent is also unusable — calculateProgress never
+    // reaches 1.0 since chapterProgress = currentPage/pageCount < 1.)
+    const bool atEndOfBook = currentSpineIndex > 0 && currentSpineIndex >= epub->getSpineItemsCount();
+    if (atEndOfBook) {
       READING_STATS.incrementBooksFinished();
       LOG_INF("ERS", "Book finished: %s", epub->getPath().c_str());
     }
