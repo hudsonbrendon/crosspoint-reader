@@ -29,6 +29,10 @@ std::string RssFeedCache::itemTextPath(const std::string& feedUrl, size_t index)
   return feedDir(feedUrl) + "/item_" + std::to_string(index) + ".txt";
 }
 
+std::string RssFeedCache::readingTextPath(const std::string& feedUrl) {
+  return feedDir(feedUrl) + "/reading.txt";
+}
+
 bool RssFeedCache::hasCache(const std::string& feedUrl) {
   return Storage.exists((feedDir(feedUrl) + "/index.json").c_str());
 }

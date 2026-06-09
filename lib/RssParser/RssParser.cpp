@@ -12,6 +12,9 @@ RssParser::RssParser() {
   } else {
     errorOccured = true;
   }
+  // Reserve the field accumulator once so appends never reallocate (avoids the
+  // capacity-doubling spike that OOMs during a live TLS session).
+  text.reserve(MAX_FIELD_BYTES);
 }
 
 RssParser::~RssParser() {
@@ -112,8 +115,7 @@ void RssParser::endElement(void* userData, const XML_Char* name) {
     }
     self->current = RssEntry{};
     self->descriptionHtml.clear();
-    self->text.clear();
-    self->text.shrink_to_fit();
+    self->text.clear();  // keep the reserved capacity for the next item
     self->inItem = false;
     return;
   }

@@ -23,8 +23,12 @@ bool writeIndex(const std::string& feedUrl, const std::vector<RssEntry>& items);
 // Read the cached item list (title + date) for offline browsing. Empty if none cached.
 std::vector<RssEntry> readIndex(const std::string& feedUrl);
 
-// Path to a cached item's plaintext file (item_<index>.txt). Caller launches the TXT reader on it.
+// Path to a cached item's content file (item_<index>.txt holds the raw capped HTML).
 std::string itemTextPath(const std::string& feedUrl, size_t index);
+
+// Path to the reusable "currently reading" plaintext file for this feed
+// (reading.txt). openSelectedItem() writes the stripped article here and opens it.
+std::string readingTextPath(const std::string& feedUrl);
 
 // True if a cache exists for this feed.
 bool hasCache(const std::string& feedUrl);

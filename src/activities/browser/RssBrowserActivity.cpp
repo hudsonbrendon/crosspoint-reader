@@ -175,7 +175,11 @@ void RssBrowserActivity::fetchFeed() {
   RssParser parser;
   parser.setItemCallback([this](RssEntry& e) {
     if (items.size() >= MAX_FEED_ITEMS) return;
-    RssFeedCache::writeItemText(feedUrl, items.size(), htmlToText(e.contentHtml));
+    // Store the RAW (capped) HTML — do NOT run htmlToText here. This callback
+    // executes inside the TLS read loop, where free heap is scarce; htmlToText
+    // would allocate two more buffers and OOM. Stripping is deferred to
+    // openSelectedItem(), which runs with no active TLS and one item at a time.
+    RssFeedCache::writeItemText(feedUrl, items.size(), e.contentHtml);
     RssEntry meta;  // keep metadata only — the body lives in the cache file now
     meta.title = std::move(e.title);
     meta.date = std::move(e.date);
@@ -232,20 +236,34 @@ void RssBrowserActivity::loadFromCache() {
 
 void RssBrowserActivity::openSelectedItem() {
   if (selectorIndex < 0 || static_cast<size_t>(selectorIndex) >= items.size()) return;
-  const std::string path = RssFeedCache::itemTextPath(feedUrl, static_cast<size_t>(selectorIndex));
-  if (!Storage.exists(path.c_str())) {
-    LOG_ERR("RSS", "Cached article missing: %s", path.c_str());
+  const std::string htmlPath = RssFeedCache::itemTextPath(feedUrl, static_cast<size_t>(selectorIndex));
+  if (!Storage.exists(htmlPath.c_str())) {
+    LOG_ERR("RSS", "Cached article missing: %s", htmlPath.c_str());
+    return;
+  }
+
+  // Strip the cached HTML to readable plain text NOW (no active TLS here, only
+  // this one item in memory) and write it to a reusable reading file that the
+  // TXT reader opens. Doing this off the network path is what keeps us within
+  // the heap budget.
+  std::string text;
+  {
+    const String html = Storage.readFile(htmlPath.c_str());
+    text = htmlToText(std::string(html.c_str()));
+  }
+  const std::string readingPath = RssFeedCache::readingTextPath(feedUrl);
+  if (!Storage.writeFile(readingPath.c_str(), String(text.c_str()))) {
+    LOG_ERR("RSS", "Failed to prepare reading file: %s", readingPath.c_str());
     return;
   }
 
   if (wifiWasConnected && WiFi.getMode() != WIFI_MODE_NULL) {
-    // This session brought WiFi up, so we must clear the ~50KB of LWIP heap
-    // fragmentation on the way out (same reason onExit() reboots). Navigating
-    // directly would trigger onExit()'s silentRestart() and reboot us to Home,
-    // losing the article. Instead, reboot straight into the reader showing this
-    // cached article (it reads offline from /.inkpoint/rss/). goToReader()
-    // dispatches by extension, so the .txt opens in the TXT reader.
-    APP_STATE.openEpubPath = path;
+    // This session brought WiFi up, so we must clear the LWIP heap fragmentation
+    // on the way out (same reason onExit() reboots). Navigating directly would
+    // trigger onExit()'s silentRestart() and reboot us to Home, losing the
+    // article. Instead, reboot straight into the reader showing this article.
+    // goToReader() dispatches by extension, so the .txt opens in the TXT reader.
+    APP_STATE.openEpubPath = readingPath;
     APP_STATE.saveToFile();
     WiFi.disconnect(false);
     silentRestartToReader();
@@ -253,7 +271,7 @@ void RssBrowserActivity::openSelectedItem() {
   }
 
   // Pure offline browse (no WiFi session this time) — navigate directly, no reboot.
-  activityManager.goToTxtReader(path);
+  activityManager.goToTxtReader(readingPath);
 }
 
 void RssBrowserActivity::launchWifiSelection() {
