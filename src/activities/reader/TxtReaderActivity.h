@@ -12,6 +12,9 @@ class TxtReaderActivity final : public Activity {
   // Transient reader (e.g. an RSS article): not a library book — skip Recents
   // and "last opened" state, and Back pops to the caller instead of going Home.
   bool transient = false;
+  // Optional human-readable display title shown in the status bar (overrides
+  // the filename-derived title from Txt::getTitle() when non-empty).
+  std::string displayTitle;
 
   int currentPage = 0;
   int totalPages = 1;
@@ -46,8 +49,11 @@ class TxtReaderActivity final : public Activity {
 
  public:
   explicit TxtReaderActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::unique_ptr<Txt> txt,
-                             bool transient = false)
-      : Activity("TxtReader", renderer, mappedInput), txt(std::move(txt)), transient(transient) {}
+                             bool transient = false, std::string displayTitle = "")
+      : Activity("TxtReader", renderer, mappedInput),
+        txt(std::move(txt)),
+        transient(transient),
+        displayTitle(std::move(displayTitle)) {}
   void onEnter() override;
   void onExit() override;
   void loop() override;

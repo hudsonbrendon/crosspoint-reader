@@ -81,3 +81,37 @@ std::vector<RssEntry> RssFeedCache::readIndex(const std::string& feedUrl) {
   if (!json.isEmpty()) RssJsonIO::deserializeIndex(json.c_str(), out);
   return out;
 }
+
+std::string RssFeedCache::rssSlug(const std::string& title) {
+  constexpr size_t MAX_SLUG_LEN = 48;
+  std::string slug;
+  slug.reserve(MAX_SLUG_LEN + 1);
+
+  bool lastWasDash = true;  // start true so leading non-alnum is trimmed
+  for (unsigned char ch : title) {
+    if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
+      slug += static_cast<char>(ch);
+      lastWasDash = false;
+    } else if (ch >= 'A' && ch <= 'Z') {
+      slug += static_cast<char>(ch + 32);  // to lowercase
+      lastWasDash = false;
+    } else {
+      // Replace any run of non-alphanumeric chars with a single '-'
+      if (!lastWasDash) {
+        slug += '-';
+        lastWasDash = true;
+      }
+    }
+    if (slug.size() >= MAX_SLUG_LEN) break;
+  }
+
+  // Trim trailing '-'
+  while (!slug.empty() && slug.back() == '-') {
+    slug.pop_back();
+  }
+
+  if (slug.empty()) {
+    return "article";
+  }
+  return slug;
+}

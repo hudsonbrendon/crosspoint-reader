@@ -12,6 +12,7 @@
 
 #include "HtmlToText.h"
 #include "MappedInputManager.h"
+#include "RecentBooksStore.h"
 #include "RssFeedCache.h"
 #include "RssParser.h"
 #include "SilentRestart.h"
@@ -149,6 +150,13 @@ void RssBrowserActivity::render(RenderLock&&) {
   }
 
   if (state == State::BROWSING) {
+    // Offline banner: drawn at y=40 (UI_10 font, ~20px tall). listTop must
+    // clear the banner text so the first row highlight doesn't overlap it.
+    constexpr int LIST_TOP_ONLINE = 30;
+    constexpr int LIST_TOP_OFFLINE = 75;
+    constexpr int BUTTON_HINTS_HEIGHT = 40;
+    constexpr int LIST_BOTTOM_MARGIN = 5;
+
     if (offline) {
       renderer.drawCenteredText(UI_10_FONT_ID, 40, tr(STR_RSS_OFFLINE_CACHED));
     }
@@ -159,18 +167,18 @@ void RssBrowserActivity::render(RenderLock&&) {
     if (items.empty()) {
       renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2, tr(STR_RSS_NO_ITEMS));
     } else {
-      const int listTop = offline ? 60 : 40;
-      const auto pageStartIndex = selectorIndex / PAGE_ITEMS * PAGE_ITEMS;
-      renderer.fillRect(0, listTop + (selectorIndex % PAGE_ITEMS) * 30 - 2, pageWidth - 1, 30);
+      const int listTop = offline ? LIST_TOP_OFFLINE : LIST_TOP_ONLINE;
+      const int listHeight = pageHeight - listTop - BUTTON_HINTS_HEIGHT - LIST_BOTTOM_MARGIN;
 
-      for (int i = pageStartIndex; i < static_cast<int>(items.size()) && i < pageStartIndex + PAGE_ITEMS; i++) {
-        const auto& item = items[i];
-        std::string displayText = item.title;
-        if (!item.date.empty()) displayText += " (" + item.date + ")";
-        auto label = renderer.truncatedText(UI_10_FONT_ID, displayText.c_str(), pageWidth - 40);
-        renderer.drawText(UI_10_FONT_ID, 20, listTop + (i % PAGE_ITEMS) * 30, label.c_str(),
-                          i != selectorIndex);
-      }
+      GUI.drawList(renderer, Rect{0, listTop, pageWidth, listHeight},
+                   static_cast<int>(items.size()), selectorIndex,
+                   [this](int index) {
+                     std::string text = items[index].title;
+                     if (!items[index].date.empty()) text += " (" + items[index].date + ")";
+                     return text;
+                   },
+                   nullptr,
+                   [](int /*index*/) { return UIIcon::Library; });
     }
     renderer.displayBuffer();
   }
@@ -278,31 +286,38 @@ void RssBrowserActivity::openSelectedItem() {
     return;
   }
 
+  const std::string& articleTitle = items[selectorIndex].title;
+
   // Strip the cached HTML to readable plain text NOW (no active TLS here, only
-  // this one item in memory) and write it to a reusable reading file that the
-  // TXT reader opens. Doing this off the network path is what keeps us within
-  // the heap budget.
+  // this one item in memory) and write it to a slug-named file so the reader's
+  // status bar and Recents show the article title instead of "reading".
   std::string text;
   {
     const String html = Storage.readFile(htmlPath.c_str());
     text = htmlToText(std::string(html.c_str()));
   }
-  const std::string readingPath = RssFeedCache::readingTextPath(feedUrl);
-  if (!Storage.writeFile(readingPath.c_str(), String(text.c_str()))) {
-    LOG_ERR("RSS", "Failed to prepare reading file: %s", readingPath.c_str());
+  const std::string articlePath =
+      RssFeedCache::feedDir(feedUrl) + "/article_" + RssFeedCache::rssSlug(articleTitle) + ".txt";
+  if (!Storage.writeFile(articlePath.c_str(), String(text.c_str()))) {
+    LOG_ERR("RSS", "Failed to prepare reading file: %s", articlePath.c_str());
     return;
   }
+
+  // Add to Recents with proper metadata (article title + feed name) BEFORE
+  // opening the reader. The reader is transient so it won't add its own entry.
+  RECENT_BOOKS.addBook(articlePath, articleTitle, feedName, "");
 
   // Open the article as a transient reader PUSHED on top of this browser. Back
   // then returns to the article list (this browser resumes with its list intact),
   // not Home. No reboot here — the browser stays alive and its onExit() does the
   // WiFi teardown + heap-clearing reboot only when the user fully leaves the feed.
-  auto txt = makeUniqueNoThrow<Txt>(readingPath.c_str(), "/.inkpoint");
+  auto txt = makeUniqueNoThrow<Txt>(articlePath.c_str(), "/.inkpoint");
   if (!txt || !txt->load()) {
-    LOG_ERR("RSS", "Failed to open article %s", readingPath.c_str());
+    LOG_ERR("RSS", "Failed to open article %s", articlePath.c_str());
     return;
   }
-  auto reader = makeUniqueNoThrow<TxtReaderActivity>(renderer, mappedInput, std::move(txt), /*transient=*/true);
+  auto reader = makeUniqueNoThrow<TxtReaderActivity>(renderer, mappedInput, std::move(txt), /*transient=*/true,
+                                                     /*displayTitle=*/articleTitle);
   if (!reader) {
     LOG_ERR("RSS", "OOM creating article reader");
     return;
