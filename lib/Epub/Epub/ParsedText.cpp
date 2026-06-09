@@ -978,7 +978,10 @@ void ParsedText::extractLine(const size_t breakIndex, const int pageWidth, const
       // Guide dot token: do not emit a word. Record its x offset on the most recently
       // emitted real word (offset = dot x minus that word's x). If there is no preceding
       // emitted word (e.g. dot is first on the line after reorder), drop it silently.
-      if (!outWords.empty()) {
+      // If the dot is the last token on this line (i + 1 == lineWordCount), the word it
+      // precedes wrapped to the next line — drop the dot entirely so no stray '·' renders
+      // at the right edge of the line.
+      if (!outWords.empty() && i + 1 < lineWordCount) {
         const int dotDelta = static_cast<int>(lineXPos[i]) - static_cast<int>(outXPos.back());
         outGuideDotXOffset.back() = static_cast<uint16_t>(dotDelta > 0 ? dotDelta : 0);
       }
