@@ -23,6 +23,63 @@ const char* kAtom =
     "</feed>";
 }  // namespace
 
+// Capture the streaming-sink output for assertions.
+struct StreamCapture {
+  struct Item {
+    std::string title;
+    std::string date;
+    std::string content;  // streamed <content> chunks (empty if none)
+    std::string fallback;  // meta.contentHtml when no content streamed
+    bool wroteContent = false;
+  };
+  std::vector<Item> items;
+  Item cur;
+  void attach(RssParser& p) {
+    p.setStreamingSink([this] { cur = Item{}; },
+                       [this](const char* d, size_t n) { cur.content.append(d, n); },
+                       [this](const RssEntry& meta, bool wrote) {
+                         cur.title = meta.title;
+                         cur.date = meta.date;
+                         cur.wroteContent = wrote;
+                         if (!wrote) cur.fallback = meta.contentHtml;
+                         items.push_back(cur);
+                       });
+  }
+};
+
+TEST(RssParser, StreamingDeliversContentAndFallback) {
+  RssParser p;
+  StreamCapture cap;
+  cap.attach(p);
+  p.write(reinterpret_cast<const uint8_t*>(kRss2), strlen(kRss2));
+  p.flush();
+  ASSERT_FALSE(p.error());
+  // Streaming bypasses getEntries().
+  EXPECT_TRUE(p.getEntries().empty());
+  ASSERT_EQ(cap.items.size(), 2u);
+  // Item 0: only <description> -> no streamed content, description is the fallback body.
+  EXPECT_EQ(cap.items[0].title, "First Post");
+  EXPECT_FALSE(cap.items[0].wroteContent);
+  EXPECT_EQ(cap.items[0].fallback, "<p>Hello &amp; welcome</p>");
+  // Item 1: <content:encoded> streamed to the sink.
+  EXPECT_EQ(cap.items[1].title, "Second");
+  EXPECT_TRUE(cap.items[1].wroteContent);
+  EXPECT_EQ(cap.items[1].content, "<p>Full <b>body</b></p>");
+}
+
+TEST(RssParser, StreamingAtomContent) {
+  RssParser p;
+  StreamCapture cap;
+  cap.attach(p);
+  p.write(reinterpret_cast<const uint8_t*>(kAtom), strlen(kAtom));
+  p.flush();
+  ASSERT_FALSE(p.error());
+  ASSERT_EQ(cap.items.size(), 1u);
+  EXPECT_EQ(cap.items[0].title, "Atom One");
+  EXPECT_TRUE(cap.items[0].wroteContent);
+  EXPECT_EQ(cap.items[0].content, "<p>Atom body</p>");
+}
+
 TEST(RssParser, ParsesRss2Items) {
   RssParser p;
   p.write(reinterpret_cast<const uint8_t*>(kRss2), strlen(kRss2));

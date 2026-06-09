@@ -66,6 +66,8 @@ void RssParser::startElement(void* userData, const XML_Char* name, const XML_Cha
       self->inItem = true;
       self->current = RssEntry{};
       self->descriptionHtml.clear();
+      self->wroteContent = false;
+      if (self->streaming && self->streamBegin) self->streamBegin();
     }
     return;
   }
@@ -104,18 +106,20 @@ void RssParser::endElement(void* userData, const XML_Char* name) {
   const char* tag = localName(name);
 
   if (strcmp(tag, "item") == 0 || strcmp(tag, "entry") == 0) {
-    // content:encoded/content wins; else description/summary.
-    if (self->current.contentHtml.empty()) self->current.contentHtml = self->descriptionHtml;
-    if (self->itemCallback) {
-      // Streaming: hand the item off (caller persists it) and free its content
-      // immediately, so we never hold more than one item's content in RAM.
-      self->itemCallback(self->current);
+    if (self->streaming) {
+      // The content field was streamed straight to disk. If none streamed, the
+      // small description is the body — hand it to the consumer to persist.
+      if (!self->wroteContent) self->current.contentHtml = std::move(self->descriptionHtml);
+      if (self->streamEnd) self->streamEnd(self->current, self->wroteContent);
     } else {
+      // Buffered path (unit tests): content:encoded/content wins, else description.
+      if (self->current.contentHtml.empty()) self->current.contentHtml = self->descriptionHtml;
       self->entries.push_back(std::move(self->current));
     }
     self->current = RssEntry{};
     self->descriptionHtml.clear();
     self->text.clear();  // keep the reserved capacity for the next item
+    self->wroteContent = false;
     self->inItem = false;
     return;
   }
@@ -131,7 +135,7 @@ void RssParser::endElement(void* userData, const XML_Char* name) {
     self->current.date = self->text;
     self->inDate = false;
   } else if (self->inContentEncoded && (strcmp(tag, "encoded") == 0 || strcmp(tag, "content") == 0)) {
-    self->current.contentHtml = self->text;  // preferred
+    if (!self->streaming) self->current.contentHtml = self->text;  // streaming already sent it to disk
     self->inContentEncoded = false;
   } else if (self->inDescription && (strcmp(tag, "description") == 0 || strcmp(tag, "summary") == 0)) {
     self->descriptionHtml = self->text;  // fallback
@@ -141,8 +145,15 @@ void RssParser::endElement(void* userData, const XML_Char* name) {
 
 void RssParser::characterData(void* userData, const XML_Char* s, int len) {
   auto* self = static_cast<RssParser*>(userData);
+  if (len <= 0) return;
+  // Streaming: the big content field goes straight to the consumer (SD), never RAM.
+  if (self->inContentEncoded && self->streaming) {
+    if (self->streamContent) self->streamContent(s, static_cast<size_t>(len));
+    self->wroteContent = true;
+    return;
+  }
   if (self->inTitle || self->inLink || self->inDate || self->inContentEncoded || self->inDescription) {
-    // Cap accumulation so a single huge field (full-text article) can't OOM the heap.
+    // Cap small-field accumulation; the reserved buffer means no reallocation.
     if (self->text.size() >= MAX_FIELD_BYTES) return;
     const size_t room = MAX_FIELD_BYTES - self->text.size();
     self->text.append(s, std::min(static_cast<size_t>(len), room));

@@ -6,6 +6,8 @@
 #include <Logging.h>
 #include <WiFi.h>
 
+#include <algorithm>
+
 #include "HtmlToText.h"
 #include "InkPointState.h"
 #include "MappedInputManager.h"
@@ -22,6 +24,10 @@ namespace {
 constexpr int PAGE_ITEMS = 23;
 // Cap the items kept/cached per feed — bounds RAM (metadata vector) and SD files.
 constexpr size_t MAX_FEED_ITEMS = 40;
+// Cap the body bytes cached per item. The body is streamed to SD (so the fetch
+// itself is unbounded-safe), but openSelectedItem() reads + strips one item in
+// RAM, so keep that within budget. ~24KB HTML ≈ a long article.
+constexpr size_t ITEM_CONTENT_CAP = 24 * 1024;
 }  // namespace
 
 RssBrowserActivity::RssBrowserActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::string feedUrl,
@@ -167,24 +173,47 @@ void RssBrowserActivity::fetchFeed() {
   state = State::FETCHING;
   requestUpdate(true);
 
-  // Stream each item straight to SD as it is parsed, keeping only title+date in
-  // RAM. Full-text feeds (large <content>) would otherwise buffer every article
-  // at once and exhaust the 380KB heap. See RssParser::setItemCallback.
+  // Stream each item's <content> straight to its SD file as it is parsed — the
+  // article body is NEVER held in RAM. Free heap during the TLS/HTTPS fetch is
+  // only tens of KB on the 380KB device, so any large std::string here OOMs
+  // (confirmed by repeated crash backtraces). Only small metadata stays in RAM;
+  // htmlToText runs later in openSelectedItem(), off the network path.
   RssFeedCache::ensureFeedDir(feedUrl);
   items.clear();
+
+  HalFile itemFile;     // (re)opened per item by the begin callback
+  size_t itemBytes = 0;  // bytes written to the current item, for the per-item cap
   RssParser parser;
-  parser.setItemCallback([this](RssEntry& e) {
-    if (items.size() >= MAX_FEED_ITEMS) return;
-    // Store the RAW (capped) HTML — do NOT run htmlToText here. This callback
-    // executes inside the TLS read loop, where free heap is scarce; htmlToText
-    // would allocate two more buffers and OOM. Stripping is deferred to
-    // openSelectedItem(), which runs with no active TLS and one item at a time.
-    RssFeedCache::writeItemText(feedUrl, items.size(), e.contentHtml);
-    RssEntry meta;  // keep metadata only — the body lives in the cache file now
-    meta.title = std::move(e.title);
-    meta.date = std::move(e.date);
-    items.push_back(std::move(meta));
-  });
+  parser.setStreamingSink(
+      /*onBegin=*/
+      [this, &itemFile, &itemBytes]() {
+        if (items.size() >= MAX_FEED_ITEMS) return;
+        Storage.openFileForWrite("RSS", RssFeedCache::itemTextPath(feedUrl, items.size()), itemFile);
+        itemBytes = 0;
+      },
+      /*onContent=*/
+      [&itemFile, &itemBytes](const char* data, size_t len) {
+        if (!itemFile || itemBytes >= ITEM_CONTENT_CAP) return;
+        const size_t n = std::min(len, ITEM_CONTENT_CAP - itemBytes);
+        itemFile.write(reinterpret_cast<const uint8_t*>(data), n);
+        itemBytes += n;
+      },
+      /*onEnd=*/
+      [this, &itemFile](const RssEntry& meta, bool wroteContent) {
+        if (items.size() >= MAX_FEED_ITEMS) {
+          if (itemFile) itemFile.close();
+          return;
+        }
+        if (!wroteContent && itemFile && !meta.contentHtml.empty()) {
+          // No <content> streamed — the small description is the body.
+          itemFile.write(reinterpret_cast<const uint8_t*>(meta.contentHtml.data()), meta.contentHtml.size());
+        }
+        if (itemFile) itemFile.close();
+        RssEntry m;  // keep metadata only — the body lives in the cache file
+        m.title = meta.title;
+        m.date = meta.date;
+        items.push_back(std::move(m));
+      });
 
   const bool ok = HttpDownloader::fetchUrl(feedUrl, [&parser](const uint8_t* data, size_t len) {
     parser.write(data, len);
