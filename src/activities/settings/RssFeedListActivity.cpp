@@ -26,10 +26,17 @@ std::string RssFeedListActivity::hostOf(const std::string& url) {
   return url.substr(s, (e == std::string::npos ? url.size() : e) - s);
 }
 
+// Hold Confirm at least this long on a feed row to delete it (matches the file
+// browser's long-press-to-delete gesture). A short press opens the feed.
+constexpr unsigned long LONG_PRESS_MS = 1000;
+
 void RssFeedListActivity::onEnter() {
   Activity::onEnter();
   RSS_STORE.loadFromFile();
   selectedIndex = 0;
+  // If Confirm is still held from selecting this screen in the parent menu,
+  // swallow its release so it doesn't act on the first feed.
+  lockNextConfirmRelease = mappedInput.isPressed(MappedInputManager::Button::Confirm);
   requestUpdate();
 }
 
@@ -41,23 +48,24 @@ void RssFeedListActivity::loop() {
     return;
   }
 
-  if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
+  // Act on Confirm release: a short press opens the row; a long press on a feed
+  // row deletes it. Navigation (Up/Down) never triggers delete.
+  if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
+    if (lockNextConfirmRelease) {
+      lockNextConfirmRelease = false;
+      return;
+    }
     const int feedCount = static_cast<int>(RSS_STORE.getCount());
     if (selectedIndex < feedCount) {
-      onSelectFeed(static_cast<size_t>(selectedIndex));
+      if (mappedInput.getHeldTime() >= LONG_PRESS_MS) {
+        onDeleteFeed(static_cast<size_t>(selectedIndex));
+      } else {
+        onSelectFeed(static_cast<size_t>(selectedIndex));
+      }
     } else if (selectedIndex == feedCount) {
       onAddFeed();
     } else {
       onManageOnWeb();
-    }
-    return;
-  }
-
-  // Right button on a feed row = delete
-  if (mappedInput.wasReleased(MappedInputManager::Button::Right)) {
-    const int feedCount = static_cast<int>(RSS_STORE.getCount());
-    if (selectedIndex < feedCount) {
-      onDeleteFeed(static_cast<size_t>(selectedIndex));
     }
     return;
   }

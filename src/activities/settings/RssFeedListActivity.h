@@ -22,5 +22,9 @@ class RssFeedListActivity final : public Activity {
   int selectedIndex = 0;  // 0..feedCount-1 = feeds; feedCount = "Add Feed"; feedCount+1 = "Manage on web"
   ButtonNavigator buttonNavigator;
 
+  // Swallow the Confirm release carried over from selecting this screen in the
+  // parent menu, so it doesn't immediately open/delete the first feed.
+  bool lockNextConfirmRelease = false;
+
   int getItemCount() const;
 };
