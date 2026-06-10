@@ -1,6 +1,9 @@
 name: Deploy Website
 
 on:
+  # A release is always preceded by the version-bump push (which changes
+  # platformio.ini), so a `release` trigger would only race the push run for
+  # the same Pages deployment. Deploy on push (and manually) instead.
   push:
     branches: [inkpoint]
     paths:
@@ -8,8 +11,6 @@ on:
       - 'scripts/make_web_flasher_assets.py'
       - '.github/workflows/pages.yml'
       - 'platformio.ini'
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -17,9 +18,11 @@ permissions:
   pages: write
   id-token: write
 
+# Serialize Pages deploys; let the in-progress one finish rather than cancelling
+# it (a cancelled deploy can leave the github-pages environment in a bad state).
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-deploy:
