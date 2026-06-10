@@ -113,7 +113,8 @@ enum UIIcon {
   Bookmark,
   Stats,
   Paw,
-  Cards
+  Cards,
+  Clock
 };
 
 enum class KeyboardKeyType { Normal, Shift, Mode, Space, Del, Ok, Disabled };
