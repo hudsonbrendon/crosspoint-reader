@@ -24,11 +24,12 @@
 #include "MappedInputManager.h"
 #include "OpdsServerStore.h"
 #include "ReadingStatsStore.h"
-#include "RssFeedStore.h"
 #include "RecentBooksStore.h"
+#include "RssFeedStore.h"
 #include "SdCardFontSystem.h"
 #include "activities/Activity.h"
 #include "activities/ActivityManager.h"
+#include "activities/flashcard/FlashcardDeck.h"
 #include "activities/flashcard/FlashcardSession.h"
 #include "activities/settings/SdFirmwareUpdateActivity.h"
 #include "components/UITheme.h"
@@ -355,7 +356,8 @@ void setup() {
   OPDS_STORE.loadFromFile();
   READING_STATS.loadFromFile();
   RSS_STORE.loadFromFile();
-  FLASHCARD_SESSION.advance();  // bump the session counter once per boot (no-RTC "today")
+  FlashcardDeck::migrateLegacyDir();  // rename legacy "/flashcard" -> "/flashcards" before any flashcard I/O
+  FLASHCARD_SESSION.advance();        // bump the session counter once per boot (no-RTC "today")
   UITheme::getInstance().reload();
   ButtonNavigator::setMappedInputManager(mappedInputManager);
 

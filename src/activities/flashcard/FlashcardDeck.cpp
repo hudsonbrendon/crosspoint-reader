@@ -366,6 +366,22 @@ std::vector<DeckListEntry> FlashcardDeck::listDecks() {
   return result;
 }
 
+void FlashcardDeck::migrateLegacyDir() {
+  // Rename "/flashcard" -> "/flashcards" once. Skip if the legacy dir is absent
+  // or the new dir already exists (avoid clobbering). The whole directory moves,
+  // so decks and the .session counter travel with it.
+  if (!Storage.exists(FLASHCARD_DIR_LEGACY)) return;
+  if (Storage.exists(FLASHCARD_DIR)) {
+    LOG_DBG("FCDECK", "both %s and %s exist; leaving legacy dir untouched", FLASHCARD_DIR_LEGACY, FLASHCARD_DIR);
+    return;
+  }
+  if (Storage.rename(FLASHCARD_DIR_LEGACY, FLASHCARD_DIR)) {
+    LOG_INF("FCDECK", "migrated %s -> %s", FLASHCARD_DIR_LEGACY, FLASHCARD_DIR);
+  } else {
+    LOG_ERR("FCDECK", "failed to migrate %s -> %s", FLASHCARD_DIR_LEGACY, FLASHCARD_DIR);
+  }
+}
+
 DeckStats FlashcardDeck::getStats(uint32_t today) const {
   DeckStats stats;
   stats.totalCount = cards.size();

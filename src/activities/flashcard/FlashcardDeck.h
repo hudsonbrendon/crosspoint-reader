@@ -5,7 +5,9 @@
 
 #include "FlashcardSrs.h"
 
-inline constexpr const char* FLASHCARD_DIR = "/flashcard";
+inline constexpr const char* FLASHCARD_DIR = "/flashcards";
+// Pre-1.7.1 decks lived here (singular). migrateLegacyDir() renames it on boot.
+inline constexpr const char* FLASHCARD_DIR_LEGACY = "/flashcard";
 inline constexpr size_t MAX_CARDS_PER_DECK = 500;
 inline constexpr size_t FLASHCARD_MAX_FILE_BYTES = 256 * 1024;  // local cap; bypasses 50KB readFile cap
 
@@ -44,6 +46,9 @@ class FlashcardDeck {
   static bool importCsv(const std::string& srcPath);
   // Enumerate decks in FLASHCARD_DIR (*.csv).
   static std::vector<DeckListEntry> listDecks();
+  // One-time boot migration: rename the legacy "/flashcard" dir to "/flashcards"
+  // if the old one exists and the new one does not. Safe to call every boot.
+  static void migrateLegacyDir();
 
   DeckStats getStats(uint32_t today) const;
   // Build the review queue for this session: due cards first, then up to newPerDay

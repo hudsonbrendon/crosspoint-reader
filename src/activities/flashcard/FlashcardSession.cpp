@@ -9,7 +9,7 @@
 #include "FlashcardDeck.h"  // for FLASHCARD_DIR
 
 FlashcardSession FlashcardSession::instance;
-static constexpr const char* SESSION_PATH = "/flashcard/.session";
+static constexpr const char* SESSION_PATH = "/flashcards/.session";
 
 void FlashcardSession::load() {
   if (loaded) return;
