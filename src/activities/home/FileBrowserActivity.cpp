@@ -10,6 +10,7 @@
 
 #include "InkPointSettings.h"
 #include "MappedInputManager.h"
+#include "activities/flashcard/FlashcardDeck.h"  // for FLASHCARD_DIR
 #include "activities/util/ConfirmationActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -57,12 +58,17 @@ void FileBrowserActivity::loadFiles() {
       entries.push_back({std::string(fileNameBuffer.get()) + "/", 0, 0});
     } else {
       std::string_view filename{fileNameBuffer.get()};
+      // In normal browsing, also surface .csv decks while inside the flashcards
+      // folder so the user sees them here too (display-only; opening is handled
+      // via the Flashcards menu). Elsewhere .csv stays hidden.
+      const bool inFlashcardsDir = (basepath == FLASHCARD_DIR);
       const bool keep = (mode == Mode::PickFirmware) ? FsHelpers::checkFileExtension(filename, ".bin")
                         : (mode == Mode::PickCsv)
                             ? FsHelpers::checkFileExtension(filename, ".csv")
                             : (FsHelpers::hasEpubExtension(filename) || FsHelpers::hasXtcExtension(filename) ||
                                FsHelpers::hasTxtExtension(filename) || FsHelpers::hasMarkdownExtension(filename) ||
-                               FsHelpers::hasBmpExtension(filename));
+                               FsHelpers::hasBmpExtension(filename) ||
+                               (inFlashcardsDir && FsHelpers::checkFileExtension(filename, ".csv")));
       if (keep) {
         entries.push_back({std::string(filename), file.modifiedKey(), static_cast<uint32_t>(file.fileSize())});
       }
@@ -298,6 +304,10 @@ void FileBrowserActivity::loop() {
         loadFiles();
         selectorIndex = 0;
         requestUpdate();
+      } else if (FsHelpers::checkFileExtension(entry, ".csv")) {
+        // Flashcard decks are display-only in the browser; open them via the
+        // Flashcards menu, not the reader (a .csv is not a book).
+        LOG_DBG("FileBrowser", "ignoring .csv open in browser: %s", entry.c_str());
       } else {
         onSelectBook(basepath + entry);
       }
