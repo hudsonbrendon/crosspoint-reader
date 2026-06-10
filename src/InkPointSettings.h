@@ -262,6 +262,10 @@ class InkPointSettings {
   uint8_t language = 0;
   // Quick Resume: keep current content visible with moon icon instead of showing a static sleep screen.
   uint8_t quickResumeSleepScreen = QUICK_RESUME_NEVER;
+  // Flashcards: new cards introduced per session (5..50 step 5)
+  uint8_t flashcardNewPerDay = 5;
+  // Flashcards: max cards reviewed per session (25..250 step 25)
+  uint8_t flashcardMaxReviewPerDay = 50;
 
   ~InkPointSettings() = default;
 
@@ -271,6 +275,10 @@ class InkPointSettings {
   static constexpr uint8_t MIN_SLEEP_TIMEOUT_MINUTES = 1;
   static constexpr uint8_t SLEEP_TIMEOUT_NEVER_MINUTES = 31;
   static constexpr uint8_t MAX_SLEEP_TIMEOUT_MINUTES = SLEEP_TIMEOUT_NEVER_MINUTES;
+  static constexpr uint8_t FLASHCARD_NEW_PER_DAY_MIN = 5;
+  static constexpr uint8_t FLASHCARD_NEW_PER_DAY_MAX = 50;
+  static constexpr uint8_t FLASHCARD_MAX_REVIEW_MIN = 25;
+  static constexpr uint8_t FLASHCARD_MAX_REVIEW_MAX = 250;
 
   // Callback to resolve SD card font IDs. Set by SdCardFontSystem::begin().
   // Returns font ID or 0 if not found.
