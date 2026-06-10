@@ -114,6 +114,20 @@
     });
   });
 
+  /* ---------- home-screen mockup: animate the selection down the menu ---------- */
+  const menuItems = document.querySelectorAll('.home-menu [data-menu]');
+  if (menuItems.length) {
+    let mi = 0;
+    const highlight = (n) => menuItems.forEach((el, k) => el.classList.toggle('sel', k === n));
+    highlight(0);
+    if (!reduceMotion) {
+      window.setInterval(() => {
+        mi = (mi + 1) % menuItems.length;
+        highlight(mi);
+      }, 1400);
+    }
+  }
+
   /* ---------- scroll reveals (progressive enhancement) ---------- */
   const ioTargets = document.querySelectorAll('[data-io]');
   if (ioTargets.length && 'IntersectionObserver' in window && !reduceMotion) {

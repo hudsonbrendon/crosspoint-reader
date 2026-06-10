@@ -347,11 +347,31 @@ a { color: inherit; }
   gap: 9px;
   box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
 }
-.screen .s-h { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.18em; color: var(--ink-faint); display: flex; justify-content: space-between; }
-.screen .s-title { font-family: var(--display); font-style: italic; font-size: 1.15rem; line-height: 1.1; margin: 2px 0 4px; }
-.screen .s-line { height: 6px; border-radius: 2px; background: var(--line); }
-.screen .s-line.short { width: 62%; }
-.screen .s-foot { margin-top: auto; font-family: var(--mono); font-size: 0.5rem; letter-spacing: 0.14em; color: var(--ink-faint); display: flex; justify-content: space-between; }
+/* ---- home-screen mockup (mirrors the InkPoint home) ---- */
+.screen.home-demo { padding: 12px 11px; gap: 6px; }
+.s-status { display: flex; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: 0.5rem; letter-spacing: 0.12em; color: var(--ink-soft); }
+.s-batt { display: inline-flex; align-items: center; gap: 3px; }
+.s-batt .batt { position: relative; display: inline-block; width: 14px; height: 7px; border: 1px solid currentColor; border-radius: 1px; }
+.s-batt .batt::after { content: ""; position: absolute; right: -3px; top: 1.5px; width: 2px; height: 3px; background: currentColor; border-radius: 0 1px 1px 0; }
+.s-batt .batt::before { content: ""; position: absolute; left: 1px; top: 1px; bottom: 1px; width: 38%; background: currentColor; }
+
+.cont-card { display: flex; gap: 9px; align-items: center; padding: 7px 8px; border: 1px solid var(--line-strong); border-radius: 7px; }
+.cover { flex: none; width: 46px; height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 5px 3px; border: 1px solid var(--ink-soft); background: color-mix(in srgb, var(--ink) 5%, var(--panel)); }
+.cover-kicker { font-family: var(--mono); font-size: 4px; letter-spacing: 0.12em; color: var(--ink-faint); }
+.cover-title { font-family: var(--display); font-style: italic; font-size: 8px; line-height: 1.02; text-align: center; color: var(--ink); }
+.cover-rule { width: 52%; height: 1px; background: var(--ink-faint); margin: 1px 0; }
+.cover-author { font-family: var(--mono); font-size: 4px; letter-spacing: 0.06em; color: var(--ink-faint); }
+.cont-meta { min-width: 0; }
+.cont-title { font-family: var(--display); font-weight: 600; font-size: 0.74rem; line-height: 1.04; letter-spacing: -0.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cont-author { font-size: 0.56rem; font-weight: 600; color: var(--ink-soft); margin-top: 3px; }
+
+.home-menu { list-style: none; margin: 1px 0 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.home-menu li { display: flex; align-items: center; gap: 7px; padding: 3px 6px; border-radius: 5px; font-size: 0.62rem; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.home-menu li svg { flex: none; width: 13px; height: 13px; }
+.home-menu li.sel { background: var(--ink); color: var(--paper); }
+
+.s-hints { margin-top: auto; display: flex; gap: 4px; justify-content: flex-end; padding-top: 4px; }
+.s-hints span { font-family: var(--body); font-weight: 600; font-size: 0.5rem; padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--ink-soft); }
 
 /* ---------- section scaffolding ---------- */
 section { position: relative; }
