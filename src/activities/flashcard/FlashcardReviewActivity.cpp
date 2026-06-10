@@ -41,8 +41,10 @@ void FlashcardReviewActivity::onEnter() {
   lockNextConfirmRelease = mappedInput.isPressed(MappedInputManager::Button::Confirm);
 
   if (queue.empty()) {
-    activityManager.pushActivity(std::make_unique<FlashcardDoneActivity>(renderer, mappedInput));
-    finish();
+    // Defer the transition: replaceActivity() is safe to call from onEnter() (it sets pendingAction
+    // and the manager processes it on the next loop() tick), but we use a flag here to keep
+    // onEnter() free of nested manager calls for clarity.
+    pendingDoneTransition = true;
     return;
   }
 
@@ -65,8 +67,8 @@ void FlashcardReviewActivity::flushSaveIfDeferred() {
 void FlashcardReviewActivity::checkExhausted() {
   if (queuePos >= queue.size()) {
     flushSaveIfDeferred();
-    activityManager.pushActivity(std::make_unique<FlashcardDoneActivity>(renderer, mappedInput));
-    finish();
+    // replaceActivity clears the stack, so Done's Back/Confirm will go Home (accepted v1 behaviour).
+    activityManager.replaceActivity(std::make_unique<FlashcardDoneActivity>(renderer, mappedInput));
   }
 }
 
@@ -89,24 +91,26 @@ void FlashcardReviewActivity::applyRating(SrsRating rating) {
 }
 
 void FlashcardReviewActivity::loop() {
+  // Execute deferred empty-queue transition from onEnter().
+  if (pendingDoneTransition) {
+    pendingDoneTransition = false;
+    activityManager.replaceActivity(std::make_unique<FlashcardDoneActivity>(renderer, mappedInput));
+    return;
+  }
+
   // Flush batched saves from loop() (keeps SD I/O out of render/button callbacks)
   if (deferredSave && reviewedSinceSave >= 5) {
     flushSaveIfDeferred();
   }
 
-  if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
-    if (state == State::Back) {
-      // Back from answer side returns to question side
-      state = State::Front;
-      requestUpdate();
-    } else {
+  if (state == State::Front) {
+    // On the question side, Back exits the review session.
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
       flushSaveIfDeferred();
       finish();
+      return;
     }
-    return;
-  }
 
-  if (state == State::Front) {
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       if (lockNextConfirmRelease) {
         lockNextConfirmRelease = false;
@@ -116,17 +120,17 @@ void FlashcardReviewActivity::loop() {
       requestUpdate();
     }
   } else {
-    // Back state: 4 rating buttons
-    // Logical button mapping: Left=Again, Down/Up navigation reused as Hard/Easy,
-    // Right=Good (approachable for 4-button device), Confirm=Easy
-    // Final mapping per plan: Back/Left/Right/Confirm → Again/Hard/Good/Easy
-    if (mappedInput.wasReleased(MappedInputManager::Button::Left)) {
+    // Answer side: all four front buttons are ratings.
+    // Mapping: Back=Again, Left=Hard, Right=Good, Confirm=Easy.
+    // (Pressing Back here applies Again — it does NOT return to the question side.)
+    // Note: Again reschedules the card for the next session, not immediately within this session.
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
       applyRating(SrsRating::Again);
       checkExhausted();
       requestUpdate();
       return;
     }
-    if (mappedInput.wasReleased(MappedInputManager::Button::Down)) {
+    if (mappedInput.wasReleased(MappedInputManager::Button::Left)) {
       applyRating(SrsRating::Hard);
       checkExhausted();
       requestUpdate();
@@ -148,13 +152,14 @@ void FlashcardReviewActivity::loop() {
 }
 
 // Choose the largest font that fits the text within maxWidth / maxLines.
-// Tries 18→16→14pt Noto Serif in that order.
+// Tries 18→16→14pt Noto Serif in that order; 14pt is the floor (truncates there if still too long).
+// wrappedText() always truncates to maxLines, so "fits" is detected by wrapping with a generous
+// limit (99) and checking whether the true required line count is <= maxLines.
 static int chooseFontId(const GfxRenderer& renderer, const char* text, int maxWidth, int maxLines) {
   static const int fontIds[] = {NOTOSERIF_18_FONT_ID, NOTOSERIF_16_FONT_ID, NOTOSERIF_14_FONT_ID};
   for (int fid : fontIds) {
-    auto lines = renderer.wrappedText(fid, text, maxWidth, maxLines);
-    // Fits if wrapping produces <= maxLines lines (overflow is truncated)
-    if (!lines.empty()) return fid;
+    auto lines = renderer.wrappedText(fid, text, maxWidth, 99);
+    if (static_cast<int>(lines.size()) <= maxLines) return fid;
   }
   return NOTOSERIF_14_FONT_ID;
 }
@@ -282,7 +287,8 @@ void FlashcardReviewActivity::renderBack() {
   snprintf(goodBuf, sizeof(goodBuf), "%s +%u", tr(STR_FLASHCARD_GOOD), (unsigned)intGood);
   snprintf(easyBuf, sizeof(easyBuf), "%s +%u", tr(STR_FLASHCARD_EASY), (unsigned)intEasy);
 
-  // btn1=Back=Again, btn2=Down=Hard, btn3=Right=Good, btn4=Confirm=Easy
+  // Button mapping: Back=Again, Left=Hard, Right=Good, Confirm=Easy.
+  // mapLabels(back, confirm, previous/left, next/right) — order matches the handler in loop().
   const auto labels = mappedInput.mapLabels(againBuf, easyBuf, hardBuf, goodBuf);
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 

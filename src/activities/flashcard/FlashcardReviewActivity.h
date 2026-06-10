@@ -35,4 +35,7 @@ class FlashcardReviewActivity final : public Activity {
 
   // Swallow Confirm held from entering this screen via the deck list.
   bool lockNextConfirmRelease = false;
+
+  // Deferred transition: set in onEnter() when the queue is already empty, executed on the first loop() tick.
+  bool pendingDoneTransition = false;
 };
