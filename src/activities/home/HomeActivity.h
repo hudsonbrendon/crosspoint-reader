@@ -31,7 +31,8 @@ class HomeActivity final : public Activity {
   const HomeMenuItem initialMenuItem;
 
   // Convert HomeMenuItem to menu index (used in onEnter)
-  // Order: FILE_BROWSER, RECENTS, [OPDS], FILE_TRANSFER, RSS_BROWSER, READING_STATS_MENU, FLASHCARD_MENU, SETTINGS_MENU
+  // Order: FILE_BROWSER, RECENTS, [OPDS], FILE_TRANSFER, RSS_BROWSER, VIRTUAL_PET, READING_STATS_MENU, FLASHCARD_MENU,
+  // SETTINGS_MENU
   static int menuItemToIndex(HomeMenuItem item, bool hasOpdsUrl) {
     int i = 0;
     if (item == HomeMenuItem::FILE_BROWSER) return i;
@@ -44,6 +45,8 @@ class HomeActivity final : public Activity {
     ++i;
     if (item == HomeMenuItem::RSS_BROWSER) return i;
     ++i;
+    if (item == HomeMenuItem::VIRTUAL_PET) return i;
+    ++i;
     if (item == HomeMenuItem::READING_STATS_MENU) return i;
     ++i;
     if (item == HomeMenuItem::FLASHCARD_MENU) return i;
@@ -53,7 +56,8 @@ class HomeActivity final : public Activity {
   }
 
   // Convert menu index to HomeMenuItem (used in loop)
-  // Order: FILE_BROWSER, RECENTS, [OPDS], FILE_TRANSFER, RSS_BROWSER, READING_STATS_MENU, FLASHCARD_MENU, SETTINGS_MENU
+  // Order: FILE_BROWSER, RECENTS, [OPDS], FILE_TRANSFER, RSS_BROWSER, VIRTUAL_PET, READING_STATS_MENU, FLASHCARD_MENU,
+  // SETTINGS_MENU
   static HomeMenuItem indexToMenuItem(int idx, bool hasOpdsUrl) {
     int i = 0;
     if (idx == i++) return HomeMenuItem::FILE_BROWSER;
@@ -61,6 +65,7 @@ class HomeActivity final : public Activity {
     if (hasOpdsUrl && idx == i++) return HomeMenuItem::OPDS_BROWSER;
     if (idx == i++) return HomeMenuItem::FILE_TRANSFER;
     if (idx == i++) return HomeMenuItem::RSS_BROWSER;
+    if (idx == i++) return HomeMenuItem::VIRTUAL_PET;
     if (idx == i++) return HomeMenuItem::READING_STATS_MENU;
     if (idx == i++) return HomeMenuItem::FLASHCARD_MENU;
     if (idx == i) return HomeMenuItem::SETTINGS_MENU;
@@ -75,6 +80,7 @@ class HomeActivity final : public Activity {
   void onReadingStatsOpen();
   void onRssOpen();
   void onFlashcardOpen();
+  void onVirtualPetOpen();
 
   int getMenuItemCount() const;
   bool storeCoverBuffer();    // Store frame buffer for cover image
