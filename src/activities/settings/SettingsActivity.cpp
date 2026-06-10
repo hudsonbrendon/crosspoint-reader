@@ -94,8 +94,8 @@ void SettingsActivity::rebuildSettingsLists() {
 void SettingsActivity::onEnter() {
   Activity::onEnter();
 
-  // selectedCategoryIndex is initialised by the constructor (supports optional initialCategory).
-  // Do NOT reset it here so that callers can open Settings at a specific category.
+  // selectedCategoryIndex defaults to 0 (Display) at construction; a fresh
+  // SettingsActivity is created on each entry, so there's nothing to reset.
   selectedSettingIndex = 0;
   preserveQuickResumeTimeoutOn =
       SETTINGS.quickResumeSleepScreen == InkPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT;
