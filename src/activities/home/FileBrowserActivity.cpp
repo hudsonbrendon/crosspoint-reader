@@ -57,8 +57,9 @@ void FileBrowserActivity::loadFiles() {
       entries.push_back({std::string(fileNameBuffer.get()) + "/", 0, 0});
     } else {
       std::string_view filename{fileNameBuffer.get()};
-      const bool keep = (mode == Mode::PickFirmware)
-                            ? FsHelpers::checkFileExtension(filename, ".bin")
+      const bool keep = (mode == Mode::PickFirmware) ? FsHelpers::checkFileExtension(filename, ".bin")
+                        : (mode == Mode::PickCsv)
+                            ? FsHelpers::checkFileExtension(filename, ".csv")
                             : (FsHelpers::hasEpubExtension(filename) || FsHelpers::hasXtcExtension(filename) ||
                                FsHelpers::hasTxtExtension(filename) || FsHelpers::hasMarkdownExtension(filename) ||
                                FsHelpers::hasBmpExtension(filename));
@@ -245,8 +246,8 @@ void FileBrowserActivity::loop() {
     const std::string& entry = files[selectorIndex];
     bool isDirectory = (entry.back() == '/');
 
-    // Firmware picker: select file -> return path; navigate into directories normally.
-    if (mode == Mode::PickFirmware && !isDirectory) {
+    // Firmware/CSV picker: select file -> return path; navigate into directories normally.
+    if ((mode == Mode::PickFirmware || mode == Mode::PickCsv) && !isDirectory) {
       std::string cleanBasePath = basepath;
       if (cleanBasePath.back() != '/') cleanBasePath += "/";
       ActivityResult res{FilePathResult{cleanBasePath + entry}};
@@ -319,8 +320,8 @@ void FileBrowserActivity::loop() {
         selectorIndex = findEntry(dirName);
 
         requestUpdate();
-      } else if (mode == Mode::PickFirmware) {
-        // Firmware picker at root: cancel back to caller instead of going home.
+      } else if (mode == Mode::PickFirmware || mode == Mode::PickCsv) {
+        // Firmware/CSV picker at root: cancel back to caller instead of going home.
         ActivityResult res;
         res.isCancelled = true;
         setResult(std::move(res));
