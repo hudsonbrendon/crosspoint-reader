@@ -14,9 +14,9 @@ enum class PetNeed : uint8_t { NONE = 0, HUNGER = 1, HAPPINESS = 2, HEALTH = 3, 
 
 // One evolution gate: minimum age (whole days) AND minimum pages read.
 struct EvolutionReq {
-  PetStage stage;       // the stage you REACH when both gates are met
-  uint16_t minDays;     // days since birth
-  uint32_t minPages;    // READING_STATS.totalPagesRead()
+  PetStage stage;     // the stage you REACH when both gates are met
+  uint16_t minDays;   // days since birth
+  uint32_t minPages;  // READING_STATS.totalPagesRead()
 };
 
 // Balance constants. constexpr -> compile-time, flash-resident.
@@ -74,8 +74,8 @@ struct PetState {
   uint32_t lastTickTime = 0;         // Unix epoch seconds of last decay tick
   uint32_t lastUpdateTimestamp = 0;  // saved time() at last save (clock-restore source)
 
-  uint32_t totalPagesRead = 0;     // mirror of READING_STATS at last sync
-  uint32_t lastKnownReadMs = 0;    // READING_STATS.totalReadingMs() at last sync (meal delta source)
+  uint32_t totalPagesRead = 0;   // mirror of READING_STATS at last sync
+  uint32_t lastKnownReadMs = 0;  // READING_STATS.totalReadingMs() at last sync (meal delta source)
 
   bool isSick = false;
   uint8_t wasteCount = 0;  // increments over time; cleaning resets to 0

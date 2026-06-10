@@ -5,9 +5,7 @@
 namespace pet {
 
 namespace {
-uint8_t subClamp(uint8_t value, uint32_t amount) {
-  return static_cast<uint8_t>(amount >= value ? 0 : value - amount);
-}
+uint8_t subClamp(uint8_t value, uint32_t amount) { return static_cast<uint8_t>(amount >= value ? 0 : value - amount); }
 }  // namespace
 
 void applyDecay(PetState& s, uint32_t elapsedHours, uint8_t startHour) {
