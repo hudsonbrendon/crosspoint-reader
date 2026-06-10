@@ -1,122 +1,142 @@
-# InkPoint Reader
+<p align="center">
+  <img src="site/assets/inkpoint-mark.svg" alt="InkPoint" width="92" height="92" />
+</p>
 
-[![Fund contributors](https://img.shields.io/badge/%F0%9F%91%91_Fund_contributors-royalty.dev-BB953A?style=for-the-badge&labelColor=1a1a1a)](https://app.royalty.dev/crosspoint-reader/crosspoint-reader)
+<h1 align="center">InkPoint Reader</h1>
 
-InkPoint is open-source e-reader firmware - community-built, fully hackable, free forever. It's maintained by a growing community of developers and readers who believe your device should do what you want - not what a manufacturer decided for you.
+<p align="center">
+  Open-source, fully hackable e-reader firmware for the ESP32-C3 Xteink readers.<br/>
+  <strong>Flash it from your browser. No account. No telemetry. Yours forever.</strong>
+</p>
 
-**Now running on:** ESP32C3-based Xteink [X4](https://www.xteink.com/products/xteink-x4) and [X3](https://www.xteink.com/products/xteink-x3).
+<p align="center">
+  <a href="https://hudsonbrendon.github.io/inkpoint/">🌐 Website &amp; web flasher</a> ·
+  <a href="https://hudsonbrendon.github.io/inkpoint/install.html">⚡ Install</a> ·
+  <a href="https://github.com/hudsonbrendon/inkpoint/releases/latest">📦 Latest release</a>
+</p>
 
-![InkPoint Reader running on Xteink device](./docs/images/cover.jpg)
+InkPoint is community-built e-reader firmware. It is a fork of [CrossPoint](https://github.com/crosspoint-reader/crosspoint-reader) that keeps everything that makes CrossPoint great and adds a layer of reading-habit and focus features on top — built with the same hard constraint in mind: the ESP32-C3 has only ~380 KB of RAM, so stability and careful memory use come before everything else.
 
-## What can InkPoint do?
+**Runs on:** ESP32-C3-based Xteink [X4](https://www.xteink.com/products/xteink-x4) (800×480) and [X3](https://www.xteink.com/products/xteink-x3) (528×792). A **single firmware image** boots on both — the panel is detected automatically at startup.
 
-- **Reader engine**: EPUB 2/3 rendering with embedded-style option, image handling, hyphenation, kerning, chapter navigation, footnotes, bookmarks, go-to-percent, auto page turn, orientation control, focus reading, KOReader progress sync and more. 
+![InkPoint Reader running on an Xteink device](./docs/images/cover.jpg)
 
-- **Various formats**: native handling for `.epub`, `.xtc/.xtch`, `.txt`, and `.bmp`.
+---
 
-- **RSS/Atom reader**: subscribe to feeds, fetch over WiFi, and cache articles to the SD card for offline reading in the text reader. Feeds are managed on-device or from the browser via Web Management, and read articles appear in Recent Books with the article title and source.
+## ✨ What InkPoint adds over CrossPoint
 
-- **Screenshots.**
+These are the features InkPoint ships on top of the CrossPoint base. All of them run within the device's memory budget and are localized in every supported language.
 
-- **Custom fonts**: install your favorite fonts on the SD card.
+### 📊 Reading statistics & habits
+A dedicated reading-stats engine and screen. Tracks **books finished**, reading **streaks**, total reading time and pages, and per-book progress. Surfaces your reading habits directly on the device — no app, no cloud.
 
-- **Tilt page turn (X3 only)**.
+### 🐣 Virtual Pet
+A companion that lives on your reader and **grows as you read**. Feed, snack, give medicine, exercise, clean, and pet it; evolution is driven by your real reading milestones (pages read and care over time). A playful nudge to keep the reading streak alive — strictly opt-in and never intrusive.
 
-- **Library workflow**: folder browser, hidden-file toggle, long-press delete, recent books, SD-cache management.
+### 🗂️ Flashcards (spaced repetition)
+Study decks stored as plain **CSV files on the SD card**. Review sessions use a lightweight **SRS (spaced-repetition)** schedule so cards you struggle with come back sooner. Because the X4 has no real-time clock, scheduling is measured in **review sessions** ("sessions until next review"), not wall-clock days, so it works without a clock. Decks also show up in the file browser inside the `flashcards/` folder.
 
+### 🍅 Pomodoro
+A focus timer designed **for e-ink**, not bolted onto it. Fixed classic cadence — **25 min focus / 5 min break / 15 min long break** every 4 cycles. The screen refreshes once per minute (no e-ink hammering), a **full-screen flash** marks every phase change (the only attention signal an e-ink panel has), and the device is **kept awake** while a session is running. Confirm = start/pause, Left = reset, Right = skip, Back = exit.
+
+### 📰 RSS / Atom reader + web management
+Subscribe to feeds, fetch over Wi-Fi, and **cache articles to the SD card** for offline reading in the text reader. Manage feeds on-device or from the browser via Web Management. Read articles appear in **Recent Books** with the article title and source.
+
+### 🔄 Self-hosted, owner-controlled OTA
+Over-the-air updates pull from **this repository's** GitHub Releases (`hudsonbrendon/inkpoint`), so you control the update channel end to end. **Settings → Firmware update** checks for and installs the latest release over Wi-Fi.
+
+### 🌐 Official website + browser web flasher
+A first-class [website](https://hudsonbrendon.github.io/inkpoint/) with a **WebSerial-based web flasher** — install or update straight from Chrome or Edge with no tools to download. The site is fully translated into every UI language InkPoint supports (with RTL).
+
+### 🎨 New brand identity
+A new InkPoint mark (the "page" tile) used across the boot/sleep splash on the device, the site, and the favicon.
+
+---
+
+## What can InkPoint do? (full feature set)
+
+- **Reader engine**: EPUB 2/3 rendering with embedded-style option, image handling, hyphenation, kerning, chapter navigation, footnotes, bookmarks, go-to-percent, auto page turn, orientation control, focus reading, KOReader progress sync, and more.
+- **Formats**: native handling for `.epub`, `.xtc/.xtch`, `.txt`, and `.bmp`.
+- **Reading statistics**: books finished, streaks, time and pages read, per-book progress.
+- **Virtual Pet**, **Flashcards (SRS)**, and **Pomodoro** focus timer (see above).
+- **RSS/Atom reader** with offline article caching and web feed management.
+- **Custom fonts**: install your own fonts from the SD card — no reflash needed.
+- **Tilt page turn** (X3 only).
+- **Library workflow**: folder browser with **sorting**, hidden-file toggle, long-press delete, recent books, SD-cache management.
 - **Wireless workflows**:
-  
-  - File transfer web UI
-  - EPUB Optimizer
-  - Web settings UI/API (edit many device settings from browser)
-  - WebSocket fast uploads
-  - WebDAV handler
-  - AP mode (hotspot) and STA mode (join existing WiFi), both with QR helpers
+  - File transfer web UI + EPUB Optimizer
+  - Web settings UI/API (edit many device settings from the browser)
+  - WebSocket fast uploads and a WebDAV handler
+  - AP mode (hotspot) and STA mode (join existing Wi-Fi), both with QR helpers
   - Calibre wireless connect flow
   - OPDS browser with saved servers (up to 8), search, pagination, and direct download
-  - RSS/Atom feed management web UI (add, edit, delete feeds from the browser)
-  - OTA update checks and installs from GitHub releases
+  - RSS/Atom feed management web UI
+  - OTA update checks and installs from GitHub Releases
+- **Customization**: multiple themes (Classic, Lyra, Lyra Extended, RoundedRaff), sleep-screen modes, front/side button remapping, status-bar controls, power-button behavior, refresh cadence, and more.
+- **Localization**: 24 UI languages and counting, including full RTL support (Hebrew). Every new feature above ships translated.
+- **Screenshots** straight from the device.
 
-- **Customization**: multiple themes (Classic, Lyra, Lyra Extended, RoundedRaff), sleep screen modes, front/side button remapping, status bar controls, power-button behavior, refresh cadence, and more.
+### Coming soon
 
-- **Localization**: 24 UI languages and counting. RTL support.
-
-### Coming soon:
-
-- Dictionary lookup — inline word lookup without leaving the reader.
-
-- More themes.
-
-- Much more! stay tuned.
+- **Dictionary lookup** — inline word lookup without leaving the reader (the headline roadmap item).
+- **In-book settings menu** — per-book font / margins / spacing.
+- **Live reading-session timer** in the reader.
+- More themes, and much more — see the [roadmap](./docs/superpowers/plans/2026-06-08-inkpoint-feature-roadmap.md).
 
 ---
 
 ## USB-locked devices (Xteink Unlocker)
 
-Some Xteink units purchased from third-party stores (e.g. AliExpress) ship with USB flashing locked from the factory.
-If your device is locked, you will need to use the **Xteink Unlocker** tool available at
-https://inkpointreader.com/#unlock-tool before you can flash InkPoint.
+Some Xteink units purchased from third-party stores (e.g. AliExpress) ship with USB flashing **locked** from the factory. If your device is locked, you must run the **Xteink Unlocker** before you can flash InkPoint. InkPoint is an officially supported target of the unlocker.
 
-**You do not need this tool if you bought your device directly from xteink.com.** Those units are not locked.
+**You do not need this if you bought directly from xteink.com** — those units are not locked.
 
-**Not sure if your device is locked?** Power it on, connect the USB-C cable, and try flashing via the web flasher first (see
-[Install firmware](#install-firmware) below). If the browser's serial device picker does not show your device, try a different
-USB port or browser before assuming the device is locked. Only reach for the unlocker if the device still doesn't appear.
+**Not sure if your device is locked?** Power it on, connect the USB-C cable, and try the [web flasher](https://hudsonbrendon.github.io/inkpoint/install.html) first. If the browser's serial device picker doesn't show your device, try a different USB port, cable, or browser before assuming it's locked. Only reach for the unlocker if it still doesn't appear.
 
-> ### ⚠️ WARNING: READ THIS BEFORE USING THE UNLOCKER ⚠️
-> 
-> **The only officially supported firmwares in the unlock tool are InkPoint and CrossInk.**
-> 
-> Flashing any other firmware on a USB-locked device may **permanently brick the device** or leave it **permanently
-> stuck on that firmware with no recovery path**. Once USB flashing is re-locked, your only way back is via OTA, and if
-> the firmware you flashed doesn't support OTA, **there is no way out**.
-> 
-> **The Papyrix fork has removed OTA update support from its code.** If you flash Papyrix onto a
-> USB-locked unit, you will have **zero update or recovery path** and will be stuck on it forever. **Do not flash
-> Papyrix (or any other unsupported firmware) on a locked device.**
+> ### ⚠️ READ THIS BEFORE USING ANY UNLOCKER ⚠️
+>
+> On a USB-locked device, flashing firmware that **does not support SD-card flashing or OTA updates** can leave you **permanently stuck on it with no recovery path** — once USB flashing is re-locked, OTA is your only way back. InkPoint supports both SD and OTA updates. **Only flash firmware that includes a working update path.**
+
+---
 
 ## Install firmware
 
-### Web installer (recommended)
+InkPoint can be installed three ways. The web flasher is the easiest; SD-card is the fallback when USB is unavailable; OTA is for devices already running InkPoint.
 
-1. Connect your device to your computer via USB-C and wake/unlock the device
-2. Go to https://inkpointreader.com/#flash-tools, select device (X3 or X4), and choose an official InkPoint release.
+### 1. Web flasher (recommended)
 
-### Web installer (specific version)
+1. Connect your device via USB-C and wake it to the home screen.
+2. Open **<https://hudsonbrendon.github.io/inkpoint/install.html>** in **Chrome or Edge on desktop**.
+3. Click **Flash InkPoint via USB**, pick the serial port, and let it complete. The device reboots into InkPoint.
 
-1. Connect your device to your computer via USB-C and wake/unlock the device
-2. Download a `firmware.bin` from [Releases](https://github.com/crosspoint-reader/crosspoint-reader/releases), local build, or continuous integration artifact.
-3. Go to https://inkpointreader.com/#flash-tools, select device (X3 or X4), click "Custom .bin" and upload a `firmware.bin`.
+The same image works on both X3 and X4 — there is nothing to choose.
 
-### Revert to Official Firmware
+### 2. SD card
 
-To revert to the official firmware, you can also flash the latest official firmware using https://inkpointreader.com/#flash-tools.
+Works even when USB flashing isn't available:
 
-### Command line
+1. Download the latest `firmware.bin` from [Releases](https://github.com/hudsonbrendon/inkpoint/releases/latest).
+2. Copy it to the **root of the SD card** (rename it however you like, e.g. `inkpoint.bin`).
+3. Insert the card, then on the device open **Settings → Firmware update** and pick the file.
 
-1. Install [`esptool`](https://github.com/espressif/esptool):
+### 3. Over-the-air (OTA)
 
-```bash
-pip install esptool
-```
+If you already run InkPoint with Wi-Fi configured, open **Settings → Firmware update** and the device pulls the latest release from GitHub on its own.
 
-2. Download `firmware.bin` from the [releases page](https://github.com/crosspoint-reader/crosspoint-reader/releases).
-3. Connect your device via USB-C.
-4. Find the device port. On Linux, run `dmesg` after connecting. On macOS:
+### 4. Command line (esptool)
 
-```bash
-log stream --predicate 'subsystem == "com.apple.iokit"' --info
-```
-
-5. Flash:
+1. Install [`esptool`](https://github.com/espressif/esptool): `pip install esptool`
+2. Download `firmware.bin` from the [releases page](https://github.com/hudsonbrendon/inkpoint/releases/latest).
+3. Connect the device via USB-C and find its port (`dmesg` on Linux after connecting; on macOS `ls /dev/cu.usb*`).
+4. Flash (the app image lives at offset `0x10000`):
 
 ```bash
 esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 /path/to/firmware.bin
 ```
 
-Adjust `/dev/ttyACM0` to match your system.
+Adjust the port to match your system.
 
-### Manual
+### 5. Build it yourself
 
 See [Development quick start](#development-quick-start) below.
 
@@ -124,25 +144,28 @@ See [Development quick start](#development-quick-start) below.
 
 ## Custom SD-card fonts
 
-Convert your own TTF/OTF files into `.cpfont` files that load from the SD card. No firmware reflash is needed.
+Convert your own TTF/OTF fonts into the firmware's `.cpfont` format that loads from the SD card — **no reflash needed**.
 
-1. Go to https://inkpointreader.com/fonts and open the "SD-card font builder" form.
-2. Upload up to four styles (regular, bold, italic, bold-italic), set the family name, point sizes, and Unicode range.
-3. Download the generated `.cpfont` files.
-4. Copy them to your SD card under `/fonts/YourFont/` (or `/.fonts/YourFont/` to hide the folder).
-5. Select the font on the device from the font settings.
+1. Run the repo's converter (host build):
 
-Conversion runs the firmware repo's `lib/EpdFont/scripts/fontconvert_sdcard.py` script unmodified, so output matches a local host build.
+   ```bash
+   python3 lib/EpdFont/scripts/fontconvert_sdcard.py --help
+   ```
+
+   Supply up to four styles (regular, bold, italic, bold-italic), the family name, point sizes, and Unicode range.
+2. Copy the generated files to your SD card under `/fonts/YourFont/` (or `/.fonts/YourFont/` to hide the folder).
+3. Select the font on the device from the font settings.
 
 ---
 
 ## Documentation
 
 - [User Guide](./USER_GUIDE.md)
-- [Web server usage](./docs/webserver.md)
-- [Web server endpoints](./docs/webserver-endpoints.md)
+- [Web server usage](./docs/webserver.md) · [Web server endpoints](./docs/webserver-endpoints.md)
+- [File formats](./docs/file-formats.md)
 - [Project scope](./SCOPE.md)
 - [Contributing docs](./docs/contributing/README.md)
+- [Feature roadmap](./docs/superpowers/plans/2026-06-08-inkpoint-feature-roadmap.md)
 
 ---
 
@@ -150,68 +173,76 @@ Conversion runs the firmware repo's `lib/EpdFont/scripts/fontconvert_sdcard.py` 
 
 ### Prerequisites
 
-- [pioarduino](https://github.com/pioarduino/pioarduino) or VS Code + pioarduino plugin
+- [pioarduino](https://github.com/pioarduino/pioarduino), or VS Code + the pioarduino plugin
 - Python 3.8+
 - `clang-format` 21
-- USB-C cable supporting data transfer
+- A USB-C cable that supports data transfer
 
 ### Setup
 
 ```bash
-git clone --recursive https://github.com/crosspoint-reader/crosspoint-reader
-cd crosspoint-reader
+git clone --recursive https://github.com/hudsonbrendon/inkpoint
+cd inkpoint
 
-# if cloned without --recursive:
+# if you cloned without --recursive:
 git submodule update --init --recursive
 ```
+
+### Build environments
+
+Configured in `platformio.ini`:
+
+| Environment      | Purpose                                   |
+| ---------------- | ----------------------------------------- |
+| `default`        | Development (verbose logging, serial)     |
+| `gh_release`     | Production release (`LOG_LEVEL=0`)        |
+| `gh_release_rc`  | Release candidate (`LOG_LEVEL=1`)         |
+| `slim`           | Minimal build (no serial logging)         |
 
 ### Build / flash / monitor
 
 ```bash
-pio run --target upload
+pio run                         # build (default env)
+pio run --target upload         # build + flash over USB
+pio run -e gh_release           # build the production image
+pio device monitor              # serial monitor
 ```
 
 ### Contributor pre-PR checks
 
 ```bash
-./bin/clang-format-fix
-pio check -e default
-pio run -e default
+./bin/clang-format-fix          # format C++ to clang-format 21
+pio check -e default            # static analysis (cppcheck)
+pio run -e default              # build must be clean (0 errors/warnings)
 ```
+
+CI runs the build and a clang-format check on every PR — fix both locally first.
 
 ### Debugging
 
-After flashing the new features, it’s recommended to capture detailed logs from the serial port.
+After flashing, capture detailed serial logs:
 
-First, make sure all required Python packages are installed:
-
-```python
+```bash
 python3 -m pip install pyserial colorama matplotlib
-```
 
-After that run the script:
-
-```sh
-# For Linux
-# This was tested on Debian and should work on most Linux systems.
+# Linux (tested on Debian; most distros work)
 python3 scripts/debugging_monitor.py
 
-# For macOS
+# macOS (pass your port)
 python3 scripts/debugging_monitor.py /dev/cu.usbmodem2101
 ```
 
-Minor adjustments may be required for Windows.
+Minor adjustments may be needed on Windows.
 
 ---
 
 ## Internals
 
-InkPoint Reader is pretty aggressive about caching data down to the SD card to minimise RAM usage. The ESP32-C3 only has ~380KB of usable RAM, so we have to be careful. A lot of the decisions made in the design of the firmware were based on this constraint.
+InkPoint is aggressive about caching data to the SD card to minimise RAM use. The ESP32-C3 has only ~380 KB of usable RAM, so most design decisions trace back to that constraint.
 
 ### Data caching
 
-The first time chapters of a book are loaded, they are cached to the SD card. Subsequent loads are served from the 
-cache. This cache directory exists at `.inkpoint` on the SD card. The structure is as follows:
+The first time a book's chapters are loaded they are cached to the SD card; later loads are served from the cache. The cache lives at `.inkpoint/` on the SD card:
 
 ```text
 .inkpoint/
@@ -225,46 +256,23 @@ cache. This cache directory exists at `.inkpoint` on the SD card. The structure 
 │       └── ...
 ```
 
-Removing `/.inkpoint` clears all cached metadata and forces a full regeneration on next open. Note: the cache isn't cleared automatically when you delete a book, and moving a file to a new path resets its reading progress.
-
-For more details on the internal file structures, see the [file formats document](./docs/file-formats.md).
+Deleting `/.inkpoint` clears all cached metadata and forces a full regeneration on next open. The cache is **not** cleared automatically when you delete a book, and moving a file to a new path resets its reading progress. See the [file-formats document](./docs/file-formats.md) for the binary structures.
 
 ---
 
 ## Contributing
 
-Contributions are welcome. If you're new to the codebase, start with the [contributing docs](./docs/contributing/README.md). For things to work on, check the [ideas discussion board](https://github.com/crosspoint-reader/crosspoint-reader/discussions/categories/ideas) — leave a comment before starting so we don't duplicate effort.
-
-Everyone here is a volunteer, so please be respectful and patient. For governance and community expectations, see [GOVERNANCE.md](./GOVERNANCE.md).
+Contributions are welcome. If you're new to the codebase, start with the [contributing docs](./docs/contributing/README.md) and open an [issue](https://github.com/hudsonbrendon/inkpoint/issues) before starting larger work so effort isn't duplicated. Everyone here is a volunteer — please be respectful and patient. See [GOVERNANCE.md](./GOVERNANCE.md) for community expectations.
 
 ---
 
-## Community forks
+## About
 
-One of the best things about open source is that anyone can take the code in a different direction. If you need something outside InkPoint's [scope](./SCOPE.md), check out the community forks:
+InkPoint Reader is open-source firmware maintained by [Hudson Brendon](https://github.com/hudsonbrendon).
 
-- [CrossInk](https://github.com/uxjulia/CrossInk) — Typography and reading tracking: Bionic Reading (bolds word stems to create fixation points), guide dots between words, improved paragraph indents, and replaces the default fonts with ChareInk/Lexend/Bitter.
+- 🌐 **Website & web flasher:** <https://hudsonbrendon.github.io/inkpoint/>
+- 📦 **Releases:** <https://github.com/hudsonbrendon/inkpoint/releases>
 
-- [papyrix-reader](https://github.com/bigbag/papyrix-reader) — Adds FB2 and MD format support. Actively maintained with Arabic script support. Custom themes via SD card.
+InkPoint is **not affiliated with Xteink or any device manufacturer**.
 
-- [crosspet](https://github.com/trilwu/crosspet) — A Vietnamese fork that adds a Tamagotchi-style virtual chicken that grows based on your reading milestones (pages read, streaks, care). Also: Flashcards, Weather, Pomodoro timer, and mini-games.
-
-- [crosspoint-reader-cjk](https://github.com/aBER0724/crosspoint-reader-cjk) — Purpose-built for Chinese, Japanese, and Korean reading.
-
-- [inx](https://github.com/obijuankenobiii/inx) — Completely reimagines the user interface with tabbed navigation.
-
-- ~~[PlusPoint](https://github.com/ngxson/pluspoint-reader) — custom JS apps support.~~ (Unmaintained)
-
-- [crosspoint-reader-papers3](https://github.com/juicecultus/crosspoint-reader-papers3) — Crosspoint port for M5Stack Paper S3. 
-
-- [t5s3-reader](https://github.com/ShallowGreen123/t5s3-reader) — Crosspoint port for LilyGo T5 ePaper S3 / T5S3 4.7-inch e-paper device.
-
-**Note:** Many of these features will make their way into InkPoint over time. We maintain a slower pace to ensure rock-solid stability and squash bugs before they reach your device.
-
-Want to build your own device? Be sure to check out the [de-link](https://github.com/iandchasse/de-link) project.
-
----
-
-InkPoint Reader is **not affiliated with Xteink or any device manufacturer**.
-
-Huge shoutout to [diy-esp32-epub-reader](https://github.com/atomic14/diy-esp32-epub-reader), which inspired this project.
+It is a fork of [CrossPoint](https://github.com/crosspoint-reader/crosspoint-reader) — huge thanks to the CrossPoint community for the foundation. CrossPoint itself was inspired by [diy-esp32-epub-reader](https://github.com/atomic14/diy-esp32-epub-reader).
