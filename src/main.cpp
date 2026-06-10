@@ -29,6 +29,7 @@
 #include "SdCardFontSystem.h"
 #include "activities/Activity.h"
 #include "activities/ActivityManager.h"
+#include "activities/flashcard/FlashcardSession.h"
 #include "activities/settings/SdFirmwareUpdateActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -354,6 +355,7 @@ void setup() {
   OPDS_STORE.loadFromFile();
   READING_STATS.loadFromFile();
   RSS_STORE.loadFromFile();
+  FLASHCARD_SESSION.advance();  // bump the session counter once per boot (no-RTC "today")
   UITheme::getInstance().reload();
   ButtonNavigator::setMappedInputManager(mappedInputManager);
 
