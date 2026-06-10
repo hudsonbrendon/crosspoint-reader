@@ -51,6 +51,8 @@ class HomeActivity final : public Activity {
     ++i;
     if (item == HomeMenuItem::FLASHCARD_MENU) return i;
     ++i;
+    if (item == HomeMenuItem::POMODORO_MENU) return i;
+    ++i;
     if (item == HomeMenuItem::SETTINGS_MENU) return i;
     return 0;
   }
@@ -68,6 +70,7 @@ class HomeActivity final : public Activity {
     if (idx == i++) return HomeMenuItem::VIRTUAL_PET;
     if (idx == i++) return HomeMenuItem::READING_STATS_MENU;
     if (idx == i++) return HomeMenuItem::FLASHCARD_MENU;
+    if (idx == i++) return HomeMenuItem::POMODORO_MENU;
     if (idx == i) return HomeMenuItem::SETTINGS_MENU;
     return HomeMenuItem::NONE;
   }
@@ -81,6 +84,7 @@ class HomeActivity final : public Activity {
   void onRssOpen();
   void onFlashcardOpen();
   void onVirtualPetOpen();
+  void onPomodoroOpen();
 
   int getMenuItemCount() const;
   bool storeCoverBuffer();    // Store frame buffer for cover image
