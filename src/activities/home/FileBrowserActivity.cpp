@@ -11,6 +11,7 @@
 #include "InkPointSettings.h"
 #include "MappedInputManager.h"
 #include "activities/flashcard/FlashcardDeck.h"  // for FLASHCARD_DIR
+#include "activities/flashcard/FlashcardReviewActivity.h"
 #include "activities/util/ConfirmationActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -59,8 +60,8 @@ void FileBrowserActivity::loadFiles() {
     } else {
       std::string_view filename{fileNameBuffer.get()};
       // In normal browsing, also surface .csv decks while inside the flashcards
-      // folder so the user sees them here too (display-only; opening is handled
-      // via the Flashcards menu). Elsewhere .csv stays hidden.
+      // folder; selecting one opens the deck review (see the Confirm handler).
+      // Elsewhere .csv stays hidden.
       const bool inFlashcardsDir = (basepath == FLASHCARD_DIR);
       const bool keep = (mode == Mode::PickFirmware) ? FsHelpers::checkFileExtension(filename, ".bin")
                         : (mode == Mode::PickCsv)
@@ -305,9 +306,10 @@ void FileBrowserActivity::loop() {
         selectorIndex = 0;
         requestUpdate();
       } else if (FsHelpers::checkFileExtension(entry, ".csv")) {
-        // Flashcard decks are display-only in the browser; open them via the
-        // Flashcards menu, not the reader (a .csv is not a book).
-        LOG_DBG("FileBrowser", "ignoring .csv open in browser: %s", entry.c_str());
+        // A .csv is only surfaced inside the flashcards folder; open it as a
+        // deck review, exactly like selecting it from the Flashcards menu.
+        activityManager.pushActivity(
+            std::make_unique<FlashcardReviewActivity>(renderer, mappedInput, basepath + entry));
       } else {
         onSelectBook(basepath + entry);
       }
