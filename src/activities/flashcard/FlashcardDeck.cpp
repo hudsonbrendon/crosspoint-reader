@@ -14,123 +14,17 @@
 //   Blank sr_* columns => new card (SrsState{}, dueDate=0)
 
 #include "FlashcardDeck.h"
+
 #include <HalStorage.h>
 #include <Logging.h>
 #include <Memory.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
-// ---------------------------------------------------------------------------
-// Pure CSV helpers (no Arduino/HalStorage dependency — safe for host linking
-// if extracted, but currently compiled only as part of the firmware unit).
-// ---------------------------------------------------------------------------
-
-// Replace all occurrences of `from` with `to` in `s` (in-place).
-static void strReplaceAll(std::string& s, const std::string& from, const std::string& to) {
-  size_t pos = 0;
-  while ((pos = s.find(from, pos)) != std::string::npos) {
-    s.replace(pos, from.size(), to);
-    pos += to.size();
-  }
-}
-
-// Unescape a RFC-4180 quoted field (with "" for embedded ").
-// Input is the raw token between the outer quotes (outer quotes already stripped).
-static std::string csvUnquoteField(const char* data, size_t len) {
-  std::string out;
-  out.reserve(len);
-  for (size_t i = 0; i < len; ++i) {
-    if (data[i] == '"' && i + 1 < len && data[i + 1] == '"') {
-      out += '"';
-      ++i;
-    } else {
-      out += data[i];
-    }
-  }
-  return out;
-}
-
-// Escape a field value for RFC-4180 CSV output.
-// Quotes the field if it contains a comma, quote, or newline-token.
-static std::string csvEscapeField(const std::string& value) {
-  bool needsQuote = false;
-  for (char c : value) {
-    if (c == '"' || c == ',' || c == '\n' || c == '\r') {
-      needsQuote = true;
-      break;
-    }
-  }
-  // Also quote if field contains the /n newline token
-  if (!needsQuote && value.find("/n") != std::string::npos) {
-    needsQuote = true;
-  }
-  if (!needsQuote) return value;
-
-  std::string out;
-  out.reserve(value.size() + 4);
-  out += '"';
-  for (char c : value) {
-    if (c == '"') out += '"';  // RFC-4180: double the quote
-    out += c;
-  }
-  out += '"';
-  return out;
-}
-
-// Tokenize one CSV row from `line` into fields.
-// Handles RFC-4180 double-quote escaping. Stops at `\n` or end of string.
-// Returns the number of fields found.
-static size_t tokenizeCsvLine(const char* line, size_t lineLen, std::string fields[], size_t maxFields) {
-  size_t fieldIdx = 0;
-  size_t i = 0;
-  while (i <= lineLen && fieldIdx < maxFields) {
-    if (i == lineLen || line[i] == '\n' || line[i] == '\r') {
-      // end of row (empty last field handled by prior loop iteration)
-      break;
-    }
-    if (line[i] == '"') {
-      // Quoted field
-      ++i;  // skip opening quote
-      const char* start = line + i;
-      // Find the closing quote (accounting for "" escapes)
-      size_t fieldLen = 0;
-      size_t j = i;
-      while (j < lineLen) {
-        if (line[j] == '"') {
-          if (j + 1 < lineLen && line[j + 1] == '"') {
-            // escaped quote
-            fieldLen += 2;
-            j += 2;
-          } else {
-            // closing quote
-            ++j;  // skip closing quote
-            break;
-          }
-        } else {
-          ++fieldLen;
-          ++j;
-        }
-      }
-      fields[fieldIdx++] = csvUnquoteField(start, (size_t)(line + j - 1 - start));
-      i = j;
-      // skip comma
-      if (i < lineLen && line[i] == ',') ++i;
-    } else {
-      // Unquoted field: ends at comma, \n, or end
-      const char* start = line + i;
-      size_t len = 0;
-      while (i < lineLen && line[i] != ',' && line[i] != '\n' && line[i] != '\r') {
-        ++len;
-        ++i;
-      }
-      fields[fieldIdx++] = std::string(start, len);
-      if (i < lineLen && line[i] == ',') ++i;
-    }
-  }
-  return fieldIdx;
-}
+#include "FlashcardCsv.h"
 
 // ---------------------------------------------------------------------------
 // FlashcardCard helpers
@@ -188,20 +82,25 @@ bool FlashcardDeck::loadFromCsv(const std::string& path) {
     return false;
   }
 
-  size_t bytesRead =
-      Storage.readFileToBuffer(path.c_str(), buf.get(), fsize + 1, FLASHCARD_MAX_FILE_BYTES);
-  if (bytesRead == 0) {
+  // Fix 3: read directly from the already-open HalFile (single open).
+  file.seek(0);
+  int bytesRead = file.read(buf.get(), fsize);
+  if (bytesRead <= 0) {
     LOG_ERR("FCDECK", "read failed: %s", path.c_str());
     return false;
   }
-  buf[bytesRead] = '\0';
+  buf[(size_t)bytesRead] = '\0';
+  // file auto-closes at scope exit (DESTRUCTOR_CLOSES_FILE=1)
 
   // Reserve before parse loop.
   cards.reserve(std::min((size_t)MAX_CARDS_PER_DECK, (size_t)(fsize / 64) + 1));
 
   const char* p = buf.get();
-  const char* end = p + bytesRead;
+  const char* end = p + (size_t)bytesRead;
   bool firstLine = true;
+
+  // Fix (cheap): declare fields outside the loop to avoid ~3000 heap events per 500-card deck.
+  std::string fields[6];
 
   while (p < end) {
     // Find end of this line
@@ -222,8 +121,10 @@ bool FlashcardDeck::loadFromCsv(const std::string& path) {
 
     if (cards.size() >= MAX_CARDS_PER_DECK) break;
 
+    // Clear fields from previous iteration before reuse
+    for (auto& f : fields) f.clear();
+
     // Parse the CSV row
-    std::string fields[6];
     size_t nFields = tokenizeCsvLine(lineStart, lineLen, fields, 6);
     if (nFields < 3) continue;  // need at least id, front, back
 
@@ -290,8 +191,8 @@ bool FlashcardDeck::saveToCsv() const {
       if (card.srs.dueDate != 0 || card.srs.interval != 0) {
         // Reviewed card: write scheduling integers
         char srBuf[32];
-        snprintf(srBuf, sizeof(srBuf), "%u,%u,%u", (unsigned)card.srs.dueDate,
-                 (unsigned)card.srs.interval, (unsigned)card.srs.ease);
+        snprintf(srBuf, sizeof(srBuf), "%u,%u,%u", (unsigned)card.srs.dueDate, (unsigned)card.srs.interval,
+                 (unsigned)card.srs.ease);
         file.print(srBuf);
       }
       // else: new card — leave sr_* blank
@@ -324,6 +225,7 @@ bool FlashcardDeck::importCsv(const std::string& srcPath) {
   }
   std::string destPath = std::string(FLASHCARD_DIR) + "/" + stem + ".csv";
 
+  // Fix 2: check destPath existence (not tmpPath) — guard unchanged.
   if (Storage.exists(destPath.c_str())) {
     LOG_ERR("FCDECK", "import: dest already exists: %s", destPath.c_str());
     return false;
@@ -341,34 +243,45 @@ bool FlashcardDeck::importCsv(const std::string& srcPath) {
     return false;
   }
 
-  // Read the source CSV
+  // Read the source CSV into buffer
   auto buf = makeUniqueNoThrow<char[]>(fsize + 1);
   if (!buf) {
     LOG_ERR("FCDECK", "OOM: %zu bytes", fsize + 1);
     return false;
   }
-  size_t bytesRead =
-      Storage.readFileToBuffer(srcPath.c_str(), buf.get(), fsize + 1, FLASHCARD_MAX_FILE_BYTES);
-  if (bytesRead == 0) {
+
+  // Fix 3 (importCsv): read directly from the already-open srcFile (single open).
+  srcFile.seek(0);
+  int bytesRead = srcFile.read(buf.get(), fsize);
+  if (bytesRead <= 0) {
     LOG_ERR("FCDECK", "import: read failed");
     return false;
   }
-  buf[bytesRead] = '\0';
+  buf[(size_t)bytesRead] = '\0';
+  // srcFile auto-closes at scope exit (DESTRUCTOR_CLOSES_FILE=1)
 
-  // Write to destination with fresh (blank) scheduling state.
-  // Parse and rewrite, stripping any existing sr_* values.
+  // Fix 2: write to a .tmp path, then rename atomically after block close.
+  std::string tmpPath = destPath + ".tmp";
+
   {
+    // Nested block so destFile (HalFile) closes before Storage.rename().
     HalFile destFile;
-    if (!Storage.openFileForWrite("FCDECK", destPath, destFile)) {
-      LOG_ERR("FCDECK", "import: open dest failed: %s", destPath.c_str());
+    if (!Storage.openFileForWrite("FCDECK", tmpPath, destFile)) {
+      LOG_ERR("FCDECK", "import: open tmp failed: %s", tmpPath.c_str());
       return false;
     }
 
     destFile.print("card_id,front_content,back_content,sr_due,sr_interval,sr_ease\n");
 
     const char* p = buf.get();
-    const char* end = p + bytesRead;
+    const char* end = p + (size_t)bytesRead;
     bool firstLine = true;
+
+    // Fix 1: cap at MAX_CARDS_PER_DECK during import write.
+    size_t cardCount = 0;
+
+    // Fix (cheap): declare fields outside loop to avoid repeated heap allocation.
+    std::string fields[6];
 
     while (p < end) {
       const char* lineStart = p;
@@ -378,27 +291,43 @@ bool FlashcardDeck::importCsv(const std::string& srcPath) {
       if (p < end) ++p;
 
       if (lineLen == 0) continue;
-      if (firstLine) { firstLine = false; continue; }
+      if (firstLine) {
+        firstLine = false;
+        continue;
+      }
 
-      std::string fields[6];
+      // Fix 1: enforce cap — stop writing rows once MAX_CARDS_PER_DECK is reached.
+      if (cardCount >= MAX_CARDS_PER_DECK) {
+        LOG_ERR("FCDECK", "import: capped at %zu cards, remaining rows discarded", MAX_CARDS_PER_DECK);
+        break;
+      }
+
+      // Clear fields from previous iteration
+      for (auto& f : fields) f.clear();
+
       size_t nFields = tokenizeCsvLine(lineStart, lineLen, fields, 6);
       if (nFields < 3) continue;
 
       // Write id, front, back with blank sr_*
-      std::string front = fields[1];
-      std::string back = fields[2];
-      // Preserve /n tokens as-is (they were already stored in /n form in the source)
-
+      // Preserve /n tokens as-is (already stored in /n form in the source)
       char idBuf[8];
       snprintf(idBuf, sizeof(idBuf), "%s", fields[0].c_str());
       destFile.print(idBuf);
       destFile.print(",");
-      destFile.print(csvEscapeField(front).c_str());
+      destFile.print(csvEscapeField(fields[1]).c_str());
       destFile.print(",");
-      destFile.print(csvEscapeField(back).c_str());
+      destFile.print(csvEscapeField(fields[2]).c_str());
       destFile.print(",,,\n");  // blank sr_due, sr_interval, sr_ease
+
+      ++cardCount;
     }
-    // destFile destructor closes here
+    // destFile destructor closes here (DESTRUCTOR_CLOSES_FILE=1)
+  }
+
+  // Fix 2: atomic rename of tmp -> dest after the write block has closed the file.
+  if (!Storage.rename(tmpPath.c_str(), destPath.c_str())) {
+    LOG_ERR("FCDECK", "import: rename failed: %s -> %s", tmpPath.c_str(), destPath.c_str());
+    return false;
   }
 
   return true;
@@ -450,8 +379,7 @@ DeckStats FlashcardDeck::getStats(uint32_t today) const {
   return stats;
 }
 
-std::vector<size_t> FlashcardDeck::buildReviewQueue(uint32_t today, size_t newPerDay,
-                                                     size_t maxReview) const {
+std::vector<size_t> FlashcardDeck::buildReviewQueue(uint32_t today, size_t newPerDay, size_t maxReview) const {
   std::vector<size_t> dueIdx;
   std::vector<size_t> newIdx;
   dueIdx.reserve(cards.size());

@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+
 #include "FlashcardSrs.h"
 
 inline constexpr const char* FLASHCARD_DIR = "/flashcard";
@@ -49,7 +50,10 @@ class FlashcardDeck {
   // new cards, total capped at maxReview. Returns indices into `cards`.
   std::vector<size_t> buildReviewQueue(uint32_t today, size_t newPerDay, size_t maxReview) const;
   // Apply a reviewed state back to card[index].
-  void updateCard(size_t index, const SrsState& next) { cards[index].srs = next; }
+  void updateCard(size_t index, const SrsState& next) {
+    if (index >= cards.size()) return;
+    cards[index].srs = next;
+  }
 
   const std::string& path() const { return loadedPath; }
   std::vector<FlashcardCard>& mutableCards() { return cards; }
