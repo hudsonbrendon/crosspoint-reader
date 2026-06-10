@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Install InkPoint</title>
+    <link rel="stylesheet" href="assets/style.css" />
+    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html">InkPoint</a>
+      <nav>
+        <a href="install.html">Install</a>
+        <a href="https://github.com/hudsonbrendon/inkpoint" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc">
+      <h1>Install InkPoint</h1>
+      <p>InkPoint runs on both the Xteink <strong>X3</strong> and <strong>X4</strong> from a single
+         firmware image — the device is auto-detected at boot.</p>
+
+      <div class="device-pick" aria-label="Your device (informational)">
+        <span>My device:</span>
+        <button data-device="X4" class="active">X4 (800×480)</button>
+        <button data-device="X3">X3 (528×792)</button>
+      </div>
+      <p class="subtle" id="device-note">The same firmware is flashed for both; this only tailors the notes below.</p>
+
+      <div class="method">
+        <h3>Method 1 — USB web flasher (recommended)</h3>
+        <p>Connect the reader with a USB-C cable, make sure it is awake on the home screen, then:</p>
+        <p>
+          <esp-web-install-button manifest="firmware/manifest.json">
+            <button slot="activate" class="cta">Flash InkPoint via USB</button>
+            <span slot="unsupported">Your browser does not support WebSerial. Use Chrome or Edge on desktop.</span>
+            <span slot="not-allowed">USB access was blocked. Reload and allow the serial port.</span>
+          </esp-web-install-button>
+        </p>
+        <p class="subtle">Requires Chrome or Edge on desktop. If the serial picker does not show your
+           device, try another USB port or cable before assuming the device is locked.</p>
+      </div>
+
+      <div class="method">
+        <h3>Method 2 — SD card</h3>
+        <p>Works even if USB flashing is unavailable:</p>
+        <ol>
+          <li>Download the latest <code>firmware.bin</code> from the
+            <a href="https://github.com/hudsonbrendon/inkpoint/releases/latest" rel="noopener">latest release</a>.</li>
+          <li>Copy <code>firmware.bin</code> to the root of the SD card (rename it as you like, e.g. <code>inkpoint.bin</code>).</li>
+          <li>Insert the card, then on the device open <strong>Settings → Firmware update</strong> and pick the file.</li>
+        </ol>
+        <div class="callout warn">
+          Only flash firmware that includes SD-flashing or OTA update support, or you may lose the ability to update.
+        </div>
+      </div>
+
+      <div class="method">
+        <h3>Method 3 — Over-the-air (already on InkPoint)</h3>
+        <p>If you already run InkPoint with Wi-Fi, open <strong>Settings → Firmware update</strong> and the
+           device pulls the latest release automatically.</p>
+      </div>
+    </main>
+
+    <footer class="foot"><p>InkPoint is community firmware. Not affiliated with Xteink.</p></footer>
+    <script src="assets/app.js"></script>
+  </body>
+</html>
