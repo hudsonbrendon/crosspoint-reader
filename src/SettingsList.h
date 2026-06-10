@@ -196,10 +196,10 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
         SettingInfo::Value(
             StrId::STR_FLASHCARD_NEW_PER_DAY, &InkPointSettings::flashcardNewPerDay,
             {InkPointSettings::FLASHCARD_NEW_PER_DAY_MIN, InkPointSettings::FLASHCARD_NEW_PER_DAY_MAX, 5},
-            "flashcardNewPerDay", StrId::STR_CAT_FLASHCARDS),
+            "flashcardNewPerDay", StrId::STR_NONE_OPT),
         SettingInfo::Value(StrId::STR_FLASHCARD_MAX_REVIEW, &InkPointSettings::flashcardMaxReviewPerDay,
                            {InkPointSettings::FLASHCARD_MAX_REVIEW_MIN, InkPointSettings::FLASHCARD_MAX_REVIEW_MAX, 25},
-                           "flashcardMaxReviewPerDay", StrId::STR_CAT_FLASHCARDS),
+                           "flashcardMaxReviewPerDay", StrId::STR_NONE_OPT),
 
         // --- KOReader Sync (web-only, uses KOReaderCredentialStore) ---
         SettingInfo::DynamicString(

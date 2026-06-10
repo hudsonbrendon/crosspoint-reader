@@ -183,13 +183,6 @@ void ActivityManager::goToWebManagement() {
 
 void ActivityManager::goToSettings() { replaceActivity(std::make_unique<SettingsActivity>(renderer, mappedInput)); }
 
-// Opens Settings directly at the Flashcards category (index 3 in categoryNames[]).
-// NOTE: index 3 = Flashcards is coupled to categoryNames[] order in SettingsActivity.cpp.
-// If that order changes, update the constant here accordingly.
-void ActivityManager::goToFlashcardSettings() {
-  replaceActivity(std::make_unique<SettingsActivity>(renderer, mappedInput, /*initialCategory=*/3));
-}
-
 void ActivityManager::goToFileBrowser(std::string path) {
   replaceActivity(std::make_unique<FileBrowserActivity>(renderer, mappedInput, std::move(path)));
 }

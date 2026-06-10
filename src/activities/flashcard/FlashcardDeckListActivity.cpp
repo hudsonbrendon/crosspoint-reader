@@ -8,6 +8,7 @@
 #include "MappedInputManager.h"
 #include "activities/ActivityManager.h"
 #include "activities/home/FileBrowserActivity.h"
+#include "activities/settings/FlashcardSettingsActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
 
@@ -131,9 +132,10 @@ void FlashcardDeckListActivity::onImportCsv() {
       });
 }
 
-// NOTE: goToFlashcardSettings() opens Settings at index 3 = Flashcards category.
-// That index is coupled to categoryNames[] order in SettingsActivity.cpp.
-void FlashcardDeckListActivity::onOpenSettings() { activityManager.goToFlashcardSettings(); }
+void FlashcardDeckListActivity::onOpenSettings() {
+  startActivityForResult(std::make_unique<FlashcardSettingsActivity>(renderer, mappedInput),
+                         [this](const ActivityResult&) { requestUpdate(); });
+}
 
 void FlashcardDeckListActivity::onOpenDeck(size_t index) {
   if (index >= decks.size()) return;
