@@ -643,18 +643,25 @@ void BaseTheme::drawRecentBookCover(GfxRenderer& renderer, Rect rect, const std:
 void BaseTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonCount, int selectedIndex,
                                const std::function<std::string(int index)>& buttonLabel,
                                const std::function<UIIcon(int index)>& rowIcon) const {
+  constexpr int kMinRowHeight = 28;
+  const int vertOff = BaseMetrics::values.verticalSpacing;
+  const int availHeight = rect.height - vertOff;
+  const int nominalStride = BaseMetrics::values.menuRowHeight + BaseMetrics::values.menuSpacing;
+  const int stride =
+      (buttonCount > 0 && buttonCount * nominalStride > availHeight) ? availHeight / buttonCount : nominalStride;
+  const int rowHeight = std::max(static_cast<int>(stride - BaseMetrics::values.menuSpacing), kMinRowHeight);
+
   for (int i = 0; i < buttonCount; ++i) {
-    const int tileY = BaseMetrics::values.verticalSpacing + rect.y +
-                      static_cast<int>(i) * (BaseMetrics::values.menuRowHeight + BaseMetrics::values.menuSpacing);
+    const int tileY = rect.y + vertOff + static_cast<int>(i) * stride;
 
     const bool selected = selectedIndex == i;
 
     if (selected) {
       renderer.fillRect(rect.x + BaseMetrics::values.contentSidePadding, tileY,
-                        rect.width - BaseMetrics::values.contentSidePadding * 2, BaseMetrics::values.menuRowHeight);
+                        rect.width - BaseMetrics::values.contentSidePadding * 2, rowHeight);
     } else {
       renderer.drawRect(rect.x + BaseMetrics::values.contentSidePadding, tileY,
-                        rect.width - BaseMetrics::values.contentSidePadding * 2, BaseMetrics::values.menuRowHeight);
+                        rect.width - BaseMetrics::values.contentSidePadding * 2, rowHeight);
     }
 
     std::string labelStr = buttonLabel(i);
@@ -662,8 +669,7 @@ void BaseTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonCount
     const int textWidth = renderer.getTextWidth(UI_10_FONT_ID, label);
     const int textX = rect.x + (rect.width - textWidth) / 2;
     const int lineHeight = renderer.getLineHeight(UI_10_FONT_ID);
-    const int textY =
-        tileY + (BaseMetrics::values.menuRowHeight - lineHeight) / 2;  // vertically centered assuming y is top of text
+    const int textY = tileY + (rowHeight - lineHeight) / 2;  // vertically centered assuming y is top of text
     // Invert text when the tile is selected, to contrast with the filled background
     renderer.drawText(UI_10_FONT_ID, textX, textY, label, selectedIndex != i);
   }
