@@ -21,6 +21,7 @@
 #include "settings/OpdsServerListActivity.h"
 #include "settings/RssFeedListActivity.h"
 #include "settings/SettingsActivity.h"
+#include "tools/PomodoroActivity.h"
 #include "tools/VirtualPetActivity.h"
 #include "util/FullScreenMessageActivity.h"
 
@@ -196,9 +197,9 @@ void ActivityManager::goToReadingStats() {
   replaceActivity(std::make_unique<ReadingStatsActivity>(renderer, mappedInput));
 }
 
-void ActivityManager::goToVirtualPet() {
-  replaceActivity(std::make_unique<VirtualPetActivity>(renderer, mappedInput));
-}
+void ActivityManager::goToVirtualPet() { replaceActivity(std::make_unique<VirtualPetActivity>(renderer, mappedInput)); }
+
+void ActivityManager::goToPomodoro() { replaceActivity(std::make_unique<PomodoroActivity>(renderer, mappedInput)); }
 
 void ActivityManager::goToRssFeeds() { replaceActivity(std::make_unique<RssFeedListActivity>(renderer, mappedInput)); }
 

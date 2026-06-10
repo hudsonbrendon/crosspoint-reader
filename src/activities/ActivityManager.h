@@ -26,7 +26,8 @@ enum class HomeMenuItem {
   SETTINGS_MENU,
   READING_STATS_MENU,
   FLASHCARD_MENU,
-  VIRTUAL_PET
+  VIRTUAL_PET,
+  POMODORO_MENU
 };
 
 /**
@@ -98,6 +99,7 @@ class ActivityManager {
   void goToRecentBooks();
   void goToReadingStats();
   void goToVirtualPet();
+  void goToPomodoro();
   void goToBrowser();
   void goToReader(std::string path);
   void goToRssFeeds();
