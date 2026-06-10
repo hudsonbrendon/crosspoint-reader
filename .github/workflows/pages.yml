@@ -1,0 +1,85 @@
+name: Deploy Website
+
+on:
+  push:
+    branches: [inkpoint]
+    paths:
+      - 'site/**'
+      - 'scripts/make_web_flasher_assets.py'
+      - '.github/workflows/pages.yml'
+      - 'platformio.ini'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: false
+
+      - name: Install PlatformIO Core
+        run: uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.19.zip
+
+      - name: Cache PlatformIO packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+          restore-keys: pio-${{ runner.os }}-
+
+      - name: Build firmware (gh_release)
+        run: pio run -e gh_release
+
+      - name: Locate boot_app0.bin
+        id: bootapp0
+        run: echo "path=$(find ~/.platformio/packages -name boot_app0.bin | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Read version
+        id: ver
+        run: echo "version=$(grep -E '^version =' platformio.ini | head -1 | awk '{print $3}')" >> "$GITHUB_OUTPUT"
+
+      - name: Generate web flasher assets
+        run: |
+          python3 scripts/make_web_flasher_assets.py \
+            --build-dir .pio/build/gh_release \
+            --boot-app0 "${{ steps.bootapp0.outputs.path }}" \
+            --version "${{ steps.ver.outputs.version }}" \
+            --out-dir site/firmware \
+            --esptool "$(python3 -c 'import shutil,glob,os;print(shutil.which("esptool.py") or glob.glob(os.path.expanduser("~/.platformio/packages/tool-esptoolpy/esptool.py"))[0])')"
+
+      - name: Validate manifest
+        run: python3 -c "import json; json.load(open('site/firmware/manifest.json')); print('manifest OK')"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
