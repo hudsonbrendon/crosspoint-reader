@@ -153,13 +153,14 @@ class SettingsActivity final : public Activity {
   std::vector<SettingInfo> displaySettings;
   std::vector<SettingInfo> readerSettings;
   std::vector<SettingInfo> controlsSettings;
+  std::vector<SettingInfo> flashcardSettings;
   std::vector<SettingInfo> systemSettings;
   const std::vector<SettingInfo>* currentSettings = nullptr;
 
   bool preserveQuickResumeTimeoutOn = false;
   bool quickResumeTimeoutAutoEnabled = false;
 
-  static constexpr int categoryCount = 4;
+  static constexpr int categoryCount = 5;
   static const StrId categoryNames[categoryCount];
 
   void enterCategory(int categoryIndex);
@@ -169,8 +170,11 @@ class SettingsActivity final : public Activity {
   void syncQuickResumeTimeoutForSleepScreen(bool sleepScreenChanged, bool quickResumeTimeoutChanged);
 
  public:
-  explicit SettingsActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
-      : Activity("Settings", renderer, mappedInput) {}
+  explicit SettingsActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, int initialCategory = 0)
+      : Activity("Settings", renderer, mappedInput),
+        selectedCategoryIndex(initialCategory < 0                ? 0
+                              : initialCategory >= categoryCount ? categoryCount - 1
+                                                                 : initialCategory) {}
   void onEnter() override;
   void onExit() override;
   void loop() override;

@@ -10,6 +10,7 @@
 #include "boot_sleep/SleepActivity.h"
 #include "browser/OpdsBookBrowserActivity.h"
 #include "browser/RssBrowserActivity.h"
+#include "flashcard/FlashcardDeckListActivity.h"
 #include "home/CrashActivity.h"
 #include "home/FileBrowserActivity.h"
 #include "home/HomeActivity.h"
@@ -18,7 +19,6 @@
 #include "network/InkPointWebServerActivity.h"
 #include "reader/ReaderActivity.h"
 #include "settings/OpdsServerListActivity.h"
-#include "flashcard/FlashcardDeckListActivity.h"
 #include "settings/RssFeedListActivity.h"
 #include "settings/SettingsActivity.h"
 #include "util/FullScreenMessageActivity.h"
@@ -183,6 +183,13 @@ void ActivityManager::goToWebManagement() {
 
 void ActivityManager::goToSettings() { replaceActivity(std::make_unique<SettingsActivity>(renderer, mappedInput)); }
 
+// Opens Settings directly at the Flashcards category (index 3 in categoryNames[]).
+// NOTE: index 3 = Flashcards is coupled to categoryNames[] order in SettingsActivity.cpp.
+// If that order changes, update the constant here accordingly.
+void ActivityManager::goToFlashcardSettings() {
+  replaceActivity(std::make_unique<SettingsActivity>(renderer, mappedInput, /*initialCategory=*/3));
+}
+
 void ActivityManager::goToFileBrowser(std::string path) {
   replaceActivity(std::make_unique<FileBrowserActivity>(renderer, mappedInput, std::move(path)));
 }
@@ -195,9 +202,7 @@ void ActivityManager::goToReadingStats() {
   replaceActivity(std::make_unique<ReadingStatsActivity>(renderer, mappedInput));
 }
 
-void ActivityManager::goToRssFeeds() {
-  replaceActivity(std::make_unique<RssFeedListActivity>(renderer, mappedInput));
-}
+void ActivityManager::goToRssFeeds() { replaceActivity(std::make_unique<RssFeedListActivity>(renderer, mappedInput)); }
 
 void ActivityManager::goToFlashcards() {
   replaceActivity(std::make_unique<FlashcardDeckListActivity>(renderer, mappedInput));

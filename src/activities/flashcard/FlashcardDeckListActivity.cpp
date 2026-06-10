@@ -50,16 +50,13 @@ void FlashcardDeckListActivity::loop() {
       return;
     }
 
-    const int deckCount = static_cast<int>(decks.size());
-    const int importRow = deckCount;
-    const int settingsRow = deckCount + 1;
-
-    if (selectedIndex < deckCount) {
-      onOpenDeck(static_cast<size_t>(selectedIndex));
-    } else if (selectedIndex == importRow) {
+    // Row layout: 0=Import CSV, 1=Flashcard Settings, 2..=decks (mirrors FIRST_DECK_ROW constant)
+    if (selectedIndex == ROW_IMPORT) {
       onImportCsv();
-    } else if (selectedIndex == settingsRow) {
+    } else if (selectedIndex == ROW_SETTINGS) {
       onOpenSettings();
+    } else if (selectedIndex >= FIRST_DECK_ROW) {
+      onOpenDeck(static_cast<size_t>(selectedIndex - FIRST_DECK_ROW));
     }
     return;
   }
@@ -97,16 +94,21 @@ void FlashcardDeckListActivity::render(RenderLock&&) {
 
   GUI.drawList(
       renderer, Rect{0, contentTop, pageWidth, contentHeight}, itemCount, selectedIndex,
-      [this, deckCount](int index) -> std::string {
-        if (index < deckCount) {
-          // v1: show deck name only; New/Due/Total stats deferred until deck open to avoid
-          // loading every deck on entry (potentially many decks, each a full CSV read).
-          return decks[static_cast<size_t>(index)].name;
-        }
-        if (index == deckCount) {
+      [this](int index) -> std::string {
+        // Row layout: 0=Import CSV, 1=Flashcard Settings, 2..=decks (mirrors FIRST_DECK_ROW)
+        if (index == ROW_IMPORT) {
           return std::string(I18n::getInstance().get(StrId::STR_FLASHCARD_IMPORT));
         }
-        return std::string(I18n::getInstance().get(StrId::STR_FLASHCARD_SETTINGS));
+        if (index == ROW_SETTINGS) {
+          return std::string(I18n::getInstance().get(StrId::STR_FLASHCARD_SETTINGS));
+        }
+        // v1: show deck name only; New/Due/Total stats deferred until deck open to avoid
+        // loading every deck on entry (potentially many decks, each a full CSV read).
+        const size_t deckIdx = static_cast<size_t>(index - FIRST_DECK_ROW);
+        if (deckIdx < decks.size()) {
+          return decks[deckIdx].name;
+        }
+        return std::string("");
       },
       [](int) { return std::string(""); });
 
@@ -129,7 +131,9 @@ void FlashcardDeckListActivity::onImportCsv() {
       });
 }
 
-void FlashcardDeckListActivity::onOpenSettings() { activityManager.goToSettings(); }
+// NOTE: goToFlashcardSettings() opens Settings at index 3 = Flashcards category.
+// That index is coupled to categoryNames[] order in SettingsActivity.cpp.
+void FlashcardDeckListActivity::onOpenSettings() { activityManager.goToFlashcardSettings(); }
 
 void FlashcardDeckListActivity::onOpenDeck(size_t index) {
   if (index >= decks.size()) return;

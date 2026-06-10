@@ -31,6 +31,9 @@ class FlashcardDeckListActivity final : public Activity {
 
   int getItemCount() const;
 
-  // Row layout: 0..deckCount-1 = decks; deckCount = "Import CSV"; deckCount+1 = "Flashcard Settings"
+  // Row layout: 0 = "Import CSV"; 1 = "Flashcard Settings"; 2..(2+deckCount-1) = decks
   static constexpr int EXTRA_ROWS = 2;
+  static constexpr int ROW_IMPORT = 0;
+  static constexpr int ROW_SETTINGS = 1;
+  static constexpr int FIRST_DECK_ROW = 2;
 };

@@ -9,9 +9,9 @@
 
 #include "ButtonRemapActivity.h"
 #include "ClearCacheActivity.h"
-#include "InkPointSettings.h"
 #include "FontDownloadActivity.h"
 #include "FontSelectionActivity.h"
+#include "InkPointSettings.h"
 #include "KOReaderSettingsActivity.h"
 #include "LanguageSelectActivity.h"
 #include "MappedInputManager.h"
@@ -27,12 +27,14 @@
 #include "fontIds.h"
 
 const StrId SettingsActivity::categoryNames[categoryCount] = {StrId::STR_CAT_DISPLAY, StrId::STR_CAT_READER,
-                                                              StrId::STR_CAT_CONTROLS, StrId::STR_CAT_SYSTEM};
+                                                              StrId::STR_CAT_CONTROLS, StrId::STR_CAT_FLASHCARDS,
+                                                              StrId::STR_CAT_SYSTEM};
 
 void SettingsActivity::rebuildSettingsLists() {
   displaySettings.clear();
   readerSettings.clear();
   controlsSettings.clear();
+  flashcardSettings.clear();
   systemSettings.clear();
 
   // Pick up any fonts uploaded/deleted over the web server since the last
@@ -47,6 +49,8 @@ void SettingsActivity::rebuildSettingsLists() {
       readerSettings.push_back(setting);
     } else if (setting.category == StrId::STR_CAT_CONTROLS) {
       controlsSettings.push_back(setting);
+    } else if (setting.category == StrId::STR_CAT_FLASHCARDS) {
+      flashcardSettings.push_back(setting);
     } else if (setting.category == StrId::STR_CAT_SYSTEM) {
       systemSettings.push_back(setting);
     }
@@ -67,7 +71,8 @@ void SettingsActivity::rebuildSettingsLists() {
                         SettingInfo::Action(StrId::STR_MANAGE_FONTS, SettingAction::DownloadFonts));
   readerSettings.push_back(SettingInfo::Action(StrId::STR_CUSTOMISE_STATUS_BAR, SettingAction::CustomiseStatusBar));
 
-  // Update currentSettings pointer and count for the active category
+  // Update currentSettings pointer and count for the active category.
+  // Index order must match categoryNames[]: 0=Display, 1=Reader, 2=Controls, 3=Flashcards, 4=System
   switch (selectedCategoryIndex) {
     case 0:
       currentSettings = &displaySettings;
@@ -79,7 +84,13 @@ void SettingsActivity::rebuildSettingsLists() {
       currentSettings = &controlsSettings;
       break;
     case 3:
+      currentSettings = &flashcardSettings;
+      break;
+    case 4:
       currentSettings = &systemSettings;
+      break;
+    default:
+      currentSettings = &displaySettings;
       break;
   }
   settingsCount = static_cast<int>(currentSettings->size());
@@ -88,8 +99,8 @@ void SettingsActivity::rebuildSettingsLists() {
 void SettingsActivity::onEnter() {
   Activity::onEnter();
 
-  // Reset selection to first category
-  selectedCategoryIndex = 0;
+  // selectedCategoryIndex is initialised by the constructor (supports optional initialCategory).
+  // Do NOT reset it here so that callers can open Settings at a specific category.
   selectedSettingIndex = 0;
   preserveQuickResumeTimeoutOn =
       SETTINGS.quickResumeSleepScreen == InkPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT;
@@ -160,6 +171,7 @@ void SettingsActivity::loop() {
 
   if (hasChangedCategory) {
     selectedSettingIndex = (selectedSettingIndex == 0) ? 0 : 1;
+    // Index order must match categoryNames[]: 0=Display, 1=Reader, 2=Controls, 3=Flashcards, 4=System
     switch (selectedCategoryIndex) {
       case 0:
         currentSettings = &displaySettings;
@@ -171,7 +183,13 @@ void SettingsActivity::loop() {
         currentSettings = &controlsSettings;
         break;
       case 3:
+        currentSettings = &flashcardSettings;
+        break;
+      case 4:
         currentSettings = &systemSettings;
+        break;
+      default:
+        currentSettings = &displaySettings;
         break;
     }
     settingsCount = static_cast<int>(currentSettings->size());
@@ -297,19 +315,19 @@ void SettingsActivity::syncQuickResumeTimeoutForSleepScreen(bool sleepScreenChan
 }
 
 void SettingsActivity::openSleepTimeoutPicker() {
-  startActivityForResult(
-      std::make_unique<IntervalSelectionActivity>(
-          renderer, mappedInput, "SleepTimeoutInterval", StrId::STR_TIME_TO_SLEEP, StrId::STR_SLEEP_TIMER_STEP_HINT,
-          SETTINGS.sleepTimeoutMinutes, InkPointSettings::MIN_SLEEP_TIMEOUT_MINUTES,
-          InkPointSettings::MAX_SLEEP_TIMEOUT_MINUTES, 1, 5, StrId::STR_SLEEP_TIMER_VALUE_FORMAT, false, true,
-          StrId::STR_SLEEP_NEVER),
-      [this](const ActivityResult& result) {
-        if (!result.isCancelled) {
-          SETTINGS.sleepTimeoutMinutes = static_cast<uint8_t>(std::get<IntervalResult>(result.data).value);
-          SETTINGS.saveToFile();
-        }
-        requestUpdate();
-      });
+  startActivityForResult(std::make_unique<IntervalSelectionActivity>(
+                             renderer, mappedInput, "SleepTimeoutInterval", StrId::STR_TIME_TO_SLEEP,
+                             StrId::STR_SLEEP_TIMER_STEP_HINT, SETTINGS.sleepTimeoutMinutes,
+                             InkPointSettings::MIN_SLEEP_TIMEOUT_MINUTES, InkPointSettings::MAX_SLEEP_TIMEOUT_MINUTES,
+                             1, 5, StrId::STR_SLEEP_TIMER_VALUE_FORMAT, false, true, StrId::STR_SLEEP_NEVER),
+                         [this](const ActivityResult& result) {
+                           if (!result.isCancelled) {
+                             SETTINGS.sleepTimeoutMinutes =
+                                 static_cast<uint8_t>(std::get<IntervalResult>(result.data).value);
+                             SETTINGS.saveToFile();
+                           }
+                           requestUpdate();
+                         });
 }
 
 void SettingsActivity::render(RenderLock&&) {

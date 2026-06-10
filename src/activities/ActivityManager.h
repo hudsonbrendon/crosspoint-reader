@@ -93,6 +93,7 @@ class ActivityManager {
   void goToFileTransfer();
   void goToWebManagement();
   void goToSettings();
+  void goToFlashcardSettings();  // Opens Settings at the Flashcards category (index 3)
   void goToFileBrowser(std::string path = {});
   void goToRecentBooks();
   void goToReadingStats();
