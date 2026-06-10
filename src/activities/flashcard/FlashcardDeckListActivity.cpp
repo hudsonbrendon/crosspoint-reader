@@ -133,6 +133,5 @@ void FlashcardDeckListActivity::onOpenSettings() { activityManager.goToSettings(
 
 void FlashcardDeckListActivity::onOpenDeck(size_t index) {
   if (index >= decks.size()) return;
-  activityManager.pushActivity(
-      std::make_unique<FlashcardReviewActivity>(renderer, mappedInput, decks[index].path));
+  activityManager.pushActivity(std::make_unique<FlashcardReviewActivity>(renderer, mappedInput, decks[index].path));
 }

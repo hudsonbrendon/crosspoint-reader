@@ -1,8 +1,11 @@
 #include "FlashcardSession.h"
+
 #include <HalStorage.h>
 #include <Logging.h>
+
 #include <cstdio>
 #include <cstdlib>
+
 #include "FlashcardDeck.h"  // for FLASHCARD_DIR
 
 FlashcardSession FlashcardSession::instance;

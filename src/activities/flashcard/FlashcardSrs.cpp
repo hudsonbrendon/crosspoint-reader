@@ -1,4 +1,5 @@
 #include "FlashcardSrs.h"
+
 #include <algorithm>
 
 namespace FlashcardSrs {
@@ -37,8 +38,6 @@ SrsState review(const SrsState& current, SrsRating rating, uint32_t today) {
   return next;
 }
 
-uint16_t previewInterval(const SrsState& current, SrsRating rating) {
-  return review(current, rating, 0).interval;
-}
+uint16_t previewInterval(const SrsState& current, SrsRating rating) { return review(current, rating, 0).interval; }
 
 }  // namespace FlashcardSrs

@@ -4,9 +4,9 @@
 
 // Scheduling state stored per card. Persisted in the deck CSV.
 struct SrsState {
-  uint16_t interval = 0;   // sessions until next review; 0 == new card
-  uint16_t ease = 250;     // ease factor * 100; clamped to [130, 400]
-  uint32_t dueDate = 0;    // session counter on which the card is next due; 0 == new
+  uint16_t interval = 0;  // sessions until next review; 0 == new card
+  uint16_t ease = 250;    // ease factor * 100; clamped to [130, 400]
+  uint32_t dueDate = 0;   // session counter on which the card is next due; 0 == new
 };
 
 enum class SrsRating : uint8_t { Again = 0, Hard = 1, Good = 2, Easy = 3 };

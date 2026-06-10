@@ -30,8 +30,8 @@ void FlashcardReviewActivity::onEnter() {
     return;
   }
 
-  queue = deck.buildReviewQueue(FLASHCARD_SESSION.today(), SETTINGS.flashcardNewPerDay,
-                                SETTINGS.flashcardMaxReviewPerDay);
+  queue =
+      deck.buildReviewQueue(FLASHCARD_SESSION.today(), SETTINGS.flashcardNewPerDay, SETTINGS.flashcardMaxReviewPerDay);
   queuePos = 0;
   state = State::Front;
   reviewedSinceSave = 0;
