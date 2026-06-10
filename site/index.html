@@ -3,28 +3,155 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>InkPoint — Open e-reader firmware for Xteink X3/X4</title>
-    <meta name="description" content="InkPoint: lightweight open-source EPUB reader firmware for the Xteink X3 and X4. Flash it from your browser." />
+    <title>InkPoint — Open e-reader firmware for the Xteink X3 &amp; X4</title>
+    <meta
+      name="description"
+      content="InkPoint is lightweight open-source EPUB reader firmware for the Xteink X3 and X4. Flash it from your browser — no tools to download."
+    />
+    <meta property="og:title" content="InkPoint — Open e-reader firmware" />
+    <meta property="og:description" content="Lightweight open-source EPUB firmware for the Xteink X3 & X4. Flash from your browser." />
     <link rel="stylesheet" href="assets/style.css" />
   </head>
   <body>
+    <div id="eink-flash" aria-hidden="true"></div>
+
     <header class="topbar">
-      <a class="brand" href="index.html">InkPoint</a>
+      <a class="brand" href="index.html">InkPoint<span class="dot">.</span></a>
       <nav>
-        <a href="install.html">Install</a>
-        <a href="https://github.com/hudsonbrendon/inkpoint" rel="noopener">GitHub</a>
+        <a class="nav-link" href="#features">Features</a>
+        <a class="nav-link" href="#specs">Hardware</a>
+        <a class="nav-link" href="https://github.com/hudsonbrendon/inkpoint" rel="noopener">GitHub</a>
+        <a class="nav-cta" href="install.html">Install</a>
       </nav>
     </header>
 
-    <main class="hero">
-      <h1>InkPoint</h1>
-      <p class="tagline">Lightweight open-source EPUB reader firmware for the Xteink X3 &amp; X4.</p>
-      <a class="cta" href="install.html">Install in your browser →</a>
-      <p class="subtle">Flashes over USB with Chrome or Edge. No tools to download.</p>
+    <main>
+      <section class="wrap hero in" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="hero-eyebrow mono reveal">Open firmware · Xteink X3 / X4</p>
+          <h1 id="hero-title" class="reveal">A reader that gets <em>out of the way</em>.</h1>
+          <p class="lede reveal">
+            InkPoint is lightweight, open-source EPUB firmware built for constrained e-ink hardware.
+            Fast page turns, honest typography, and nothing you didn't ask for.
+          </p>
+          <div class="hero-actions reveal">
+            <a class="btn" href="install.html"><span>Flash it in your browser →</span></a>
+            <a class="btn ghost" href="#features"><span>What's inside</span></a>
+          </div>
+          <div class="hero-meta reveal">
+            <span>Flashes over USB</span>
+            <span>OTA &amp; SD updates</span>
+            <span id="ver-meta">Latest release</span>
+          </div>
+        </div>
+
+        <div class="device reveal" aria-hidden="true">
+          <div class="screen">
+            <div class="s-h"><span>INKPOINT</span><span>87%</span></div>
+            <div class="s-title">The Wind in<br />the Willows</div>
+            <div class="s-line"></div>
+            <div class="s-line"></div>
+            <div class="s-line short"></div>
+            <div class="s-line"></div>
+            <div class="s-line"></div>
+            <div class="s-line short"></div>
+            <div class="s-line"></div>
+            <div class="s-foot"><span>CH. IV</span><span>p. 132 / 240</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="wrap" aria-labelledby="features-title">
+        <div class="section-head">
+          <h2 id="features-title">Built for reading, not features.</h2>
+          <span class="idx">01 — WHY</span>
+        </div>
+        <div class="features">
+          <article class="feat" data-io>
+            <div class="num">/01</div>
+            <h3>Featherweight</h3>
+            <p>Engineered for ~380&nbsp;KB of RAM. Stability and fast refreshes come before everything else.</p>
+          </article>
+          <article class="feat" data-io>
+            <div class="num">/02</div>
+            <h3>Typography that breathes</h3>
+            <p>Serif and sans faces, adjustable spacing, paragraph indents, and a clean page that respects the words.</p>
+          </article>
+          <article class="feat" data-io>
+            <div class="num">/03</div>
+            <h3>Three ways to update</h3>
+            <p>Flash over USB from this page, drop a file on the SD card, or pull updates over Wi-Fi. Your choice.</p>
+          </article>
+          <article class="feat" data-io>
+            <div class="num">/04</div>
+            <h3>Reading, tracked</h3>
+            <p>Streaks, finished books, and a flashcard deck for what you want to remember — opt in, never noisy.</p>
+          </article>
+          <article class="feat" data-io>
+            <div class="num">/05</div>
+            <h3>A Pomodoro on paper</h3>
+            <p>A focus timer designed for e-ink: minute-resolution refreshes and a full-screen flash between phases.</p>
+          </article>
+          <article class="feat" data-io>
+            <div class="num">/06</div>
+            <h3>Open, all the way down</h3>
+            <p>Community firmware. Read the source, file an issue, send a patch. No accounts, no telemetry.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="specs" class="wrap" aria-labelledby="specs-title">
+        <div class="section-head">
+          <h2 id="specs-title">One image, two readers.</h2>
+          <span class="idx">02 — HARDWARE</span>
+        </div>
+        <div class="specs" data-io>
+          <div class="spec">
+            <div class="k">DEVICES</div>
+            <div class="v">X3 &amp; X4</div>
+          </div>
+          <div class="spec">
+            <div class="k">MCU</div>
+            <div class="v">ESP32-C3</div>
+          </div>
+          <div class="spec">
+            <div class="k">PANEL</div>
+            <div class="v">E-Ink <small>800×480 / 528×792</small></div>
+          </div>
+          <div class="spec">
+            <div class="k">DETECTION</div>
+            <div class="v">Automatic</div>
+          </div>
+        </div>
+        <p style="color: var(--ink-soft); max-width: 60ch;" data-io>
+          The same firmware boots on both the X3 and the X4 — the panel is detected at startup, so there's
+          a single image to flash and a single release to follow.
+        </p>
+      </section>
+
+      <section class="wrap" aria-label="Get started" style="padding-block: clamp(3rem, 9vh, 6rem);">
+        <div class="method primary" data-io style="text-align: center; padding: 2.5rem 1.5rem;">
+          <h3 style="font-size: clamp(1.8rem, 4vw, 2.6rem); margin-top: 0;">Ready when you are.</h3>
+          <p style="margin: 0 auto 1.4rem; max-width: 46ch;">
+            Connect your reader over USB-C and flash InkPoint straight from the browser — Chrome or Edge, no downloads.
+          </p>
+          <a class="btn" href="install.html"><span>Install InkPoint →</span></a>
+        </div>
+      </section>
     </main>
 
     <footer class="foot">
-      <p>InkPoint is community firmware. Not affiliated with Xteink.</p>
+      <div class="wrap">
+        <a class="brand" href="index.html">InkPoint<span class="dot">.</span></a>
+        <nav>
+          <a href="install.html">Install</a>
+          <a href="https://github.com/hudsonbrendon/inkpoint" rel="noopener">GitHub</a>
+          <a href="https://github.com/hudsonbrendon/inkpoint/releases/latest" rel="noopener">Releases</a>
+        </nav>
+        <p>Community firmware. Not affiliated with Xteink.</p>
+      </div>
     </footer>
+
+    <script src="assets/app.js"></script>
   </body>
 </html>
