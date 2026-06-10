@@ -21,7 +21,7 @@
 #include "fontIds.h"
 
 int HomeActivity::getMenuItemCount() const {
-  int count = 7;  // File Browser, Recents, File transfer, Settings, Reading Stats, RSS, Flashcards
+  int count = 8;  // File Browser, Recents, File transfer, RSS, Virtual Pet, Reading Stats, Flashcards, Settings
   if (!recentBooks.empty()) {
     count += recentBooks.size();
   }
@@ -206,6 +206,9 @@ void HomeActivity::loop() {
         case HomeMenuItem::RSS_BROWSER:
           onRssOpen();
           break;
+        case HomeMenuItem::VIRTUAL_PET:
+          onVirtualPetOpen();
+          break;
         case HomeMenuItem::FLASHCARD_MENU:
           onFlashcardOpen();
           break;
@@ -240,10 +243,10 @@ void HomeActivity::render(RenderLock&&) {
                           std::bind(&HomeActivity::storeCoverBuffer, this));
 
   // Build menu items dynamically
-  std::vector<const char*> menuItems = {tr(STR_BROWSE_FILES),  tr(STR_MENU_RECENT_BOOKS),   tr(STR_FILE_TRANSFER),
-                                        tr(STR_RSS_TITLE),     tr(STR_READING_STATS_TITLE), tr(STR_FLASHCARD),
-                                        tr(STR_SETTINGS_TITLE)};
-  std::vector<UIIcon> menuIcons = {Folder, Recent, Transfer, Library, Book, Book, Settings};
+  std::vector<const char*> menuItems = {tr(STR_BROWSE_FILES),      tr(STR_MENU_RECENT_BOOKS),   tr(STR_FILE_TRANSFER),
+                                        tr(STR_RSS_TITLE),         tr(STR_VIRTUAL_PET),         tr(STR_READING_STATS_TITLE),
+                                        tr(STR_FLASHCARD),         tr(STR_SETTINGS_TITLE)};
+  std::vector<UIIcon> menuIcons = {Folder, Recent, Transfer, Library, Book, Book, Book, Settings};
 
   if (hasOpdsServers) {
     menuItems.insert(menuItems.begin() + 2, tr(STR_OPDS_BROWSER));
@@ -296,3 +299,5 @@ void HomeActivity::onReadingStatsOpen() { activityManager.goToReadingStats(); }
 void HomeActivity::onRssOpen() { activityManager.goToRssFeeds(); }
 
 void HomeActivity::onFlashcardOpen() { activityManager.goToFlashcards(); }
+
+void HomeActivity::onVirtualPetOpen() { activityManager.goToVirtualPet(); }
