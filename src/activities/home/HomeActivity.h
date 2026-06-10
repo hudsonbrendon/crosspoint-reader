@@ -31,6 +31,7 @@ class HomeActivity final : public Activity {
   const HomeMenuItem initialMenuItem;
 
   // Convert HomeMenuItem to menu index (used in onEnter)
+  // Order: FILE_BROWSER, RECENTS, [OPDS], FILE_TRANSFER, RSS_BROWSER, READING_STATS_MENU, FLASHCARD_MENU, SETTINGS_MENU
   static int menuItemToIndex(HomeMenuItem item, bool hasOpdsUrl) {
     int i = 0;
     if (item == HomeMenuItem::FILE_BROWSER) return i;
@@ -45,11 +46,14 @@ class HomeActivity final : public Activity {
     ++i;
     if (item == HomeMenuItem::READING_STATS_MENU) return i;
     ++i;
+    if (item == HomeMenuItem::FLASHCARD_MENU) return i;
+    ++i;
     if (item == HomeMenuItem::SETTINGS_MENU) return i;
     return 0;
   }
 
   // Convert menu index to HomeMenuItem (used in loop)
+  // Order: FILE_BROWSER, RECENTS, [OPDS], FILE_TRANSFER, RSS_BROWSER, READING_STATS_MENU, FLASHCARD_MENU, SETTINGS_MENU
   static HomeMenuItem indexToMenuItem(int idx, bool hasOpdsUrl) {
     int i = 0;
     if (idx == i++) return HomeMenuItem::FILE_BROWSER;
@@ -58,6 +62,7 @@ class HomeActivity final : public Activity {
     if (idx == i++) return HomeMenuItem::FILE_TRANSFER;
     if (idx == i++) return HomeMenuItem::RSS_BROWSER;
     if (idx == i++) return HomeMenuItem::READING_STATS_MENU;
+    if (idx == i++) return HomeMenuItem::FLASHCARD_MENU;
     if (idx == i) return HomeMenuItem::SETTINGS_MENU;
     return HomeMenuItem::NONE;
   }
@@ -69,6 +74,7 @@ class HomeActivity final : public Activity {
   void onOpdsBrowserOpen();
   void onReadingStatsOpen();
   void onRssOpen();
+  void onFlashcardOpen();
 
   int getMenuItemCount() const;
   bool storeCoverBuffer();    // Store frame buffer for cover image

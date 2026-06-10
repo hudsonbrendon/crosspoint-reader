@@ -18,6 +18,7 @@
 #include "network/InkPointWebServerActivity.h"
 #include "reader/ReaderActivity.h"
 #include "settings/OpdsServerListActivity.h"
+#include "flashcard/FlashcardDeckListActivity.h"
 #include "settings/RssFeedListActivity.h"
 #include "settings/SettingsActivity.h"
 #include "util/FullScreenMessageActivity.h"
@@ -198,6 +199,10 @@ void ActivityManager::goToRssFeeds() {
   replaceActivity(std::make_unique<RssFeedListActivity>(renderer, mappedInput));
 }
 
+void ActivityManager::goToFlashcards() {
+  replaceActivity(std::make_unique<FlashcardDeckListActivity>(renderer, mappedInput));
+}
+
 void ActivityManager::goToRssBrowser(const std::string& feedUrl, const std::string& feedName) {
   pushActivity(std::make_unique<RssBrowserActivity>(renderer, mappedInput, feedUrl, feedName));
 }
@@ -246,6 +251,8 @@ void ActivityManager::goHome(HomeMenuItem initialMenuItem) {
       initialMenuItem = HomeMenuItem::READING_STATS_MENU;
     } else if (activityName == "RssBrowser" || activityName == "RssFeedList") {
       initialMenuItem = HomeMenuItem::RSS_BROWSER;
+    } else if (activityName == "FlashcardDeckList") {
+      initialMenuItem = HomeMenuItem::FLASHCARD_MENU;
     }
   }
   replaceActivity(std::make_unique<HomeActivity>(renderer, mappedInput, initialMenuItem));

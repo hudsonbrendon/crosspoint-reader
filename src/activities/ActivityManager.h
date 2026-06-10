@@ -24,7 +24,8 @@ enum class HomeMenuItem {
   RSS_BROWSER,
   FILE_TRANSFER,
   SETTINGS_MENU,
-  READING_STATS_MENU
+  READING_STATS_MENU,
+  FLASHCARD_MENU
 };
 
 /**
@@ -99,6 +100,7 @@ class ActivityManager {
   void goToReader(std::string path);
   void goToRssFeeds();
   void goToRssBrowser(const std::string& feedUrl, const std::string& feedName);
+  void goToFlashcards();
   void goToTxtReader(const std::string& path);
   void goToSleep(bool fromTimeout = false);
   void goToBoot();
