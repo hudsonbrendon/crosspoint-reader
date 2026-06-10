@@ -49,7 +49,7 @@ def main() -> int:
     # multi-token ("python /path/to/esptool.py") invocations work correctly.
     # subprocess treats a list's first element as the executable name, so a
     # two-word string passed as one element would fail with FileNotFoundError.
-    esptool_tokens = shlex.split(args.esptool)
+    esptool_tokens = [os.path.expanduser(t) for t in shlex.split(args.esptool)]
 
     # ESP32-C3 factory layout. Offsets are safety-critical — do not change.
     #   0x00000  bootloader
@@ -65,7 +65,7 @@ def main() -> int:
         "0xe000", args.boot_app0,
         "0x10000", firmware,
     ]
-    print("RUN:", " ".join(cmd))
+    print("RUN:", shlex.join(cmd))
     subprocess.run(cmd, check=True)
 
     manifest = {
