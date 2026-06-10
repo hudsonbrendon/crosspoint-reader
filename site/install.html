@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Install InkPoint</title>
     <meta name="description" content="Flash InkPoint to your Xteink X3 or X4 — over USB from the browser, via SD card, or over the air." />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("ink-theme");
+          if (!t) t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="assets/style.css" />
     <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js"></script>
   </head>
@@ -14,70 +25,78 @@
     <header class="topbar">
       <a class="brand" href="index.html">InkPoint<span class="dot">.</span></a>
       <nav>
-        <a class="nav-link" href="index.html#features">Features</a>
-        <a class="nav-link" href="index.html#specs">Hardware</a>
+        <a class="nav-link" href="index.html#features" data-i18n="nav_features">Features</a>
+        <a class="nav-link" href="index.html#specs" data-i18n="nav_hardware">Hardware</a>
         <a class="nav-link" href="https://github.com/hudsonbrendon/inkpoint" rel="noopener">GitHub</a>
-        <a class="nav-cta" href="install.html">Install</a>
+        <span class="ver-chip"></span>
+        <span class="tools">
+          <select class="lang-select" aria-label="Language"></select>
+          <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+            <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+            <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          </button>
+        </span>
+        <a class="nav-cta" href="install.html" data-i18n="nav_install">Install</a>
       </nav>
     </header>
 
     <main class="doc in">
       <div class="wrap">
         <header class="doc-hero">
-          <p class="mono reveal" style="color: var(--accent-deep);">Get started</p>
-          <h1 class="reveal">Install InkPoint.</h1>
-          <p class="reveal">
+          <p class="mono reveal" style="color: var(--accent-deep);" data-i18n="inst_eyebrow">Get started</p>
+          <h1 class="reveal" data-i18n="inst_title">Install InkPoint.</h1>
+          <p class="reveal" data-i18n-html="inst_intro">
             InkPoint runs on both the Xteink <strong>X3</strong> and <strong>X4</strong> from a single image —
             the device is detected automatically at boot. Pick the method that suits you.
           </p>
 
           <div class="device-pick reveal" aria-label="Your device (informational)">
-            <span class="label">MY DEVICE</span>
+            <span class="label" data-i18n="inst_devicelabel">My device</span>
             <button type="button" data-device="X4" class="active">X4 · 800×480</button>
             <button type="button" data-device="X3">X3 · 528×792</button>
           </div>
-          <p class="subtle" id="device-note">The same firmware is flashed for both; this only tailors the notes below.</p>
+          <p class="subtle" id="device-note" data-i18n="inst_devicenote_default">The same firmware is flashed for both; this only tailors the notes below.</p>
         </header>
 
         <section class="method primary" data-io>
-          <span class="step-tag">METHOD 01 · RECOMMENDED</span>
-          <h3>USB web flasher</h3>
-          <p>
+          <span class="step-tag" data-i18n="m1_tag">METHOD 01 · RECOMMENDED</span>
+          <h3 data-i18n="m1_title">USB web flasher</h3>
+          <p data-i18n="m1_body">
             Connect the reader with a USB-C cable, make sure it is awake on the home screen, then flash directly
             from this page:
           </p>
           <esp-web-install-button manifest="firmware/manifest.json">
-            <button slot="activate" class="btn"><span>Flash InkPoint via USB</span></button>
-            <span slot="unsupported">Your browser doesn't support WebSerial — use Chrome or Edge on desktop.</span>
-            <span slot="not-allowed">USB access was blocked. Reload and allow the serial port.</span>
+            <button slot="activate" class="btn"><span data-i18n="m1_btn">Flash InkPoint via USB</span></button>
+            <span slot="unsupported" data-i18n="m1_unsupported">Your browser doesn't support WebSerial — use Chrome or Edge on desktop.</span>
+            <span slot="not-allowed" data-i18n="m1_notallowed">USB access was blocked. Reload and allow the serial port.</span>
           </esp-web-install-button>
-          <p class="hint">
+          <p class="hint" data-i18n="m1_hint">
             Requires Chrome or Edge on desktop. If the serial picker doesn't list your device, try another USB
             port or cable before assuming the device is locked.
           </p>
         </section>
 
         <section class="method" data-io>
-          <span class="step-tag">METHOD 02</span>
-          <h3>SD card</h3>
-          <p>Works even when USB flashing isn't available:</p>
+          <span class="step-tag" data-i18n="m2_tag">METHOD 02</span>
+          <h3 data-i18n="m2_title">SD card</h3>
+          <p data-i18n="m2_body">Works even when USB flashing isn't available:</p>
           <ol>
-            <li>
+            <li data-i18n-html="m2_s1">
               Download the latest <code>firmware.bin</code> from the
               <a class="inline" href="https://github.com/hudsonbrendon/inkpoint/releases/latest" rel="noopener">latest release</a>.
             </li>
-            <li>Copy it to the root of the SD card (rename it however you like, e.g. <code>inkpoint.bin</code>).</li>
-            <li>Insert the card, then on the device open <strong>Settings → Firmware update</strong> and pick the file.</li>
+            <li data-i18n-html="m2_s2">Copy it to the root of the SD card (rename it however you like, e.g. <code>inkpoint.bin</code>).</li>
+            <li data-i18n-html="m2_s3">Insert the card, then on the device open <strong>Settings → Firmware update</strong> and pick the file.</li>
           </ol>
-          <p class="callout">
+          <p class="callout" data-i18n="m2_callout">
             Only flash firmware that includes SD-flashing or OTA update support, or you may lose the ability to update.
           </p>
         </section>
 
         <section class="method" data-io>
-          <span class="step-tag">METHOD 03</span>
-          <h3>Over-the-air</h3>
-          <p>
+          <span class="step-tag" data-i18n="m3_tag">METHOD 03</span>
+          <h3 data-i18n="m3_title">Over-the-air</h3>
+          <p data-i18n-html="m3_body">
             Already running InkPoint with Wi-Fi? Open <strong>Settings → Firmware update</strong> and the device
             pulls the latest release on its own.
           </p>
@@ -89,14 +108,15 @@
       <div class="wrap">
         <a class="brand" href="index.html">InkPoint<span class="dot">.</span></a>
         <nav>
-          <a href="index.html">Home</a>
+          <a href="index.html" data-i18n="foot_home">Home</a>
           <a href="https://github.com/hudsonbrendon/inkpoint" rel="noopener">GitHub</a>
-          <a href="https://github.com/hudsonbrendon/inkpoint/releases/latest" rel="noopener">Releases</a>
+          <a href="https://github.com/hudsonbrendon/inkpoint/releases/latest" rel="noopener" data-i18n="foot_releases">Releases</a>
         </nav>
-        <p>Community firmware. Not affiliated with Xteink.</p>
+        <p data-i18n="foot_disclaimer">Community firmware. Not affiliated with Xteink.</p>
       </div>
     </footer>
 
+    <script src="assets/i18n-data.js"></script>
     <script src="assets/app.js"></script>
   </body>
 </html>
