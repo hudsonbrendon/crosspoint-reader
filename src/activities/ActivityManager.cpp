@@ -21,6 +21,7 @@
 #include "settings/OpdsServerListActivity.h"
 #include "settings/RssFeedListActivity.h"
 #include "settings/SettingsActivity.h"
+#include "tools/VirtualPetActivity.h"
 #include "util/FullScreenMessageActivity.h"
 
 void ActivityManager::begin() {
@@ -195,6 +196,10 @@ void ActivityManager::goToReadingStats() {
   replaceActivity(std::make_unique<ReadingStatsActivity>(renderer, mappedInput));
 }
 
+void ActivityManager::goToVirtualPet() {
+  replaceActivity(std::make_unique<VirtualPetActivity>(renderer, mappedInput));
+}
+
 void ActivityManager::goToRssFeeds() { replaceActivity(std::make_unique<RssFeedListActivity>(renderer, mappedInput)); }
 
 void ActivityManager::goToFlashcards() {
@@ -249,6 +254,8 @@ void ActivityManager::goHome(HomeMenuItem initialMenuItem) {
       initialMenuItem = HomeMenuItem::READING_STATS_MENU;
     } else if (activityName == "RssBrowser" || activityName == "RssFeedList") {
       initialMenuItem = HomeMenuItem::RSS_BROWSER;
+    } else if (activityName == "VirtualPet") {
+      initialMenuItem = HomeMenuItem::VIRTUAL_PET;
     } else if (activityName == "FlashcardDeckList") {
       initialMenuItem = HomeMenuItem::FLASHCARD_MENU;
     }
