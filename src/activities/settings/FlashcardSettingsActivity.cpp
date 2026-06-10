@@ -27,20 +27,19 @@ void FlashcardSettingsActivity::onEnter() {
 
 void FlashcardSettingsActivity::onExit() { Activity::onExit(); }
 
-void FlashcardSettingsActivity::adjustValue(int delta) {
-  // Steps match SettingsList.h: flashcardNewPerDay step=5, flashcardMaxReviewPerDay step=25
+void FlashcardSettingsActivity::cycleValue() {
+  // Confirm (Toggle) cycles the value up by one step, wrapping max -> min.
+  // Mirrors SettingsActivity's VALUE handling. Steps/bounds match SettingsList.h.
   if (selectedIndex == 0) {
     const int cur = static_cast<int>(SETTINGS.flashcardNewPerDay);
-    const int next = cur + delta * 5;
-    SETTINGS.flashcardNewPerDay =
-        static_cast<uint8_t>(std::max(static_cast<int>(InkPointSettings::FLASHCARD_NEW_PER_DAY_MIN),
-                                      std::min(static_cast<int>(InkPointSettings::FLASHCARD_NEW_PER_DAY_MAX), next)));
+    const int next =
+        (cur + 5 > InkPointSettings::FLASHCARD_NEW_PER_DAY_MAX) ? InkPointSettings::FLASHCARD_NEW_PER_DAY_MIN : cur + 5;
+    SETTINGS.flashcardNewPerDay = static_cast<uint8_t>(next);
   } else {
     const int cur = static_cast<int>(SETTINGS.flashcardMaxReviewPerDay);
-    const int next = cur + delta * 25;
-    SETTINGS.flashcardMaxReviewPerDay =
-        static_cast<uint8_t>(std::max(static_cast<int>(InkPointSettings::FLASHCARD_MAX_REVIEW_MIN),
-                                      std::min(static_cast<int>(InkPointSettings::FLASHCARD_MAX_REVIEW_MAX), next)));
+    const int next =
+        (cur + 25 > InkPointSettings::FLASHCARD_MAX_REVIEW_MAX) ? InkPointSettings::FLASHCARD_MAX_REVIEW_MIN : cur + 25;
+    SETTINGS.flashcardMaxReviewPerDay = static_cast<uint8_t>(next);
   }
   SETTINGS.saveToFile();
 }
@@ -51,16 +50,11 @@ void FlashcardSettingsActivity::loop() {
     return;
   }
 
-  // Left / Confirm decrements; Right increments — mirrors SettingsActivity VALUE handling
-  if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
-    adjustValue(-1);
-    requestUpdate();
-    return;
-  }
-
-  if (mappedInput.wasPressed(MappedInputManager::Button::Right) ||
-      mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
-    adjustValue(+1);
+  // Confirm = "Toggle": cycle the selected value (wraps at max back to min).
+  // Up/Down (handled by buttonNavigator below) only move the selector — they do
+  // NOT change values.
+  if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
+    cycleValue();
     requestUpdate();
     return;
   }

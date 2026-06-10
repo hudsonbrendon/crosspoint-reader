@@ -22,5 +22,5 @@ class FlashcardSettingsActivity final : public Activity {
 
   int selectedIndex = 0;
 
-  void adjustValue(int delta);
+  void cycleValue();
 };
