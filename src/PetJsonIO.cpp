@@ -2,6 +2,7 @@
 
 #include <ArduinoJson.h>
 
+#include <algorithm>
 #include <cstring>
 
 #include "PetState.h"
@@ -46,7 +47,10 @@ bool deserializePetState(const char* json, PetState& out) {
   JsonObject o = doc.as<JsonObject>();
 
   out.initialized = o["initialized"] | false;
-  out.stage = static_cast<PetStage>(o["stage"] | static_cast<uint8_t>(0));
+  {
+    const uint8_t rawStage = o["stage"] | static_cast<uint8_t>(0);
+    out.stage = static_cast<PetStage>(std::min<uint8_t>(rawStage, static_cast<uint8_t>(PetStage::ELDER)));
+  }
   {
     std::string name = o["petName"] | std::string("");
     std::strncpy(out.petName, name.c_str(), sizeof(out.petName) - 1);
@@ -63,7 +67,10 @@ bool deserializePetState(const char* json, PetState& out) {
   out.lastKnownReadMs = o["lastKnownReadMs"] | static_cast<uint32_t>(0);
   out.isSick = o["isSick"] | false;
   out.wasteCount = o["wasteCount"] | static_cast<uint8_t>(0);
-  out.currentNeed = static_cast<PetNeed>(o["currentNeed"] | static_cast<uint8_t>(0));
+  {
+    const uint8_t rawNeed = o["currentNeed"] | static_cast<uint8_t>(0);
+    out.currentNeed = static_cast<PetNeed>(std::min<uint8_t>(rawNeed, static_cast<uint8_t>(PetNeed::CLEAN)));
+  }
   out.attentionCall = o["attentionCall"] | false;
   out.isSleeping = o["isSleeping"] | false;
   out.evolutionVariant = o["evolutionVariant"] | static_cast<uint8_t>(0);

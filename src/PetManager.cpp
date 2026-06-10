@@ -62,8 +62,8 @@ void PetManager::syncFromReadingStats() {
     uint32_t meals = deltaMs / pet::PetConfig::MS_PER_AUTO_MEAL;
     meals = std::min<uint32_t>(meals, 8);  // cap
     if (meals > 0) {
-      addClamped(state_.hunger, static_cast<uint8_t>(
-                                   std::min<uint32_t>(255, meals * pet::PetConfig::AUTO_MEAL_HUNGER)));
+      addClamped(state_.hunger,
+                 static_cast<uint8_t>(std::min<uint32_t>(255, meals * pet::PetConfig::AUTO_MEAL_HUNGER)));
     }
   }
   state_.lastKnownReadMs = readMs;
@@ -83,37 +83,67 @@ void PetManager::hatchIfEgg() {
   // effects (e.g. naming) later.
 }
 
-bool PetManager::save() { return PetStore::save(state_); }
+bool PetManager::save() {
+  if (!loaded_) {
+    LOG_ERR("PET", "save before begin()");
+    return false;
+  }
+  return PetStore::save(state_);
+}
 
 void PetManager::feed() {
+  if (!loaded_) {
+    LOG_ERR("PET", "PetManager used before begin()");
+    return;
+  }
   addClamped(state_.hunger, pet::PetConfig::FEED_HUNGER);
   save();
 }
 
 void PetManager::snack() {
+  if (!loaded_) {
+    LOG_ERR("PET", "PetManager used before begin()");
+    return;
+  }
   addClamped(state_.hunger, pet::PetConfig::SNACK_HUNGER);
   addClamped(state_.happiness, pet::PetConfig::SNACK_HAPPINESS);
   save();
 }
 
 void PetManager::giveMedicine() {
+  if (!loaded_) {
+    LOG_ERR("PET", "PetManager used before begin()");
+    return;
+  }
   addClamped(state_.health, pet::PetConfig::MEDICINE_HEALTH);
   if (state_.health > pet::PetConfig::SICK_HEALTH_THRESHOLD) state_.isSick = false;
   save();
 }
 
 void PetManager::exercise() {
+  if (!loaded_) {
+    LOG_ERR("PET", "PetManager used before begin()");
+    return;
+  }
   addClamped(state_.happiness, pet::PetConfig::EXERCISE_HAPPINESS);
   save();
 }
 
 void PetManager::clean() {
+  if (!loaded_) {
+    LOG_ERR("PET", "PetManager used before begin()");
+    return;
+  }
   state_.wasteCount = 0;
   addClamped(state_.happiness, pet::PetConfig::CLEAN_HAPPINESS);
   save();
 }
 
 void PetManager::petThePet() {
+  if (!loaded_) {
+    LOG_ERR("PET", "PetManager used before begin()");
+    return;
+  }
   addClamped(state_.happiness, pet::PetConfig::PET_HAPPINESS);
   save();
 }
