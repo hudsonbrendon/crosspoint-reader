@@ -28,6 +28,18 @@ class HalClock {
   // Returns false if RTC is not available.
   bool getTime(uint8_t& hour, uint8_t& minute) const;
 
+  // Current local calendar date. Works on both hardware variants:
+  //   X3: read from the DS3231 date registers.
+  //   X4: read from the ESP32 system clock, valid only after an NTP sync this
+  //       power cycle (survives sleep/restart, lost on power loss).
+  // utcOffsetQuarterHoursBiased matches getTime()/formatTime() (48 = UTC+0).
+  // Returns false (and leaves outputs untouched) when no trustworthy date exists.
+  bool getDate(int16_t& year, uint8_t& month, uint8_t& day, uint16_t& dayOfYear,
+               uint8_t utcOffsetQuarterHoursBiased = 48) const;
+
+  // Convenience: true when getDate() would succeed right now.
+  bool hasValidDate(uint8_t utcOffsetQuarterHoursBiased = 48) const;
+
   // Format time into a caller-provided buffer.
   // 24h mode produces "HH:MM" (needs >=6 bytes); 12h mode produces "H:MM AM"/"HH:MM PM" (needs >=9 bytes).
   // utcOffsetQuarterHoursBiased: biased quarter-hour offset (48 = UTC+0, 0 = UTC-12, 104 = UTC+14).
