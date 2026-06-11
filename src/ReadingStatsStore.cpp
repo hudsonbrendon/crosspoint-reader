@@ -11,11 +11,12 @@ constexpr char READING_STATS_FILE_JSON[] = "/.inkpoint/reading_stats.json";
 
 ReadingStatsStore ReadingStatsStore::instance;
 
-void ReadingStatsStore::endSession(uint32_t nowMs) {
-  aggregator.endSession(nowMs);
+uint32_t ReadingStatsStore::endSession(uint32_t nowMs) {
+  const uint32_t sessionMs = aggregator.endSession(nowMs);
   if (!saveToFile()) {
     LOG_ERR("RSS", "Failed to persist reading stats");
   }
+  return sessionMs;
 }
 
 bool ReadingStatsStore::saveToFile() const {

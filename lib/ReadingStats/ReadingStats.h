@@ -67,9 +67,9 @@ class ReadingStatsAggregator {
   // page as read; either direction banks elapsed time. No-op without a session.
   void recordPageTurn(uint32_t nowMs, bool forward);
 
-  // End the active session, banking the final delta and counting the session.
-  // No-op if no session is active.
-  void endSession(uint32_t nowMs);
+  // Ends the active session, banking the final delta and counting the session.
+  // Returns the ms banked by this session (0 if no session was active).
+  uint32_t endSession(uint32_t nowMs);
 
   // Aggregate accessors.
   const BookStats* statsFor(const std::string& bookPath) const;
@@ -130,6 +130,7 @@ class ReadingStatsAggregator {
   bool sessionActive_ = false;
   std::optional<std::size_t> activeIndex_;  // set to the active session's index in books_
   uint32_t lastEventMs_ = 0;
+  uint32_t sessionStartReadingMs_ = 0;  // snapshot of totalReadingMs when session began
 
   // Lifetime counters (persisted alongside per-book stats).
   uint16_t currentStreak_ = 0;

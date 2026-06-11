@@ -45,6 +45,7 @@ void ReadingStatsAggregator::beginSession(const std::string& bookPath, uint32_t 
   }
   sessionActive_ = true;
   lastEventMs_ = nowMs;
+  sessionStartReadingMs_ = books_[*activeIndex_].totalReadingMs;
 }
 
 void ReadingStatsAggregator::recordPageTurn(uint32_t nowMs, bool forward) {
@@ -55,13 +56,15 @@ void ReadingStatsAggregator::recordPageTurn(uint32_t nowMs, bool forward) {
   lastEventMs_ = nowMs;
 }
 
-void ReadingStatsAggregator::endSession(uint32_t nowMs) {
-  if (!sessionActive_) return;
+uint32_t ReadingStatsAggregator::endSession(uint32_t nowMs) {
+  if (!sessionActive_) return 0;
   BookStats& book = books_[*activeIndex_];
   book.totalReadingMs = saturatingAddU32(book.totalReadingMs, cappedDelta(nowMs));
   book.sessionCount++;
+  const uint32_t sessionMs = book.totalReadingMs - sessionStartReadingMs_;
   sessionActive_ = false;
   activeIndex_.reset();
+  return sessionMs;
 }
 
 const BookStats* ReadingStatsAggregator::statsFor(const std::string& bookPath) const {

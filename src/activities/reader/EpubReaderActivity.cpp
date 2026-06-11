@@ -5,6 +5,7 @@
 #include <FontCacheManager.h>
 #include <FsHelpers.h>
 #include <GfxRenderer.h>
+#include <HalClock.h>
 #include <HalStorage.h>
 #include <I18n.h>
 #include <JsonSettingsIO.h>
@@ -192,17 +193,14 @@ void EpubReaderActivity::onExit() {
       LOG_INF("ERS", "Book finished: %s", epub->getPath().c_str());
     }
 
-    // Phase 1: no reliable wall-clock on X4, so the streak day is not stamped.
-    // Phase 2 (X4 wall-clock module) will replace `false` with a real (year,
-    // dayOfYear) acquisition and call READING_STATS.recordReadingDay(...) here.
-    constexpr bool haveValidDate = false;
-    if (haveValidDate) {
-      // Phase 2 fills in: READING_STATS.recordReadingDay(year, dayOfYear);
-    }
-
     // endSession() banks the final time slice and persists everything (including
     // the booksFinished bump above) in one SD write.
-    READING_STATS.endSession(millis());
+    const uint32_t sessionMs = READING_STATS.endSession(millis());
+    int16_t y; uint8_t mo, d; uint16_t doy;
+    if (sessionMs > 0 && halClock.getDate(y, mo, d, doy, SETTINGS.clockUtcOffsetQ)) {
+      READING_STATS.recordReadingMs(y, doy, sessionMs);
+      READING_STATS.recordReadingDay(y, doy);
+    }
   }
 
   // Reset orientation back to portrait for the rest of the UI

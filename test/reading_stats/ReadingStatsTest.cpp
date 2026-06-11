@@ -404,3 +404,10 @@ TEST(StatsFormat, FormatsHoursAndMinutes) {
   reading_stats::formatHm(buf, sizeof(buf), 66u * 3600000u + 18 * 60000);  // 66h 18m
   EXPECT_STREQ(buf, "66h 18m");
 }
+
+TEST(ReadingStats, EndSessionReturnsBankedMs) {
+  ReadingStatsAggregator agg;
+  agg.beginSession("/b.epub", 1000);
+  agg.recordPageTurn(3000, true);   // banks 2000
+  EXPECT_EQ(agg.endSession(4000), 3000u);  // + final 1000 = 3000
+}

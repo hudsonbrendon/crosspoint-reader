@@ -28,7 +28,8 @@ class ReadingStatsStore {
   void beginSession(const std::string& bookPath, uint32_t nowMs) { aggregator.beginSession(bookPath, nowMs); }
   void recordPageTurn(uint32_t nowMs, bool forward) { aggregator.recordPageTurn(nowMs, forward); }
   // Ends the active session and persists. Best-effort: a failed save is logged.
-  void endSession(uint32_t nowMs);
+  // Returns the ms banked by this session (0 if no session was active).
+  uint32_t endSession(uint32_t nowMs);
 
   // --- Persistence ---
   bool saveToFile() const;
