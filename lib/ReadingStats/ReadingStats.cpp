@@ -144,4 +144,30 @@ uint32_t ReadingStatsAggregator::windowMs(int16_t year, uint16_t dayOfYear, uint
   return sum;
 }
 
+GoalStreak ReadingStatsAggregator::computeGoalStreak(int16_t todayYear, uint16_t todayDayOfYear,
+                                                     uint32_t goalMs) const {
+  if (goalMs == 0) return {};
+  std::vector<int64_t> met;
+  met.reserve(days_.size());
+  for (const auto& d : days_)
+    if (d.ms >= goalMs) met.push_back(dayOrdinal(d.year, d.dayOfYear));
+  std::sort(met.begin(), met.end());
+
+  GoalStreak gs;
+  uint16_t run = 0;
+  int64_t prev = INT64_MIN;
+  for (int64_t o : met) {
+    run = (o == prev + 1) ? static_cast<uint16_t>(run + 1) : 1;
+    if (run > gs.max) gs.max = run;
+    prev = o;
+  }
+  const int64_t today = dayOrdinal(todayYear, todayDayOfYear);
+  int64_t cur = today;
+  while (std::binary_search(met.begin(), met.end(), cur)) {
+    gs.current++;
+    cur -= 1;
+  }
+  return gs;
+}
+
 }  // namespace reading_stats

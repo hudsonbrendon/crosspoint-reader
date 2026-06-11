@@ -362,3 +362,24 @@ TEST(ReadingStatsDays, AnnualAndWindowSums) {
   EXPECT_EQ(agg.windowMs(2026, 11, 7), 1200000u);   // days 5..11 of 2026
   EXPECT_EQ(agg.windowMs(2026, 11, 30), 1800000u);  // reaches back into 2025 day 364
 }
+
+TEST(ReadingStatsGoal, GoalStreakCountsConsecutiveMetDays) {
+  ReadingStatsAggregator agg;
+  const uint32_t goalMs = 3600000;  // 60 min
+  agg.recordReadingMs(2026, 100, 4000000);  // met
+  agg.recordReadingMs(2026, 101, 3600000);  // met
+  agg.recordReadingMs(2026, 102, 1000000);  // missed
+  agg.recordReadingMs(2026, 103, 5000000);  // met
+  agg.recordReadingMs(2026, 104, 5000000);  // met (today)
+  auto gs = agg.computeGoalStreak(2026, 104, goalMs);
+  EXPECT_EQ(gs.current, 2u);  // days 103,104
+  EXPECT_EQ(gs.max, 2u);      // best run is 2
+}
+
+TEST(ReadingStatsGoal, GoalStreakZeroWhenTodayMissed) {
+  ReadingStatsAggregator agg;
+  agg.recordReadingMs(2026, 100, 5000000);
+  auto gs = agg.computeGoalStreak(2026, 101, 3600000);  // today (101) has nothing
+  EXPECT_EQ(gs.current, 0u);
+  EXPECT_EQ(gs.max, 1u);
+}

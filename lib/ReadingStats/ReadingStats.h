@@ -6,6 +6,11 @@
 
 namespace reading_stats {
 
+struct GoalStreak {
+  uint16_t current = 0;
+  uint16_t max = 0;
+};
+
 // One calendar day of accumulated reading time. Compact for SD persistence.
 struct DayBucket {
   int16_t year = 0;
@@ -109,6 +114,10 @@ class ReadingStatsAggregator {
   uint32_t windowMs(int16_t year, uint16_t dayOfYear, uint16_t count) const;
   const std::vector<DayBucket>& days() const { return days_; }
   void loadDays(std::vector<DayBucket> days) { days_ = std::move(days); }
+
+  // Consecutive days (ending today) whose reading time met `goalMs`, plus the
+  // longest such run ever. A day with no record counts as missed.
+  GoalStreak computeGoalStreak(int16_t todayYear, uint16_t todayDayOfYear, uint32_t goalMs) const;
 
  private:
   // Wrap-safe, capped delta from lastEventMs_ to nowMs.
