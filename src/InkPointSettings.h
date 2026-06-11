@@ -266,6 +266,8 @@ class InkPointSettings {
   uint8_t flashcardNewPerDay = 5;
   // Flashcards: max cards reviewed per session (25..250 step 25)
   uint8_t flashcardMaxReviewPerDay = 50;
+  // Daily reading goal in minutes (used by Reading Stats / Heatmap goal streak).
+  uint8_t dailyGoalMinutes = 60;
 
   ~InkPointSettings() = default;
 
