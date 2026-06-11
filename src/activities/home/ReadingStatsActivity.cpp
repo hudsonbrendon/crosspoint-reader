@@ -19,7 +19,7 @@
 namespace {
 // Vertical space reserved above the list for the totals block (tiles + chart + annual).
 // Large enough that the list's selection highlight clears all new sections.
-constexpr int TOTALS_BLOCK_HEIGHT = 310;
+constexpr int TOTALS_BLOCK_HEIGHT = 360;
 
 // Walk back `back` days from (year, doy). Handles year boundaries.
 void minusDays(int16_t& year, uint16_t& doy, uint16_t back) {
@@ -128,23 +128,24 @@ void ReadingStatsActivity::render(RenderLock&&) {
   const int tileMargin = metrics.contentSidePadding;
   const int tileGap = 8;
   const int tileW = (pageWidth - tileMargin * 2 - tileGap) / 2;
-  const int tileH = 42;
+  const int tileH = 54;
   const int labelH = renderer.getLineHeight(UI_10_FONT_ID);
-  const int valueH = renderer.getLineHeight(UI_12_FONT_ID);
 
-  // Helper lambda: draw one tile at column col (0 or 1), row row (0-based)
-  // label is the small top text, value is the larger bottom text.
+  // Helper lambda: draw one tile. The value is prominent (large font, top) and
+  // the label sits below it (small). The value font auto-shrinks so a long
+  // value (e.g. the Daily Goal "1h 17m / 1h 0m") never overflows the tile width.
   auto drawTile = [&](int col, int row, const char* label, const char* value) {
     const int tx = tileMargin + col * (tileW + tileGap);
     const int ty = headerBottom + row * (tileH + tileGap);
     renderer.drawRect(tx, ty, tileW, tileH);
-    // Label (small, top of tile)
-    const int lx = tx + 6;
-    const int ly = ty + 5;
-    renderer.drawText(UI_10_FONT_ID, lx, ly, label);
-    // Value (slightly larger, below label)
-    const int vy = ly + labelH + 2;
-    renderer.drawText(UI_12_FONT_ID, lx, vy, value);
+    const int lx = tx + 8;
+    const int innerW = tileW - 16;
+    int valueFont = NOTOSANS_16_FONT_ID;
+    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = UI_12_FONT_ID;
+    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = SMALL_FONT_ID;
+    const int vH = renderer.getLineHeight(valueFont);
+    renderer.drawText(valueFont, lx, ty + 7, value);
+    renderer.drawText(UI_10_FONT_ID, lx, ty + 7 + vH + 2, label);
   };
 
   char buf1[32], buf2[32], buf3[64], buf4[32], buf5[32], buf6[32], buf7[32], buf8[32];
@@ -305,6 +306,4 @@ void ReadingStatsActivity::render(RenderLock&&) {
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 
   renderer.displayBuffer();
-
-  (void)valueH;  // suppress unused warning if compiler doesn't inline lambda
 }

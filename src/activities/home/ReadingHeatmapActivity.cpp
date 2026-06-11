@@ -151,8 +151,7 @@ void ReadingHeatmapActivity::render(RenderLock&&) {
   // -----------------------------------------------------------------------
   const int tileGap = 6;
   const int tileW = (contentW - tileGap) / 2;
-  const int tileH = 38;
-  const int labelH = renderer.getLineHeight(UI_10_FONT_ID);
+  const int tileH = 50;
 
   // Accumulate month stats.
   uint8_t numDays = daysInMonth(viewMonth, viewYear);
@@ -175,12 +174,20 @@ void ReadingHeatmapActivity::render(RenderLock&&) {
     gs = READING_STATS.goalStreak(today_y, today_doy, goalMs);
   }
 
+  // Value prominent (large font, top); label small below. Value auto-shrinks
+  // so it never overflows the tile width.
   auto drawSummaryTile = [&](int col, int row, const char* label, const char* value) {
     const int tx = contentX + col * (tileW + tileGap);
     const int ty = y + row * (tileH + tileGap);
     renderer.drawRect(tx, ty, tileW, tileH);
-    renderer.drawText(UI_10_FONT_ID, tx + 5, ty + 4, label);
-    renderer.drawText(UI_12_FONT_ID, tx + 5, ty + 4 + labelH + 2, value);
+    const int lx = tx + 8;
+    const int innerW = tileW - 16;
+    int valueFont = NOTOSANS_16_FONT_ID;
+    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = UI_12_FONT_ID;
+    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = SMALL_FONT_ID;
+    const int vH = renderer.getLineHeight(valueFont);
+    renderer.drawText(valueFont, lx, ty + 6, value);
+    renderer.drawText(UI_10_FONT_ID, lx, ty + 6 + vH + 1, label);
   };
 
   char buf1[20], buf2[20], buf3[20], buf4[20];
@@ -316,7 +323,7 @@ void ReadingHeatmapActivity::render(RenderLock&&) {
   }
 
   // -- Button hints: Back | (none) | < Prev | Next > --
-  const auto labels = mappedInput.mapLabels(tr(STR_BACK), nullptr, tr(STR_DIR_LEFT), tr(STR_DIR_RIGHT));
+  const auto labels = mappedInput.mapLabels(tr(STR_BACK), nullptr, tr(STR_PREV_MONTH), tr(STR_NEXT_MONTH));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 
   renderer.displayBuffer();
