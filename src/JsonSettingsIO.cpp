@@ -374,12 +374,22 @@ bool JsonSettingsIO::saveReadingStats(const ReadingStatsStore& store, const char
     obj["sessionCount"] = book.sessionCount;
   }
 
-  doc["v"] = 1;
+  doc["v"] = 2;
   doc["currentStreak"] = store.currentStreak();
   doc["longestStreak"] = store.longestStreak();
   doc["booksFinished"] = store.booksFinished();
   doc["lastReadYear"] = store.lastReadYear();
   doc["lastReadDayOfYear"] = store.lastReadDayOfYear();
+  doc["booksStarted"] = store.booksStarted();
+  JsonArray days = doc["days"].to<JsonArray>();
+  const auto& src = store.days();
+  size_t kept = 0;
+  for (auto it = src.rbegin(); it != src.rend() && kept < 400; ++it, ++kept) {
+    JsonObject o = days.add<JsonObject>();
+    o["y"] = it->year;
+    o["d"] = it->dayOfYear;
+    o["ms"] = it->ms;
+  }
 
   String json;
   serializeJson(doc, json);
@@ -411,6 +421,16 @@ bool JsonSettingsIO::loadReadingStats(ReadingStatsStore& store, const char* json
       static_cast<uint16_t>(doc["currentStreak"] | 0u), static_cast<uint16_t>(doc["longestStreak"] | 0u),
       static_cast<uint16_t>(doc["booksFinished"] | 0u), static_cast<int16_t>(doc["lastReadYear"] | -1),
       static_cast<int16_t>(doc["lastReadDayOfYear"] | -1));
+  store.setBooksStarted(doc["booksStarted"] | 0);
+  std::vector<reading_stats::DayBucket> dayBuckets;
+  for (JsonObject o : doc["days"].as<JsonArray>()) {
+    reading_stats::DayBucket b;
+    b.year = o["y"] | 0;
+    b.dayOfYear = o["d"] | 0;
+    b.ms = o["ms"] | 0u;
+    if (b.year != 0) dayBuckets.push_back(b);
+  }
+  store.loadDays(std::move(dayBuckets));
   LOG_DBG("RSS", "Reading stats loaded (%d books)", static_cast<int>(store.books().size()));
   return true;
 }

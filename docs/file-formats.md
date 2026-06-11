@@ -245,3 +245,7 @@ if (parsedSize != fileSize) {
     std::warning(std::format("Unparsed data detected: {} bytes remaining at offset 0x{:X}", fileSize - parsedSize, parsedSize));
 }
 ```
+
+## `reading_stats.json`
+
+`reading_stats.json`: version 2 — adds `days[]` (per-day reading minutes) and `booksStarted`. v1 files load with empty days.

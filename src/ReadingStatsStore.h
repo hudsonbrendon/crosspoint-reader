@@ -53,6 +53,19 @@ class ReadingStatsStore {
   // Stamp today's reading day into the streak (valid wall-clock only).
   void recordReadingDay(int16_t year, int16_t dayOfYear) { aggregator.recordReadingDay(year, dayOfYear); }
 
+  // --- Per-day log accessors ---
+  void recordReadingMs(int16_t year, uint16_t dayOfYear, uint32_t ms) { aggregator.recordReadingMs(year, dayOfYear, ms); }
+  uint32_t msForDay(int16_t y, uint16_t doy) const { return aggregator.msForDay(y, doy); }
+  uint32_t daysRead() const { return aggregator.daysRead(); }
+  uint32_t bestDayMs() const { return aggregator.bestDayMs(); }
+  uint32_t annualMs(int16_t y) const { return aggregator.annualMs(y); }
+  uint32_t windowMs(int16_t y, uint16_t doy, uint16_t n) const { return aggregator.windowMs(y, doy, n); }
+  const std::vector<reading_stats::DayBucket>& days() const { return aggregator.days(); }
+  uint16_t booksStarted() const { return aggregator.booksStarted(); }
+  reading_stats::GoalStreak goalStreak(int16_t y, uint16_t doy, uint32_t goalMs) const {
+    return aggregator.computeGoalStreak(y, doy, goalMs);
+  }
+
  private:
   ReadingStatsStore() = default;
 
@@ -63,6 +76,10 @@ class ReadingStatsStore {
   void setLifetimeCounters(uint16_t current, uint16_t longest, uint16_t finished, int16_t lastYear, int16_t lastDay) {
     aggregator.setLifetimeCounters(current, longest, finished, lastYear, lastDay);
   }
+
+  // Only JsonSettingsIO may restore per-day log and booksStarted on load.
+  void loadDays(std::vector<reading_stats::DayBucket> d) { aggregator.loadDays(std::move(d)); }
+  void setBooksStarted(uint16_t n) { aggregator.setBooksStarted(n); }
 
   friend bool JsonSettingsIO::loadReadingStats(ReadingStatsStore& store, const char* json);
 };
