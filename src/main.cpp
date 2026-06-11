@@ -15,9 +15,9 @@
 #include <SPI.h>
 #include <WiFi.h>
 #include <builtinFonts/all.h>
+#include <time.h>
 
 #include <cstring>
-#include <time.h>
 
 #include "InkPointSettings.h"
 #include "InkPointState.h"

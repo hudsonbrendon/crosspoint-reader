@@ -55,7 +55,9 @@ class ReadingStatsStore {
   void recordReadingDay(int16_t year, int16_t dayOfYear) { aggregator.recordReadingDay(year, dayOfYear); }
 
   // --- Per-day log accessors ---
-  void recordReadingMs(int16_t year, uint16_t dayOfYear, uint32_t ms) { aggregator.recordReadingMs(year, dayOfYear, ms); }
+  void recordReadingMs(int16_t year, uint16_t dayOfYear, uint32_t ms) {
+    aggregator.recordReadingMs(year, dayOfYear, ms);
+  }
   uint32_t msForDay(int16_t y, uint16_t doy) const { return aggregator.msForDay(y, doy); }
   uint32_t daysRead() const { return aggregator.daysRead(); }
   uint32_t bestDayMs() const { return aggregator.bestDayMs(); }

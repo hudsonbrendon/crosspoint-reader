@@ -242,7 +242,8 @@ class InkPointSettings {
   uint8_t embeddedStyle = 1;
   // Focus Reading - emphasizes the first part of words with bold
   uint8_t focusReadingEnabled = 0;
-  // Force Paragraph Indents - always indent the first line of natural-aligned paragraphs even when extra paragraph spacing is on
+  // Force Paragraph Indents - always indent the first line of natural-aligned paragraphs even when extra paragraph
+  // spacing is on
   uint8_t forceParagraphIndents = 0;
   // Guide Reading - render a middle dot between words to guide the eye across the line
   uint8_t guideReadingEnabled = 0;
@@ -288,9 +289,7 @@ class InkPointSettings {
   SdFontIdResolver sdFontIdResolver = nullptr;
   void* sdFontResolverCtx = nullptr;
 
-  uint16_t getPowerButtonDuration() const {
-    return (shortPwrBtn == InkPointSettings::SHORT_PWRBTN::SLEEP) ? 10 : 400;
-  }
+  uint16_t getPowerButtonDuration() const { return (shortPwrBtn == InkPointSettings::SHORT_PWRBTN::SLEEP) ? 10 : 400; }
   int getReaderFontId() const;
 
   // If count_only is true, returns the number of settings items that would be written.

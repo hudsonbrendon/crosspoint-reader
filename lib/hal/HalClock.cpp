@@ -229,8 +229,7 @@ bool HalClock::syncFromNTP() {
         LOG_INF("CLK", "RTC set to %02d:%02d:%02d UTC", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
       }
 
-      LOG_INF("CLK", "NTP sync OK (%04d-%02d-%02d)", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1,
-              timeinfo.tm_mday);
+      LOG_INF("CLK", "NTP sync OK (%04d-%02d-%02d)", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday);
       return true;
     }
     delay(100);

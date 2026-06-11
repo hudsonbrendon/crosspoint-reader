@@ -53,8 +53,8 @@ static uint8_t shadeLevel(uint32_t ms) {
 }
 
 // Short month names (English, flash-resident).
-static const char* const kMonthAbbr[13] = {
-    "", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+static const char* const kMonthAbbr[13] = {"",    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 // ---------------------------------------------------------------------------
 // Activity implementation
@@ -89,9 +89,7 @@ void ReadingHeatmapActivity::onEnter() {
   requestUpdate();
 }
 
-void ReadingHeatmapActivity::onExit() {
-  Activity::onExit();
-}
+void ReadingHeatmapActivity::onExit() { Activity::onExit(); }
 
 void ReadingHeatmapActivity::prevMonth() {
   if (viewMonth == 1) {
@@ -230,7 +228,7 @@ void ReadingHeatmapActivity::render(RenderLock&&) {
 
   // Shade patterns for levels 1..4: we use fillRectDither with Color enum values.
   // Color: Clear=0x00, White=0x01, LightGray=0x05, DarkGray=0x0A, Black=0x10
-  static constexpr Color kShadeColors[6] = {Color::White, Color::White, Color::LightGray,
+  static constexpr Color kShadeColors[6] = {Color::White,     Color::White,    Color::LightGray,
                                             Color::LightGray, Color::DarkGray, Color::Black};
   // Level 0 = empty (just outline). Levels 1-5 fill with increasing darkness.
   // We use fillRectDither for all fills; level 1 uses White (essentially transparent dither).
@@ -318,8 +316,7 @@ void ReadingHeatmapActivity::render(RenderLock&&) {
   }
 
   // -- Button hints: Back | (none) | < Prev | Next > --
-  const auto labels =
-      mappedInput.mapLabels(tr(STR_BACK), nullptr, tr(STR_DIR_LEFT), tr(STR_DIR_RIGHT));
+  const auto labels = mappedInput.mapLabels(tr(STR_BACK), nullptr, tr(STR_DIR_LEFT), tr(STR_DIR_RIGHT));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 
   renderer.displayBuffer();

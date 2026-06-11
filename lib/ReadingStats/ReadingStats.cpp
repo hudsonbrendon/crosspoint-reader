@@ -11,9 +11,7 @@ uint32_t saturatingAddU32(uint32_t a, uint32_t b) {
 }
 
 // A strictly increasing ordinal across years for window comparisons.
-int64_t dayOrdinal(int16_t year, uint16_t dayOfYear) {
-  return static_cast<int64_t>(year) * 366 + dayOfYear;
-}
+int64_t dayOrdinal(int16_t year, uint16_t dayOfYear) { return static_cast<int64_t>(year) * 366 + dayOfYear; }
 }  // namespace
 
 void ReadingStatsAggregator::load(std::vector<BookStats> books) {
@@ -115,13 +113,17 @@ void updateStreak(int16_t curYear, int16_t curDay, int16_t& lastYear, int16_t& l
 void ReadingStatsAggregator::recordReadingMs(int16_t year, uint16_t dayOfYear, uint32_t ms) {
   if (ms == 0) return;
   for (auto& d : days_) {
-    if (d.year == year && d.dayOfYear == dayOfYear) { d.ms += ms; return; }
+    if (d.year == year && d.dayOfYear == dayOfYear) {
+      d.ms += ms;
+      return;
+    }
   }
   days_.push_back(DayBucket{year, dayOfYear, ms});
 }
 
 uint32_t ReadingStatsAggregator::msForDay(int16_t year, uint16_t dayOfYear) const {
-  for (const auto& d : days_) if (d.year == year && d.dayOfYear == dayOfYear) return d.ms;
+  for (const auto& d : days_)
+    if (d.year == year && d.dayOfYear == dayOfYear) return d.ms;
   return 0;
 }
 
@@ -133,7 +135,8 @@ uint32_t ReadingStatsAggregator::bestDayMs() const {
 
 uint32_t ReadingStatsAggregator::annualMs(int16_t year) const {
   uint32_t sum = 0;
-  for (const auto& d : days_) if (d.year == year) sum += d.ms;
+  for (const auto& d : days_)
+    if (d.year == year) sum += d.ms;
   return sum;
 }
 

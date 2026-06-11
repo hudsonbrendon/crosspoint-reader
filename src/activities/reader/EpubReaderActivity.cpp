@@ -196,7 +196,9 @@ void EpubReaderActivity::onExit() {
     // endSession() banks the final time slice and persists everything (including
     // the booksFinished bump above) in one SD write.
     const uint32_t sessionMs = READING_STATS.endSession(millis());
-    int16_t y; uint8_t mo, d; uint16_t doy;
+    int16_t y;
+    uint8_t mo, d;
+    uint16_t doy;
     if (sessionMs > 0 && halClock.getDate(y, mo, d, doy, SETTINGS.clockUtcOffsetQ)) {
       READING_STATS.recordReadingMs(y, doy, sessionMs);
       READING_STATS.recordReadingDay(y, doy);

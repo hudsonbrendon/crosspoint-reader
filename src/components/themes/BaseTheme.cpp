@@ -7,8 +7,8 @@
 #include <Logging.h>
 
 #include <algorithm>
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <string>
 
 #include "I18n.h"
@@ -846,8 +846,8 @@ void BaseTheme::drawStatusBar(GfxRenderer& renderer, const float bookProgress, c
     uint16_t ddoy;
     if (halClock.getDate(dy, dmo, dd, ddoy, SETTINGS.clockUtcOffsetQ)) {
       char dateBuf[12];
-      std::snprintf(dateBuf, sizeof(dateBuf), "%02u/%02u/%04u", static_cast<unsigned>(dd),
-                    static_cast<unsigned>(dmo), static_cast<unsigned>(dy));
+      std::snprintf(dateBuf, sizeof(dateBuf), "%02u/%02u/%04u", static_cast<unsigned>(dd), static_cast<unsigned>(dmo),
+                    static_cast<unsigned>(dy));
       dateTextWidth = renderer.getTextWidth(SMALL_FONT_ID, dateBuf);
       // Position to the left of the clock (if shown) or to the left of the progress text
       const int dateX = renderer.getScreenWidth() - metrics.statusBarHorizontalMargin - orientedMarginRight -

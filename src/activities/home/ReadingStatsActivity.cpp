@@ -8,11 +8,11 @@
 #include <cstdio>
 #include <string>
 
-#include "activities/ActivityManager.h"
 #include "HalClock.h"
 #include "MappedInputManager.h"
 #include "ReadingStatsDetailActivity.h"
 #include "ReadingStatsStore.h"
+#include "activities/ActivityManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
 
@@ -237,9 +237,8 @@ void ReadingStatsActivity::render(RenderLock&&) {
     for (int i = 0; i < 7; ++i) {
       const int barX = tileMargin + i * (barW + barGap);
       const uint32_t ms = dayMs[i];
-      const int barH = (ms > 0u)
-                           ? static_cast<int>(static_cast<uint64_t>(ms) * static_cast<uint64_t>(chartHeight) / maxMs)
-                           : 0;
+      const int barH =
+          (ms > 0u) ? static_cast<int>(static_cast<uint64_t>(ms) * static_cast<uint64_t>(chartHeight) / maxMs) : 0;
       if (barH > 0) {
         renderer.fillRect(barX, chartBottom - barH, barW, barH, true);
       } else {
