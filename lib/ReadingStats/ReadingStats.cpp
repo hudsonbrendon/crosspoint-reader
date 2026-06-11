@@ -9,6 +9,11 @@ uint32_t saturatingAddU32(uint32_t a, uint32_t b) {
   const uint64_t sum = static_cast<uint64_t>(a) + b;
   return sum > UINT32_MAX ? UINT32_MAX : static_cast<uint32_t>(sum);
 }
+
+// A strictly increasing ordinal across years for window comparisons.
+int64_t dayOrdinal(int16_t year, uint16_t dayOfYear) {
+  return static_cast<int64_t>(year) * 366 + dayOfYear;
+}
 }  // namespace
 
 void ReadingStatsAggregator::load(std::vector<BookStats> books) {
@@ -101,6 +106,42 @@ void updateStreak(int16_t curYear, int16_t curDay, int16_t& lastYear, int16_t& l
   if (current > longest) longest = current;
   lastYear = curYear;
   lastDay = curDay;
+}
+
+void ReadingStatsAggregator::recordReadingMs(int16_t year, uint16_t dayOfYear, uint32_t ms) {
+  if (ms == 0) return;
+  for (auto& d : days_) {
+    if (d.year == year && d.dayOfYear == dayOfYear) { d.ms += ms; return; }
+  }
+  days_.push_back(DayBucket{year, dayOfYear, ms});
+}
+
+uint32_t ReadingStatsAggregator::msForDay(int16_t year, uint16_t dayOfYear) const {
+  for (const auto& d : days_) if (d.year == year && d.dayOfYear == dayOfYear) return d.ms;
+  return 0;
+}
+
+uint32_t ReadingStatsAggregator::bestDayMs() const {
+  uint32_t best = 0;
+  for (const auto& d : days_) best = (d.ms > best) ? d.ms : best;
+  return best;
+}
+
+uint32_t ReadingStatsAggregator::annualMs(int16_t year) const {
+  uint32_t sum = 0;
+  for (const auto& d : days_) if (d.year == year) sum += d.ms;
+  return sum;
+}
+
+uint32_t ReadingStatsAggregator::windowMs(int16_t year, uint16_t dayOfYear, uint16_t count) const {
+  const int64_t end = dayOrdinal(year, dayOfYear);
+  const int64_t start = end - (static_cast<int64_t>(count) - 1);
+  uint32_t sum = 0;
+  for (const auto& d : days_) {
+    const int64_t o = dayOrdinal(d.year, d.dayOfYear);
+    if (o >= start && o <= end) sum += d.ms;
+  }
+  return sum;
 }
 
 }  // namespace reading_stats

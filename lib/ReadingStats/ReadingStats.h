@@ -6,6 +6,14 @@
 
 namespace reading_stats {
 
+// One calendar day of accumulated reading time. Compact for SD persistence.
+struct DayBucket {
+  int16_t year = 0;
+  uint16_t dayOfYear = 0;  // 0..365
+  uint32_t ms = 0;
+  bool operator==(const DayBucket& o) const = default;
+};
+
 // Per-book accumulated reading statistics. Time is wall-clock-free: it is
 // derived from monotonic millis() deltas, so it works identically on X3 and
 // X4 (neither exposes a reliable calendar date).
@@ -92,6 +100,16 @@ class ReadingStatsAggregator {
     lastReadDayOfYear_ = lastDay;
   }
 
+  // --- Per-day reading log ---
+  void recordReadingMs(int16_t year, uint16_t dayOfYear, uint32_t ms);
+  uint32_t msForDay(int16_t year, uint16_t dayOfYear) const;
+  uint32_t daysRead() const { return static_cast<uint32_t>(days_.size()); }
+  uint32_t bestDayMs() const;
+  uint32_t annualMs(int16_t year) const;
+  uint32_t windowMs(int16_t year, uint16_t dayOfYear, uint16_t count) const;
+  const std::vector<DayBucket>& days() const { return days_; }
+  void loadDays(std::vector<DayBucket> days) { days_ = std::move(days); }
+
  private:
   // Wrap-safe, capped delta from lastEventMs_ to nowMs.
   uint32_t cappedDelta(uint32_t nowMs) const;
@@ -107,6 +125,8 @@ class ReadingStatsAggregator {
   uint16_t booksFinished_ = 0;
   int16_t lastReadYear_ = -1;       // -1 = never recorded a valid wall-clock day
   int16_t lastReadDayOfYear_ = -1;  // 0..365
+
+  std::vector<DayBucket> days_;  // unsorted; one entry per (year, dayOfYear)
 };
 
 }  // namespace reading_stats

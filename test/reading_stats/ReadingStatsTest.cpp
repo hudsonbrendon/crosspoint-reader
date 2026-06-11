@@ -339,3 +339,26 @@ TEST(BooksFinished, SetLifetimeCountersRoundTrips) {
   EXPECT_EQ(agg.lastReadYear(), 2026);
   EXPECT_EQ(agg.lastReadDayOfYear(), 100);
 }
+
+TEST(ReadingStatsDays, RecordsAndSumsPerDay) {
+  ReadingStatsAggregator agg;
+  agg.recordReadingMs(2026, 150, 600000);   // 10 min
+  agg.recordReadingMs(2026, 150, 300000);   // +5 min same day
+  agg.recordReadingMs(2026, 151, 1200000);  // 20 min next day
+  EXPECT_EQ(agg.msForDay(2026, 150), 900000u);
+  EXPECT_EQ(agg.msForDay(2026, 151), 1200000u);
+  EXPECT_EQ(agg.msForDay(2026, 999), 0u);
+  EXPECT_EQ(agg.daysRead(), 2u);
+  EXPECT_EQ(agg.bestDayMs(), 1200000u);
+}
+
+TEST(ReadingStatsDays, AnnualAndWindowSums) {
+  ReadingStatsAggregator agg;
+  agg.recordReadingMs(2026, 10, 600000);
+  agg.recordReadingMs(2026, 11, 600000);
+  agg.recordReadingMs(2025, 364, 600000);
+  EXPECT_EQ(agg.annualMs(2026), 1200000u);
+  EXPECT_EQ(agg.annualMs(2025), 600000u);
+  EXPECT_EQ(agg.windowMs(2026, 11, 7), 1200000u);   // days 5..11 of 2026
+  EXPECT_EQ(agg.windowMs(2026, 11, 30), 1800000u);  // reaches back into 2025 day 364
+}
