@@ -3,6 +3,7 @@
 #include <Logging.h>
 #include <WiFi.h>
 #include <esp_sntp.h>
+#include <sys/time.h>
 #include <time.h>
 
 #include <cassert>
@@ -16,6 +17,18 @@ HalClock halClock;  // Singleton instance
 
 static uint8_t bcdToDec(uint8_t bcd) { return ((bcd >> 4) * 10) + (bcd & 0x0F); }
 static uint8_t decToBcd(uint8_t dec) { return ((dec / 10) << 4) | (dec % 10); }
+
+// DS3231 date registers (BCD): 0x04 day-of-month, 0x05 month(+century bit7), 0x06 year(00-99)
+static constexpr uint8_t DS3231_DATE_REG = 0x04;
+
+// Days before the start of each month for a non-leap year (index 1..12).
+static int daysBeforeMonth(uint8_t month, int16_t year) {
+  static const int cum[13] = {0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+  int d = cum[month];
+  const bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+  if (leap && month > 2) d += 1;
+  return d;  // 0-based day-of-year for the 1st of `month`
+}
 
 void HalClock::begin() {
   if (!gpio.deviceIsX3()) {
@@ -147,6 +160,48 @@ bool HalClock::writeTimeToRTC(uint8_t hour, uint8_t minute, uint8_t second) {
   _cachedMinute = minute;
   _hasCachedTime = true;
   return true;
+}
+
+bool HalClock::getDate(int16_t& year, uint8_t& month, uint8_t& day, uint16_t& dayOfYear,
+                       uint8_t utcOffsetQuarterHoursBiased) const {
+  if (_available) {
+    // X3 path: read date straight from the DS3231 (already local time on the chip).
+    Wire.beginTransmission(I2C_ADDR_DS3231);
+    Wire.write(DS3231_DATE_REG);
+    if (Wire.endTransmission(false) != 0) return false;
+    Wire.requestFrom(I2C_ADDR_DS3231, (uint8_t)3);
+    if (Wire.available() < 3) return false;
+    const uint8_t d = bcdToDec(Wire.read());
+    const uint8_t mo = bcdToDec(Wire.read() & 0x1F);  // mask century bit
+    const uint8_t yy = bcdToDec(Wire.read());
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return false;
+    year = 2000 + yy;
+    month = mo;
+    day = d;
+    dayOfYear = static_cast<uint16_t>(daysBeforeMonth(mo, year) + (d - 1));
+    return true;
+  }
+
+  // X4 path: system clock, only trustworthy after a sync this power cycle.
+  time_t now = time(nullptr);
+  if (now < 1700000000) return false;  // ~2023-11; unset/garbage clock
+  const long offsetSec = (static_cast<long>(utcOffsetQuarterHoursBiased) - 48) * 15 * 60;
+  time_t local = now + offsetSec;
+  struct tm t;
+  gmtime_r(&local, &t);
+  if (t.tm_year + 1900 < 2023) return false;
+  year = static_cast<int16_t>(t.tm_year + 1900);
+  month = static_cast<uint8_t>(t.tm_mon + 1);
+  day = static_cast<uint8_t>(t.tm_mday);
+  dayOfYear = static_cast<uint16_t>(t.tm_yday);  // 0..365
+  return true;
+}
+
+bool HalClock::hasValidDate(uint8_t utcOffsetQuarterHoursBiased) const {
+  int16_t y;
+  uint8_t mo, d;
+  uint16_t doy;
+  return getDate(y, mo, d, doy, utcOffsetQuarterHoursBiased);
 }
 
 bool HalClock::syncFromNTP() {
