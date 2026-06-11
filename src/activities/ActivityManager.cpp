@@ -14,6 +14,7 @@
 #include "home/CrashActivity.h"
 #include "home/FileBrowserActivity.h"
 #include "home/HomeActivity.h"
+#include "home/ReadingHeatmapActivity.h"
 #include "home/ReadingStatsActivity.h"
 #include "home/RecentBooksActivity.h"
 #include "network/InkPointWebServerActivity.h"
@@ -195,6 +196,10 @@ void ActivityManager::goToRecentBooks() {
 
 void ActivityManager::goToReadingStats() {
   replaceActivity(std::make_unique<ReadingStatsActivity>(renderer, mappedInput));
+}
+
+void ActivityManager::goToReadingHeatmap() {
+  replaceActivity(std::make_unique<ReadingHeatmapActivity>(renderer, mappedInput));
 }
 
 void ActivityManager::goToVirtualPet() { replaceActivity(std::make_unique<VirtualPetActivity>(renderer, mappedInput)); }

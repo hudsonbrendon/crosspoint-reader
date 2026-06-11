@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <string>
 
+#include "activities/ActivityManager.h"
 #include "HalClock.h"
 #include "MappedInputManager.h"
 #include "ReadingStatsDetailActivity.h"
@@ -73,6 +74,11 @@ void ReadingStatsActivity::loop() {
 
   if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
     onGoHome();
+    return;
+  }
+
+  if (mappedInput.wasReleased(MappedInputManager::Button::Left)) {
+    activityManager.goToReadingHeatmap();
     return;
   }
 
@@ -296,7 +302,7 @@ void ReadingStatsActivity::render(RenderLock&&) {
   }
 
   const auto labels =
-      mappedInput.mapLabels(tr(STR_HOME), tr(STR_STATS_MORE_DETAILS), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
+      mappedInput.mapLabels(tr(STR_HOME), tr(STR_STATS_MORE_DETAILS), tr(STR_HEATMAP_VIEW), tr(STR_DIR_DOWN));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 
   renderer.displayBuffer();
