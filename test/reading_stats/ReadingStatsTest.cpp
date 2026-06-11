@@ -394,3 +394,13 @@ TEST(ReadingStatsBooks, BooksStartedCountsDistinctBooks) {
   agg.endSession(5000);
   EXPECT_EQ(agg.booksStarted(), 2u);
 }
+
+TEST(StatsFormat, FormatsHoursAndMinutes) {
+  char buf[16];
+  reading_stats::formatHm(buf, sizeof(buf), 3600000 + 18 * 60000);  // 1h 18m
+  EXPECT_STREQ(buf, "1h 18m");
+  reading_stats::formatHm(buf, sizeof(buf), 7 * 60000);  // 7m
+  EXPECT_STREQ(buf, "7m");
+  reading_stats::formatHm(buf, sizeof(buf), 66u * 3600000u + 18 * 60000);  // 66h 18m
+  EXPECT_STREQ(buf, "66h 18m");
+}

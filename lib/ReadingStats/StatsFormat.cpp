@@ -43,4 +43,14 @@ uint32_t avgMsPerSession(uint32_t totalMs, uint32_t sessions) {
   return totalMs / sessions;
 }
 
+void formatHm(char* buf, size_t bufSize, uint32_t ms) {
+  const uint32_t totalMin = ms / 60000;
+  const uint32_t h = totalMin / 60;
+  const uint32_t m = totalMin % 60;
+  if (h > 0)
+    std::snprintf(buf, bufSize, "%uh %um", static_cast<unsigned>(h), static_cast<unsigned>(m));
+  else
+    std::snprintf(buf, bufSize, "%um", static_cast<unsigned>(m));
+}
+
 }  // namespace reading_stats

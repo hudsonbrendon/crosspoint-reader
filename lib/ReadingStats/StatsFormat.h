@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <string>
 
@@ -6,6 +7,10 @@ namespace reading_stats {
 
 // Format a millisecond duration for display. >= 1 hour -> "Xh Ym"; otherwise "Ym Zs".
 std::string formatDurationMs(uint32_t ms);
+
+// Format a millisecond duration as "Hh Mm" (or "Mm" when under an hour).
+// Writes into buf (>=16 bytes). Always null-terminates.
+void formatHm(char* buf, size_t bufSize, uint32_t ms);
 
 // Derive a display name from a book file path: basename without the extension.
 // "/books/great-gatsby.epub" -> "great-gatsby". A path with no '/' or no '.' is
