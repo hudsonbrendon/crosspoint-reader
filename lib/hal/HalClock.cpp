@@ -205,8 +205,6 @@ bool HalClock::hasValidDate(uint8_t utcOffsetQuarterHoursBiased) const {
 }
 
 bool HalClock::syncFromNTP() {
-  if (!_available) return false;
-
   if (WiFi.status() != WL_CONNECTED) {
     LOG_ERR("CLK", "WiFi not connected, cannot sync NTP");
     return false;
@@ -223,11 +221,17 @@ bool HalClock::syncFromNTP() {
       struct tm timeinfo;
       gmtime_r(&now, &timeinfo);
 
-      if (writeTimeToRTC(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec)) {
+      if (_available) {
+        // X3: also write time into the DS3231 so it persists across power cycles.
+        if (!writeTimeToRTC(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec)) {
+          return false;
+        }
         LOG_INF("CLK", "RTC set to %02d:%02d:%02d UTC", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-        return true;
       }
-      return false;
+
+      LOG_INF("CLK", "NTP sync OK (%04d-%02d-%02d)", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1,
+              timeinfo.tm_mday);
+      return true;
     }
     delay(100);
   }
