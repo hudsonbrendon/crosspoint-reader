@@ -91,6 +91,9 @@ class ReadingStatsAggregator {
     if (booksFinished_ < UINT16_MAX) booksFinished_++;
   }
 
+  uint16_t booksStarted() const { return booksStarted_; }
+  void setBooksStarted(uint16_t n) { booksStarted_ = n; }
+
   // Stamp today's reading day into the streak. Only call with a valid wall-clock.
   void recordReadingDay(int16_t year, int16_t dayOfYear) {
     updateStreak(year, dayOfYear, lastReadYear_, lastReadDayOfYear_, currentStreak_, longestStreak_);
@@ -132,6 +135,7 @@ class ReadingStatsAggregator {
   uint16_t currentStreak_ = 0;
   uint16_t longestStreak_ = 0;
   uint16_t booksFinished_ = 0;
+  uint16_t booksStarted_ = 0;
   int16_t lastReadYear_ = -1;       // -1 = never recorded a valid wall-clock day
   int16_t lastReadDayOfYear_ = -1;  // 0..365
 

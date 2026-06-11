@@ -39,6 +39,7 @@ void ReadingStatsAggregator::beginSession(const std::string& bookPath, uint32_t 
     fresh.bookPath = bookPath;
     books_.push_back(std::move(fresh));
     activeIndex_ = books_.size() - 1;
+    if (booksStarted_ < UINT16_MAX) booksStarted_++;
   } else {
     activeIndex_ = static_cast<std::size_t>(std::distance(books_.begin(), it));
   }

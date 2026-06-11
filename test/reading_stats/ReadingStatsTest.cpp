@@ -383,3 +383,14 @@ TEST(ReadingStatsGoal, GoalStreakZeroWhenTodayMissed) {
   EXPECT_EQ(gs.current, 0u);
   EXPECT_EQ(gs.max, 1u);
 }
+
+TEST(ReadingStatsBooks, BooksStartedCountsDistinctBooks) {
+  ReadingStatsAggregator agg;
+  agg.beginSession("/books/a.epub", 0);
+  agg.endSession(1000);
+  agg.beginSession("/books/a.epub", 2000);  // same book again
+  agg.endSession(3000);
+  agg.beginSession("/books/b.epub", 4000);  // new book
+  agg.endSession(5000);
+  EXPECT_EQ(agg.booksStarted(), 2u);
+}
