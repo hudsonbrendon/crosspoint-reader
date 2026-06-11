@@ -19,7 +19,7 @@
 namespace {
 // Vertical space reserved above the list for the totals block (tiles + chart + annual).
 // Large enough that the list's selection highlight clears all new sections.
-constexpr int TOTALS_BLOCK_HEIGHT = 360;
+constexpr int TOTALS_BLOCK_HEIGHT = 396;
 
 // Walk back `back` days from (year, doy). Handles year boundaries.
 void minusDays(int16_t& year, uint16_t& doy, uint16_t back) {
@@ -128,24 +128,26 @@ void ReadingStatsActivity::render(RenderLock&&) {
   const int tileMargin = metrics.contentSidePadding;
   const int tileGap = 8;
   const int tileW = (pageWidth - tileMargin * 2 - tileGap) / 2;
-  const int tileH = 54;
-  const int labelH = renderer.getLineHeight(UI_10_FONT_ID);
+  const int tileH = 52;
+  const int labelH = renderer.getLineHeight(UI_10_FONT_ID);  // paragraph advance; used by the chart below
 
-  // Helper lambda: draw one tile. The value is prominent (large font, top) and
-  // the label sits below it (small). The value font auto-shrinks so a long
-  // value (e.g. the Daily Goal "1h 17m / 1h 0m") never overflows the tile width.
+  // Draw one tile: value on top, label below. The two lines are stacked using
+  // the value font's ASCENDER (getTextHeight), NOT getLineHeight() — the latter
+  // returns the paragraph advanceY (e.g. 45px for NotoSans-16), which is far too
+  // large for intra-tile spacing and would push the label out of the box. The
+  // value uses UI_12 so the tile stays compact (4 rows + chart + list must fit),
+  // shrinking to UI_10 only if a value is too wide. Math: labelTop = ty+2+24,
+  // labelBottom ~= ty+2+24+24 = ty+50 < tileH(52).
   auto drawTile = [&](int col, int row, const char* label, const char* value) {
     const int tx = tileMargin + col * (tileW + tileGap);
     const int ty = headerBottom + row * (tileH + tileGap);
     renderer.drawRect(tx, ty, tileW, tileH);
     const int lx = tx + 8;
     const int innerW = tileW - 16;
-    int valueFont = NOTOSANS_16_FONT_ID;
-    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = UI_12_FONT_ID;
-    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = SMALL_FONT_ID;
-    const int vH = renderer.getLineHeight(valueFont);
-    renderer.drawText(valueFont, lx, ty + 7, value);
-    renderer.drawText(UI_10_FONT_ID, lx, ty + 7 + vH + 2, label);
+    int valueFont = UI_12_FONT_ID;
+    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = UI_10_FONT_ID;
+    renderer.drawText(valueFont, lx, ty + 2, value);
+    renderer.drawText(UI_10_FONT_ID, lx, ty + 2 + renderer.getTextHeight(valueFont), label);
   };
 
   char buf1[32], buf2[32], buf3[64], buf4[32], buf5[32], buf6[32], buf7[32], buf8[32];

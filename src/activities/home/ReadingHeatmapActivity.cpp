@@ -151,7 +151,7 @@ void ReadingHeatmapActivity::render(RenderLock&&) {
   // -----------------------------------------------------------------------
   const int tileGap = 6;
   const int tileW = (contentW - tileGap) / 2;
-  const int tileH = 50;
+  const int tileH = 52;
 
   // Accumulate month stats.
   uint8_t numDays = daysInMonth(viewMonth, viewYear);
@@ -174,20 +174,20 @@ void ReadingHeatmapActivity::render(RenderLock&&) {
     gs = READING_STATS.goalStreak(today_y, today_doy, goalMs);
   }
 
-  // Value prominent (large font, top); label small below. Value auto-shrinks
-  // so it never overflows the tile width.
+  // Value on top, label below. Stack the lines using the value font's ASCENDER
+  // (getTextHeight), NOT getLineHeight() — the latter is the paragraph advanceY
+  // (45px for NotoSans-16) and would push the label out of the tile. Value uses
+  // UI_12 (compact), shrinking to UI_10 only if too wide.
   auto drawSummaryTile = [&](int col, int row, const char* label, const char* value) {
     const int tx = contentX + col * (tileW + tileGap);
     const int ty = y + row * (tileH + tileGap);
     renderer.drawRect(tx, ty, tileW, tileH);
     const int lx = tx + 8;
     const int innerW = tileW - 16;
-    int valueFont = NOTOSANS_16_FONT_ID;
-    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = UI_12_FONT_ID;
-    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = SMALL_FONT_ID;
-    const int vH = renderer.getLineHeight(valueFont);
-    renderer.drawText(valueFont, lx, ty + 6, value);
-    renderer.drawText(UI_10_FONT_ID, lx, ty + 6 + vH + 1, label);
+    int valueFont = UI_12_FONT_ID;
+    if (renderer.getTextWidth(valueFont, value) > innerW) valueFont = UI_10_FONT_ID;
+    renderer.drawText(valueFont, lx, ty + 2, value);
+    renderer.drawText(UI_10_FONT_ID, lx, ty + 2 + renderer.getTextHeight(valueFont), label);
   };
 
   char buf1[20], buf2[20], buf3[20], buf4[20];
