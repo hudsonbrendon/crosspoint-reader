@@ -806,6 +806,25 @@ void BaseTheme::drawStatusBar(GfxRenderer& renderer, const float bookProgress, c
     }
   }
 
+  // Draw Date (shown whenever a valid date is available, independent of clock toggle)
+  int dateTextWidth = 0;
+  {
+    int16_t dy;
+    uint8_t dmo, dd;
+    uint16_t ddoy;
+    if (halClock.getDate(dy, dmo, dd, ddoy, SETTINGS.clockUtcOffsetQ)) {
+      char dateBuf[12];
+      std::snprintf(dateBuf, sizeof(dateBuf), "%02u/%02u/%04u", static_cast<unsigned>(dd),
+                    static_cast<unsigned>(dmo), static_cast<unsigned>(dy));
+      dateTextWidth = renderer.getTextWidth(SMALL_FONT_ID, dateBuf);
+      // Position to the left of the clock (if shown) or to the left of the progress text
+      const int dateX = renderer.getScreenWidth() - metrics.statusBarHorizontalMargin - orientedMarginRight -
+                        progressTextWidth - (progressTextWidth > 0 ? 10 : 0) - clockTextWidth -
+                        (clockTextWidth > 0 ? 10 : 0) - dateTextWidth;
+      renderer.drawText(SMALL_FONT_ID, dateX, textY, dateBuf);
+    }
+  }
+
   // Draw Title
   if (!title.empty()) {
     textY -= textYOffset;
@@ -817,7 +836,8 @@ void BaseTheme::drawStatusBar(GfxRenderer& renderer, const float bookProgress, c
     const int batterySize = SETTINGS.statusBarBattery ? (showBatteryPercentage ? 50 : 20) : 0;
     const int titleMarginLeft = batterySize + 30;
     const int clockReserve = clockTextWidth > 0 ? (clockTextWidth + 10) : 0;
-    const int titleMarginRight = progressTextWidth + clockReserve + 30;
+    const int dateReserve = dateTextWidth > 0 ? (dateTextWidth + 10) : 0;
+    const int titleMarginRight = progressTextWidth + clockReserve + dateReserve + 30;
 
     // Attempt to center title on the screen, but if title is too wide then later we will center it within the
     // available space.
