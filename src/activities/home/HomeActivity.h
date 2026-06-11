@@ -92,6 +92,9 @@ class HomeActivity final : public Activity {
   void freeCoverBuffer();     // Free the stored cover buffer
   void loadRecentBooks(int maxBooks);
   void loadRecentCovers(int coverHeight);
+  // Read progress.bin + book.bin header from an epub cache dir to compute a
+  // chapter-level progress percent (0-100). Returns 0 when cache is absent.
+  static int loadBookProgressPercent(const std::string& cachePath);
 
  public:
   explicit HomeActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,

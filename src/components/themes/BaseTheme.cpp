@@ -7,6 +7,7 @@
 #include <Logging.h>
 
 #include <algorithm>
+#include <cstdio>
 #include <cstdint>
 #include <string>
 
@@ -612,6 +613,37 @@ void BaseTheme::drawRecentBookCover(GfxRenderer& renderer, Rect rect, const std:
     if (!truncatedAuthor.empty()) {
       titleYStart += renderer.getLineHeight(UI_10_FONT_ID) / 2;
       renderer.drawCenteredText(UI_10_FONT_ID, titleYStart, truncatedAuthor.c_str(), !bookSelected);
+    }
+
+    // Progress bar + percentage, drawn above the "Continue Reading" label
+    {
+      const int pct = recentBooks[0].progressPercent;
+      constexpr int barH = 6;
+      constexpr int barSideMargin = 40;
+      // Position bar above the "Continue Reading" label area (label sits at bookHeight - lineHeight*3/2)
+      const int continueLineH = renderer.getLineHeight(UI_10_FONT_ID);
+      const int barBottomOffset = continueLineH * 3 / 2 + barH + 14;
+      const int barY = bookY + bookHeight - barBottomOffset;
+      const int barX = bookX + barSideMargin;
+      const int barW = bookWidth - 2 * barSideMargin;
+
+      // Outline
+      renderer.drawRect(barX, barY, barW, barH, !bookSelected);
+      // Fill
+      if (pct > 0) {
+        const int fillW = pct * (barW - 2) / 100;
+        if (fillW > 0) {
+          renderer.fillRect(barX + 1, barY + 1, fillW, barH - 2, !bookSelected);
+        }
+      }
+
+      // Percentage text, right of the bar
+      char pctBuf[8];
+      snprintf(pctBuf, sizeof(pctBuf), "%d%%", pct);
+      const int pctTextW = renderer.getTextWidth(UI_10_FONT_ID, pctBuf);
+      const int pctTextX = bookX + bookWidth - barSideMargin - pctTextW;
+      const int pctTextY = barY + barH + 3;
+      renderer.drawText(UI_10_FONT_ID, pctTextX, pctTextY, pctBuf, !bookSelected);
     }
 
     // "Continue Reading" label at the bottom

@@ -7,6 +7,8 @@ struct RecentBook {
   std::string title;
   std::string author;
   std::string coverBmpPath;
+  // Transient (not persisted): reading progress 0-100%, loaded from progress.bin at home-screen render time.
+  int progressPercent = 0;
 
   bool operator==(const RecentBook& other) const { return path == other.path; }
 };

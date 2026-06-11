@@ -10,6 +10,7 @@
 #include <Xtc.h>
 
 #include <cstring>
+#include <functional>
 #include <vector>
 
 #include "InkPointSettings.h"
@@ -19,6 +20,47 @@
 #include "RecentBooksStore.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+
+// Read spineIndex from progress.bin and spineCount from the book.bin header.
+// Returns a chapter-level reading progress percent (0-100). Returns 0 when no
+// cache files are present (book not yet opened) or on any read error.
+// This is intentionally lightweight — it opens two tiny files (~6 + 9 bytes)
+// and does no EPUB zip parsing, so it is safe to call per-book on the home screen.
+int HomeActivity::loadBookProgressPercent(const std::string& cachePath) {
+  if (cachePath.empty()) return 0;
+
+  // --- 1. Read spineIndex from progress.bin ---
+  // Format: {spineIndex(u16 LE), pageNum(u16 LE), pageCount(u16 LE)}
+  const std::string progressPath = cachePath + "/progress.bin";
+  uint16_t spineIndex = 0;
+  {
+    HalFile f;
+    if (!Storage.openFileForRead("HOME", progressPath, f)) return 0;
+    uint8_t data[4];
+    const int n = f.read(data, 4);
+    if (n < 2) return 0;
+    spineIndex = static_cast<uint16_t>(data[0]) | (static_cast<uint16_t>(data[1]) << 8);
+  }
+  if (spineIndex == 0) return 0;
+
+  // --- 2. Read spineCount from book.bin header ---
+  // Format: {version(u8), lutOffset(u32 LE), spineCount(u16 LE), tocCount(u16 LE), ...}
+  const std::string bookBinPath = cachePath + "/book.bin";
+  uint16_t spineCount = 0;
+  {
+    HalFile f;
+    if (!Storage.openFileForRead("HOME", bookBinPath, f)) return 0;
+    uint8_t header[7];  // version(1) + lutOffset(4) + spineCount(2)
+    const int n = f.read(header, 7);
+    if (n < 7) return 0;
+    spineCount = static_cast<uint16_t>(header[5]) | (static_cast<uint16_t>(header[6]) << 8);
+  }
+  if (spineCount == 0) return 0;
+
+  // Chapter-level approximation: spineIndex / spineCount * 100
+  const int pct = static_cast<int>(spineIndex) * 100 / static_cast<int>(spineCount);
+  return pct < 0 ? 0 : (pct > 100 ? 100 : pct);
+}
 
 int HomeActivity::getMenuItemCount() const {
   int count =
@@ -103,6 +145,23 @@ void HomeActivity::loadRecentCovers(int coverHeight) {
       }
     }
     progress++;
+  }
+
+  // Load reading progress percent for each book from its cache dir.
+  // cachePath is the directory portion of coverBmpPath (strip filename after last '/').
+  // Falls back to derivation from book.path when coverBmpPath is empty.
+  for (RecentBook& book : recentBooks) {
+    std::string cachePath;
+    if (!book.coverBmpPath.empty()) {
+      const size_t slashPos = book.coverBmpPath.rfind('/');
+      if (slashPos != std::string::npos) {
+        cachePath = book.coverBmpPath.substr(0, slashPos);
+      }
+    } else if (FsHelpers::hasEpubExtension(book.path)) {
+      // Derive cache path from filepath hash, same formula as Epub constructor
+      cachePath = "/.inkpoint/epub_" + std::to_string(std::hash<std::string>{}(book.path));
+    }
+    book.progressPercent = loadBookProgressPercent(cachePath);
   }
 
   recentsLoaded = true;
