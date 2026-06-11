@@ -17,6 +17,7 @@
 #include <builtinFonts/all.h>
 
 #include <cstring>
+#include <time.h>
 
 #include "InkPointSettings.h"
 #include "InkPointState.h"
@@ -360,6 +361,14 @@ void setup() {
   FLASHCARD_SESSION.advance();        // bump the session counter once per boot (no-RTC "today")
   UITheme::getInstance().reload();
   ButtonNavigator::setMappedInputManager(mappedInputManager);
+
+  // On X4 the NTP-seeded system clock is lost on power loss. If it is unset now,
+  // forget any previous "synced" flag so Wi-Fi will re-seed it. (X3 keeps the
+  // DS3231 date across power loss, so its flag is left as-is.)
+  if (!halClock.isAvailable() && time(nullptr) < 1700000000 && SETTINGS.clockHasBeenSynced) {
+    SETTINGS.clockHasBeenSynced = 0;
+    SETTINGS.saveToFile();
+  }
 
   const auto wakeupReason = gpio.getWakeupReason();
   switch (wakeupReason) {
